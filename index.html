@@ -72,55 +72,39 @@
         background: #0ff;
       }
       #design-doc-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        width: 100vw;
-        height: 100vh;
-        padding: 0;
-        margin: 0;
-        box-sizing: border-box;
-        overflow: hidden;
         background: #000;
-      }
-      /* When design doc is shown, hide header and buttons */
-      body.show-design-doc h1,
-      body.show-design-doc .button-container,
-      body.show-design-doc .footer-link {
-        display: none;
-      }
-      #design-doc-container > div:first-child {
-        flex-shrink: 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0;
-        padding: 10px 20px;
-        border-bottom: 2px solid #0f0;
-        background: #000;
-      }
-      #design-doc-iframe {
-        flex: 1;
-        width: 100%;
-        height: 100%;
+        border: 2px solid #0f0;
+        padding: 20px;
+        flex: 1 1 0;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        width: calc(100% - 20px);
+        margin: 0 10px;
         min-height: 0;
-        border: none;
-        margin: 0;
-        padding: 0;
-        background: #1a1a1a;
+        box-sizing: border-box;
+        scrollbar-width: auto;
+        scrollbar-color: #0f0 #000;
+      }
+      #design-doc-container::-webkit-scrollbar {
+        width: 16px;
+        -webkit-appearance: none;
         display: block;
       }
-      .footer-link {
-        flex-shrink: 0;
-        margin-top: 0;
-        text-align: center;
-        padding: 10px;
-        border-top: 2px solid #0f0;
+      #design-doc-container::-webkit-scrollbar-track {
+        background: #111;
+        border: 1px solid #0f0;
+      }
+      #design-doc-container::-webkit-scrollbar-thumb {
+        background: #0f0;
+        border: 2px solid #111;
+      }
+      #design-doc-container::-webkit-scrollbar-thumb:hover {
+        background: #0ff;
+      }
+      #design-doc-content {
+        background: #1a1a1a;
+        padding: 20px;
+        color: #e0e0e0;
       }
       .log {
         margin: 5px 0;
@@ -150,40 +134,14 @@
     </style>
   </head>
   <body>
-    <h1>TRS-80 Model III Emulator - Dev Console</h1>
+    <h1>TRS-80 Model III Emulator</h1>
     <div class="button-container">
       <button onclick="showDesignDoc()">Phase 0: Design Doc</button>
       <button onclick="runCPUTest()">Phase 1: Z80 CPU</button>
-      <button onclick="clearConsole()">Clear Console</button>
     </div>
     <div id="console" tabindex="0"></div>
     <div id="design-doc-container" style="display: none">
-      <div>
-        <h2 style="color: #0f0; margin: 0">Complete Design Document</h2>
-        <button
-          onclick="hideDesignDoc()"
-          style="
-            background: #f00;
-            color: #fff;
-            padding: 5px 15px;
-            font-size: 12px;
-          "
-        >
-          Close
-        </button>
-      </div>
-      <iframe
-        id="design-doc-iframe"
-        src="/docs/TRS80-COMPLETE-BUILD-PROMPT.html"
-      ></iframe>
-    </div>
-    <div class="footer-link">
-      <a
-        href="/docs/TRS80-COMPLETE-BUILD-PROMPT.html"
-        style="color: #0f0; text-decoration: none; font-size: 14px"
-      >
-        📋 View Complete Design Document
-      </a>
+      <div id="design-doc-content"></div>
     </div>
 
     <script type="module" src="./src/main.js"></script>

@@ -19,7 +19,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = resolve(__dirname, "..");
 const docsDir = resolve(projectRoot, "docs");
-const outputDir = resolve(projectRoot, "public", "docs");
+const outputDir = resolve(projectRoot, "public");
 
 // Configure marked for better HTML output
 marked.setOptions({
@@ -244,9 +244,7 @@ function renderDocs() {
     renderMarkdownFile(inputPath, outputPath);
   });
 
-  console.log(
-    `\n✨ Rendered ${markdownFiles.length} document(s) to public/docs/`
-  );
+  console.log(`\n✨ Rendered ${markdownFiles.length} document(s) to public/`);
 }
 
 // Run if called directly

@@ -49,32 +49,22 @@ function showTab(tabName) {
   }
 }
 
-// Clear console function
-window.clearConsole = function () {
-  // Ensure console is visible
-  showTab("console");
-  consoleDiv.innerHTML = "";
-  console.clear();
-  log("Console cleared", "info");
-};
-
 // Show design document function
-window.showDesignDoc = function () {
+window.showDesignDoc = async function () {
   showTab("design-doc");
-  // Log to console (temporarily show it)
-  const console = document.getElementById("console");
-  if (console) {
-    console.style.display = "block";
-    log("📋 Displaying Complete Design Document", "info");
-    console.style.display = "none";
+  const contentDiv = document.getElementById("design-doc-content");
+  if (contentDiv && !contentDiv.dataset.loaded) {
+    try {
+      const response = await fetch("/TRS80-COMPLETE-BUILD-PROMPT.html");
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      contentDiv.innerHTML = doc.body.innerHTML;
+      contentDiv.dataset.loaded = "true";
+    } catch (error) {
+      contentDiv.innerHTML = `<p style="color: #f00;">Error loading design document: ${error.message}</p>`;
+    }
   }
-};
-
-// Hide design document function (shows console)
-window.hideDesignDoc = function () {
-  showTab("console");
-  // Remove class from body to show header/buttons/footer
-  document.body.classList.remove("show-design-doc");
 };
 
 // Z80 CPU Test function - Runs all Phase 1 tests via dynamic import
@@ -190,7 +180,6 @@ window.runCPUTest = async function () {
   }
 };
 
-// Auto-run test on page load (optional)
+// Initial message
 log("TRS-80 Model III Emulator - Development Console Ready", "success");
-log('Click "Phase 1: Z80 CPU" to execute Z80 CPU tests', "info");
-log("Or use window.runCPUTest() in browser console", "info");
+log('Click "Phase 0: Design Doc" or "Phase 1: Z80 CPU" to get started', "info");
