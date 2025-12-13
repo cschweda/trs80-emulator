@@ -1,0 +1,48 @@
+{
+  "name": "trs80-model3-emulator",
+  "version": "1.0.0",
+  "description": "Browser-based TRS-80 Model III emulator with cassette interface, graphics, and integrated Z80 assembler",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "rom:embed": "node scripts/rom-to-base64.js",
+    "deploy": "yarn test:run && yarn build && netlify deploy --prod",
+    "phase:1": "node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js",
+    "phase:2": "node scripts/phase-workflow.js 2 tests/unit/memory-tests.js",
+    "phase:3": "node scripts/phase-workflow.js 3 \"tests/unit/cassette-tests.js tests/unit/io-tests.js\"",
+    "phase:4": "node scripts/phase-workflow.js 4 tests/unit/video-tests.js",
+    "phase:5": "node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js",
+    "phase:6": "node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js",
+    "phase:7": "node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
+    "jsdom": "^27.3.0",
+    "terser": "^5.31.0",
+    "vite": "^5.4.0",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "yarn": ">=1.22.22"
+  },
+  "keywords": [
+    "trs80",
+    "emulator",
+    "z80",
+    "retro-computing",
+    "model-iii",
+    "graphics",
+    "assembler"
+  ],
+  "author": "cschweda",
+  "license": "MIT"
+}
+
