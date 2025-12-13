@@ -12,6 +12,8 @@ A web-based emulator for the TRS-80 Model III computer, built with JavaScript an
 
 The emulator currently implements a complete Z80 CPU with full instruction set support and a comprehensive memory management system. A browser-based development console allows you to run comprehensive CPU and memory tests directly in the browser.
 
+![TRS-80 Emulator UI](docs/phase2-ui-screenshot.png)
+
 ### ✅ Implemented Features
 
 - **Complete Z80 CPU Emulation**: Full instruction set implementation (252+ opcodes including CB, ED, DD, FD prefixes)
@@ -161,11 +163,7 @@ This project follows a phased development approach. See the [Complete Design Doc
 
 #### Phase 1 Test Results
 
-The browser-based development console provides real-time test execution and results. Here's what the Phase 1 Z80 CPU test suite looks like when all tests pass:
-
-![Phase 1 Z80 CPU Test Results](docs/phase1-test-results.png)
-
-The console displays:
+The browser-based development console provides real-time test execution and results. The console displays:
 
 - Test execution progress
 - Detailed test results for each suite
