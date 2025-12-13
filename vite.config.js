@@ -19,28 +19,30 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
       },
-      output: {
-        manualChunks: {
-          core: [
-            "./src/core/z80cpu.js",
-            "./src/core/memory.js",
-            "./src/core/io.js",
-          ],
-          peripherals: [
-            "./src/peripherals/video.js",
-            "./src/peripherals/cassette.js",
-            "./src/peripherals/keyboard.js",
-          ],
-          assembler: [
-            "./src/assembler/assembler.js",
-            "./src/assembler/lexer.js",
-            "./src/assembler/parser.js",
-            "./src/assembler/codegen.js",
-            "./src/assembler/evaluator.js",
-            "./src/assembler/opcodes.js",
-          ],
-        },
-      },
+      // manualChunks removed - files don't exist yet
+      // Will be re-enabled as modules are added
+      // output: {
+      //   manualChunks: {
+      //     core: [
+      //       "./src/core/z80cpu.js",
+      //       "./src/core/memory.js",
+      //       "./src/core/io.js",
+      //     ],
+      //     peripherals: [
+      //       "./src/peripherals/video.js",
+      //       "./src/peripherals/cassette.js",
+      //       "./src/peripherals/keyboard.js",
+      //     ],
+      //     assembler: [
+      //       "./src/assembler/assembler.js",
+      //       "./src/assembler/lexer.js",
+      //       "./src/assembler/parser.js",
+      //       "./src/assembler/codegen.js",
+      //       "./src/assembler/evaluator.js",
+      //       "./src/assembler/opcodes.js",
+      //     ],
+      //   },
+      // },
     },
     target: "es2020",
     chunkSizeWarningLimit: 1000,
@@ -56,7 +58,7 @@ export default defineConfig({
   },
 
   preview: {
-    port: 4173,
+    port: 5150,
     open: true,
   },
 
@@ -91,5 +93,3 @@ export default defineConfig({
     exclude: ["node_modules", "dist"],
   },
 });
-
-

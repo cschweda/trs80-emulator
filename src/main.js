@@ -34,14 +34,14 @@ window.clearConsole = function () {
   console.clear();
 };
 
-// CPU Test function - Runs all Phase 1 tests via dynamic import
+// Z80 CPU Test function - Runs all Phase 1 tests via dynamic import
 window.runCPUTest = async function () {
   log("═══════════════════════════════════════════════════════════", "info");
   log("Z80 CPU Comprehensive Test Suite - Phase 1", "info");
   log("═══════════════════════════════════════════════════════════", "info");
   log("");
-  log("🚀 Starting Phase 1 Test Suite...", "info");
-  log("📥 Loading test runner...", "info");
+  log("🚀 Starting Phase 1: Z80 CPU Test Suite...", "info");
+  log("📥 Loading Z80 CPU test runner...", "info");
   log("");
 
   try {
@@ -143,5 +143,5 @@ window.runCPUTest = async function () {
 
 // Auto-run test on page load (optional)
 log("TRS-80 Model III Emulator - Development Console Ready", "success");
-log('Click "Run CPU Test" to execute CPU tests', "info");
+log('Click "Phase 1: Z80 CPU" to execute Z80 CPU tests', "info");
 log("Or use window.runCPUTest() in browser console", "info");
