@@ -2,6 +2,8 @@
 
 A complete, web-based emulator for the TRS-80 Model III computer, built with JavaScript and Vite. This project implements a full Z80 CPU emulator with complete instruction set support, memory management, I/O systems, and a web-based user interface.
 
+🌐 **Live Demo**: [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+
 ## Features
 
 - **Complete Z80 CPU Emulation**: Full instruction set implementation (252+ opcodes including CB, ED, DD, FD prefixes)
@@ -186,10 +188,11 @@ This project is configured for automatic deployment on Netlify.
 
 2. **Build Settings** (automatically configured via `netlify.toml`):
 
-   - **Build command**: `yarn test:run && yarn build`
+   - **Build command**: `yarn build`
    - **Publish directory**: `dist`
    - **Node version**: 20
    - **Yarn version**: 1.22.22
+   - **Live URL**: [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
 3. **Deploy**:
    - Netlify will automatically deploy on every push to the main branch
