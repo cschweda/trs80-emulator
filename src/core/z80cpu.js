@@ -61,10 +61,31 @@ export class Z80CPU {
     };
 
     // Create registers object with automatic 8-bit wrapping for 8-bit registers
-    const eightBitRegs = ['A', 'F', 'B', 'C', 'D', 'E', 'H', 'L', 
-                          'A_', 'F_', 'B_', 'C_', 'D_', 'E_', 'H_', 'L_',
-                          'IXH', 'IXL', 'IYH', 'IYL', 'I', 'R'];
-    
+    const eightBitRegs = [
+      "A",
+      "F",
+      "B",
+      "C",
+      "D",
+      "E",
+      "H",
+      "L",
+      "A_",
+      "F_",
+      "B_",
+      "C_",
+      "D_",
+      "E_",
+      "H_",
+      "L_",
+      "IXH",
+      "IXL",
+      "IYH",
+      "IYL",
+      "I",
+      "R",
+    ];
+
     this.registers = new Proxy(_registers, {
       get(target, prop) {
         if (eightBitRegs.includes(prop)) {
@@ -79,7 +100,7 @@ export class Z80CPU {
           target[prop] = value;
         }
         return true;
-      }
+      },
     });
 
     // Interrupt system
@@ -264,10 +285,9 @@ export class Z80CPU {
         `Unimplemented opcode: 0x${opcode
           .toString(16)
           .toUpperCase()
-          .padStart(2, "0")} at PC=0x${(this.registers.PC - 1).toString(16).padStart(
-          4,
-          "0"
-        )}`
+          .padStart(2, "0")} at PC=0x${(this.registers.PC - 1)
+          .toString(16)
+          .padStart(4, "0")}`
       );
     }
 
@@ -391,9 +411,9 @@ export class Z80CPU {
     // Stack grows downward. Push low byte (C) first, then high byte (B)
     this.opcodeHandlers[0xc5] = () => {
       this.registers.SP = (this.registers.SP - 1) & 0xffff;
-      this.writeMemory(this.registers.SP, this.registers.B);  // High byte
+      this.writeMemory(this.registers.SP, this.registers.B); // High byte
       this.registers.SP = (this.registers.SP - 1) & 0xffff;
-      this.writeMemory(this.registers.SP, this.registers.C);  // Low byte
+      this.writeMemory(this.registers.SP, this.registers.C); // Low byte
       return 11;
     };
 
@@ -749,7 +769,7 @@ export class Z80CPU {
 
     // LD r, r (0x40-0x7F) - register-to-register transfers
     // Pattern: 0x40 | (dest << 3) | src
-    const regs = ['B', 'C', 'D', 'E', 'H', 'L', null, 'A'];
+    const regs = ["B", "C", "D", "E", "H", "L", null, "A"];
     for (let dest = 0; dest < 8; dest++) {
       for (let src = 0; src < 8; src++) {
         if (dest === 6 || src === 6) continue; // Skip (HL) cases
@@ -983,7 +1003,7 @@ export class Z80CPU {
     this.opcodeHandlers[0x18] = () => {
       const offset = this.readMemory(this.registers.PC);
       this.registers.PC = (this.registers.PC + 1) & 0xffff;
-      const signedOffset = (offset & 0x80) ? offset - 256 : offset;
+      const signedOffset = offset & 0x80 ? offset - 256 : offset;
       this.registers.PC = (this.registers.PC + signedOffset) & 0xffff;
       return 12;
     };
@@ -993,7 +1013,7 @@ export class Z80CPU {
       const offset = this.readMemory(this.registers.PC);
       this.registers.PC = (this.registers.PC + 1) & 0xffff;
       if (this.flagZ) {
-        const signedOffset = (offset & 0x80) ? offset - 256 : offset;
+        const signedOffset = offset & 0x80 ? offset - 256 : offset;
         this.registers.PC = (this.registers.PC + signedOffset) & 0xffff;
         return 12;
       }
@@ -1005,7 +1025,7 @@ export class Z80CPU {
       const offset = this.readMemory(this.registers.PC);
       this.registers.PC = (this.registers.PC + 1) & 0xffff;
       if (!this.flagZ) {
-        const signedOffset = (offset & 0x80) ? offset - 256 : offset;
+        const signedOffset = offset & 0x80 ? offset - 256 : offset;
         this.registers.PC = (this.registers.PC + signedOffset) & 0xffff;
         return 12;
       }
@@ -1017,7 +1037,7 @@ export class Z80CPU {
       const offset = this.readMemory(this.registers.PC);
       this.registers.PC = (this.registers.PC + 1) & 0xffff;
       if (this.flagC) {
-        const signedOffset = (offset & 0x80) ? offset - 256 : offset;
+        const signedOffset = offset & 0x80 ? offset - 256 : offset;
         this.registers.PC = (this.registers.PC + signedOffset) & 0xffff;
         return 12;
       }
@@ -1029,7 +1049,7 @@ export class Z80CPU {
       const offset = this.readMemory(this.registers.PC);
       this.registers.PC = (this.registers.PC + 1) & 0xffff;
       if (!this.flagC) {
-        const signedOffset = (offset & 0x80) ? offset - 256 : offset;
+        const signedOffset = offset & 0x80 ? offset - 256 : offset;
         this.registers.PC = (this.registers.PC + signedOffset) & 0xffff;
         return 12;
       }
@@ -1042,7 +1062,7 @@ export class Z80CPU {
       this.registers.PC = (this.registers.PC + 1) & 0xffff;
       this.registers.B = (this.registers.B - 1) & 0xff;
       if (this.registers.B !== 0) {
-        const signedOffset = (offset & 0x80) ? offset - 256 : offset;
+        const signedOffset = offset & 0x80 ? offset - 256 : offset;
         this.registers.PC = (this.registers.PC + signedOffset) & 0xffff;
         return 13;
       }
@@ -1307,7 +1327,7 @@ export class Z80CPU {
 
     // CPL (0x2F) - Complement Accumulator
     this.opcodeHandlers[0x2f] = () => {
-      this.registers.A = (~this.registers.A) & 0xff;
+      this.registers.A = ~this.registers.A & 0xff;
       this.flagH = true;
       this.flagN = true;
       return 4;
@@ -1320,7 +1340,7 @@ export class Z80CPU {
       if (this.flagH || (a & 0x0f) > 9) {
         add = 6;
       }
-      if (this.flagC || (a >> 4) > 9 || ((a >> 4) >= 9 && (a & 0x0f) > 9)) {
+      if (this.flagC || a >> 4 > 9 || (a >> 4 >= 9 && (a & 0x0f) > 9)) {
         add |= 0x60;
         this.flagC = true;
       }
@@ -1537,11 +1557,11 @@ export class Z80CPU {
     // CB instructions (bit operations, rotates, shifts)
     // Pattern: opcode = base | (register << 3) | register
     // Register mapping: 0=B, 1=C, 2=D, 3=E, 4=H, 5=L, 6=(HL), 7=A
-    
-    const regs = ['B', 'C', 'D', 'E', 'H', 'L', null, 'A'];
+
+    const regs = ["B", "C", "D", "E", "H", "L", null, "A"];
     const reg = opcode & 0x07;
     const base = opcode & 0xf8;
-    
+
     if (reg === 6) {
       // (HL) operations - 15 cycles
       switch (base) {
@@ -1561,16 +1581,42 @@ export class Z80CPU {
           return this.sllMem(this.HL);
         case 0x38: // SRL (HL)
           return this.srlMem(this.HL);
-        case 0x40: case 0x48: case 0x50: case 0x58: case 0x60: case 0x68: case 0x70: case 0x78: // BIT n, (HL)
+        case 0x40:
+        case 0x48:
+        case 0x50:
+        case 0x58:
+        case 0x60:
+        case 0x68:
+        case 0x70:
+        case 0x78: // BIT n, (HL)
           return this.bitMem(this.HL, (base >> 3) & 0x07);
-        case 0x80: case 0x88: case 0x90: case 0x98: case 0xa0: case 0xa8: case 0xb0: case 0xb8: // RES n, (HL)
+        case 0x80:
+        case 0x88:
+        case 0x90:
+        case 0x98:
+        case 0xa0:
+        case 0xa8:
+        case 0xb0:
+        case 0xb8: // RES n, (HL)
           return this.resMem(this.HL, (base >> 3) & 0x07);
-        case 0xc0: case 0xc8: case 0xd0: case 0xd8: case 0xe0: case 0xe8: case 0xf0: case 0xf8: // SET n, (HL)
+        case 0xc0:
+        case 0xc8:
+        case 0xd0:
+        case 0xd8:
+        case 0xe0:
+        case 0xe8:
+        case 0xf0:
+        case 0xf8: // SET n, (HL)
           return this.setMem(this.HL, (base >> 3) & 0x07);
         default:
           if (!this.unimplementedOpcodes.has(0xcb00 | opcode)) {
             this.unimplementedOpcodes.add(0xcb00 | opcode);
-            console.warn(`Unimplemented CB opcode: 0xCB 0x${opcode.toString(16).toUpperCase().padStart(2, "0")}`);
+            console.warn(
+              `Unimplemented CB opcode: 0xCB 0x${opcode
+                .toString(16)
+                .toUpperCase()
+                .padStart(2, "0")}`
+            );
           }
           return 8;
       }
@@ -1594,16 +1640,42 @@ export class Z80CPU {
           return this.sllReg(regName);
         case 0x38: // SRL r
           return this.srlReg(regName);
-        case 0x40: case 0x48: case 0x50: case 0x58: case 0x60: case 0x68: case 0x70: case 0x78: // BIT n, r
+        case 0x40:
+        case 0x48:
+        case 0x50:
+        case 0x58:
+        case 0x60:
+        case 0x68:
+        case 0x70:
+        case 0x78: // BIT n, r
           return this.bitReg(regName, (base >> 3) & 0x07);
-        case 0x80: case 0x88: case 0x90: case 0x98: case 0xa0: case 0xa8: case 0xb0: case 0xb8: // RES n, r
+        case 0x80:
+        case 0x88:
+        case 0x90:
+        case 0x98:
+        case 0xa0:
+        case 0xa8:
+        case 0xb0:
+        case 0xb8: // RES n, r
           return this.resReg(regName, (base >> 3) & 0x07);
-        case 0xc0: case 0xc8: case 0xd0: case 0xd8: case 0xe0: case 0xe8: case 0xf0: case 0xf8: // SET n, r
+        case 0xc0:
+        case 0xc8:
+        case 0xd0:
+        case 0xd8:
+        case 0xe0:
+        case 0xe8:
+        case 0xf0:
+        case 0xf8: // SET n, r
           return this.setReg(regName, (base >> 3) & 0x07);
         default:
           if (!this.unimplementedOpcodes.has(0xcb00 | opcode)) {
             this.unimplementedOpcodes.add(0xcb00 | opcode);
-            console.warn(`Unimplemented CB opcode: 0xCB 0x${opcode.toString(16).toUpperCase().padStart(2, "0")}`);
+            console.warn(
+              `Unimplemented CB opcode: 0xCB 0x${opcode
+                .toString(16)
+                .toUpperCase()
+                .padStart(2, "0")}`
+            );
           }
           return 8;
       }
@@ -1625,7 +1697,7 @@ export class Z80CPU {
         return this.ldd();
       case 0xb8: // LDDR
         return this.lddr();
-      
+
       // Block Compare Instructions
       case 0xa1: // CPI
         return this.cpi();
@@ -1635,7 +1707,7 @@ export class Z80CPU {
         return this.cpd();
       case 0xb9: // CPDR
         return this.cpdr();
-      
+
       // Block Input Instructions
       case 0xa2: // INI
         return this.ini();
@@ -1645,7 +1717,7 @@ export class Z80CPU {
         return this.ind();
       case 0xba: // INDR
         return this.indr();
-      
+
       // Block Output Instructions
       case 0xa3: // OUTI
         return this.outi();
@@ -1655,7 +1727,7 @@ export class Z80CPU {
         return this.outd();
       case 0xbb: // OTDR
         return this.otdr();
-      
+
       // Extended Load Instructions
       case 0x47: // LD I, A
         this.registers.I = this.registers.A;
@@ -1679,7 +1751,7 @@ export class Z80CPU {
         this.flagPV = this.IFF2;
         this.flagN = false;
         return 9;
-      
+
       // 16-bit Load Instructions
       case 0x4b: // LD BC, (nn)
         return this.ldBCnn();
@@ -1697,7 +1769,7 @@ export class Z80CPU {
         return this.ldnnHL();
       case 0x73: // LD (nn), SP
         return this.ldnnSP();
-      
+
       // Extended Arithmetic
       case 0x4a: // ADC HL, BC
         return this.adcHL(this.BC);
@@ -1715,23 +1787,35 @@ export class Z80CPU {
         return this.sbcHL(this.HL);
       case 0x72: // SBC HL, SP
         return this.sbcHL(this.registers.SP);
-      
+
       // NEG (0x44)
       case 0x44:
         return this.neg();
-      
+
       // I/O Instructions
-      case 0x40: case 0x48: case 0x50: case 0x58: case 0x60: case 0x68: case 0x78: // IN r, (C)
+      case 0x40:
+      case 0x48:
+      case 0x50:
+      case 0x58:
+      case 0x60:
+      case 0x68:
+      case 0x78: // IN r, (C)
         return this.inrC((opcode >> 3) & 0x07);
-      case 0x41: case 0x49: case 0x51: case 0x59: case 0x61: case 0x69: case 0x79: // OUT (C), r
+      case 0x41:
+      case 0x49:
+      case 0x51:
+      case 0x59:
+      case 0x61:
+      case 0x69:
+      case 0x79: // OUT (C), r
         return this.outCr((opcode >> 3) & 0x07);
-      
+
       // Return Instructions
       case 0x4d: // RETI
         return this.reti();
       case 0x45: // RETN
         return this.retn();
-      
+
       // Interrupt Mode
       case 0x46: // IM 0
         this.interruptMode = 0;
@@ -1742,11 +1826,16 @@ export class Z80CPU {
       case 0x5e: // IM 2
         this.interruptMode = 2;
         return 8;
-      
+
       default:
         if (!this.unimplementedOpcodes.has(0xed00 | opcode)) {
           this.unimplementedOpcodes.add(0xed00 | opcode);
-          console.warn(`Unimplemented ED opcode: 0xED 0x${opcode.toString(16).toUpperCase().padStart(2, "0")}`);
+          console.warn(
+            `Unimplemented ED opcode: 0xED 0x${opcode
+              .toString(16)
+              .toUpperCase()
+              .padStart(2, "0")}`
+          );
         }
         return 8;
     }
@@ -1770,7 +1859,7 @@ export class Z80CPU {
     }
 
     // Standard DD instructions - delegate to helper
-    return this.executeIndexReg(opcode, 'IX');
+    return this.executeIndexReg(opcode, "IX");
   }
 
   executeFD() {
@@ -1791,7 +1880,7 @@ export class Z80CPU {
     }
 
     // Standard FD instructions - delegate to helper
-    return this.executeIndexReg(opcode, 'IY');
+    return this.executeIndexReg(opcode, "IY");
   }
 
   // Arithmetic methods
@@ -1836,7 +1925,7 @@ export class Z80CPU {
     const signedA = a & 0x80 ? a - 256 : a;
     const signedValue = value & 0x80 ? value - 256 : value;
     const signedResult = signedA + signedValue + carry;
-    this.flagPV = (signedResult < -128 || signedResult > 127);
+    this.flagPV = signedResult < -128 || signedResult > 127;
 
     return 4;
   }
@@ -1914,7 +2003,7 @@ export class Z80CPU {
     const result = a - value - carry;
 
     this.flagC = result < 0;
-    this.flagH = ((a & 0x0f) - (value & 0x0f) - carry) < 0;
+    this.flagH = (a & 0x0f) - (value & 0x0f) - carry < 0;
     this.flagN = 1;
 
     this.registers.A = result & 0xff;
@@ -1986,7 +2075,7 @@ export class Z80CPU {
     const hl = this.HL;
     const result = hl + value;
     this.flagC = result > 0xffff;
-    this.flagH = ((hl & 0x0fff) + (value & 0x0fff)) > 0x0fff;
+    this.flagH = (hl & 0x0fff) + (value & 0x0fff) > 0x0fff;
     this.flagN = false;
     this.HL = result & 0xffff;
     return 4;
@@ -2245,24 +2334,23 @@ export class Z80CPU {
   executeIndexReg(opcode, reg) {
     // Most DD/FD instructions are identical to HL instructions but use IX/IY
     // Special handling for indexed operations
-    const isIX = reg === 'IX';
+    const isIX = reg === "IX";
     const indexReg = isIX ? this.IX : this.IY;
-    
+
     switch (opcode) {
       // LD IX/IY, nn (0x21)
-      case 0x21:
-        {
-          const low = this.readMemory(this.registers.PC);
-          const high = this.readMemory((this.registers.PC + 1) & 0xffff);
-          this.registers.PC = (this.registers.PC + 2) & 0xffff;
-          if (isIX) {
-            this.IX = (high << 8) | low;
-          } else {
-            this.IY = (high << 8) | low;
-          }
-          return 14;
+      case 0x21: {
+        const low = this.readMemory(this.registers.PC);
+        const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+        this.registers.PC = (this.registers.PC + 2) & 0xffff;
+        if (isIX) {
+          this.IX = (high << 8) | low;
+        } else {
+          this.IY = (high << 8) | low;
         }
-      
+        return 14;
+      }
+
       // ADD IX/IY, BC (0x09)
       case 0x09:
         return this.addIndexReg(indexReg, this.BC, isIX);
@@ -2275,7 +2363,7 @@ export class Z80CPU {
       // ADD IX/IY, SP (0x39)
       case 0x39:
         return this.addIndexReg(indexReg, this.registers.SP, isIX);
-      
+
       // INC IX/IY (0x23)
       case 0x23:
         if (isIX) {
@@ -2284,7 +2372,7 @@ export class Z80CPU {
           this.IY = (this.IY + 1) & 0xffff;
         }
         return 10;
-      
+
       // DEC IX/IY (0x2B)
       case 0x2b:
         if (isIX) {
@@ -2293,78 +2381,74 @@ export class Z80CPU {
           this.IY = (this.IY - 1) & 0xffff;
         }
         return 10;
-      
+
       // PUSH IX/IY (0xE5)
-      case 0xe5:
-        {
-          const high = isIX ? this.registers.IXH : this.registers.IYH;
-          const low = isIX ? this.registers.IXL : this.registers.IYL;
-          this.registers.SP = (this.registers.SP - 1) & 0xffff;
-          this.writeMemory(this.registers.SP, high);
-          this.registers.SP = (this.registers.SP - 1) & 0xffff;
-          this.writeMemory(this.registers.SP, low);
-          return 15;
-        }
-      
+      case 0xe5: {
+        const high = isIX ? this.registers.IXH : this.registers.IYH;
+        const low = isIX ? this.registers.IXL : this.registers.IYL;
+        this.registers.SP = (this.registers.SP - 1) & 0xffff;
+        this.writeMemory(this.registers.SP, high);
+        this.registers.SP = (this.registers.SP - 1) & 0xffff;
+        this.writeMemory(this.registers.SP, low);
+        return 15;
+      }
+
       // POP IX/IY (0xE1)
-      case 0xe1:
-        {
-          const low = this.readMemory(this.registers.SP);
-          const high = this.readMemory((this.registers.SP + 1) & 0xffff);
-          this.registers.SP = (this.registers.SP + 2) & 0xffff;
-          if (isIX) {
-            this.registers.IXL = low;
-            this.registers.IXH = high;
-          } else {
-            this.registers.IYL = low;
-            this.registers.IYH = high;
-          }
-          return 14;
+      case 0xe1: {
+        const low = this.readMemory(this.registers.SP);
+        const high = this.readMemory((this.registers.SP + 1) & 0xffff);
+        this.registers.SP = (this.registers.SP + 2) & 0xffff;
+        if (isIX) {
+          this.registers.IXL = low;
+          this.registers.IXH = high;
+        } else {
+          this.registers.IYL = low;
+          this.registers.IYH = high;
         }
-      
+        return 14;
+      }
+
       // LD (nn), IX/IY (0x22)
-      case 0x22:
-        {
-          const low = this.readMemory(this.registers.PC);
-          const high = this.readMemory((this.registers.PC + 1) & 0xffff);
-          this.registers.PC = (this.registers.PC + 2) & 0xffff;
-          const addr = (high << 8) | low;
-          const regLow = isIX ? this.registers.IXL : this.registers.IYL;
-          const regHigh = isIX ? this.registers.IXH : this.registers.IYH;
-          this.writeMemory(addr, regLow);
-          this.writeMemory((addr + 1) & 0xffff, regHigh);
-          return 20;
-        }
-      
+      case 0x22: {
+        const low = this.readMemory(this.registers.PC);
+        const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+        this.registers.PC = (this.registers.PC + 2) & 0xffff;
+        const addr = (high << 8) | low;
+        const regLow = isIX ? this.registers.IXL : this.registers.IYL;
+        const regHigh = isIX ? this.registers.IXH : this.registers.IYH;
+        this.writeMemory(addr, regLow);
+        this.writeMemory((addr + 1) & 0xffff, regHigh);
+        return 20;
+      }
+
       // LD IX/IY, (nn) (0x2A)
-      case 0x2a:
-        {
-          const low = this.readMemory(this.registers.PC);
-          const high = this.readMemory((this.registers.PC + 1) & 0xffff);
-          this.registers.PC = (this.registers.PC + 2) & 0xffff;
-          const addr = (high << 8) | low;
-          const regLow = this.readMemory(addr);
-          const regHigh = this.readMemory((addr + 1) & 0xffff);
-          if (isIX) {
-            this.registers.IXL = regLow;
-            this.registers.IXH = regHigh;
-          } else {
-            this.registers.IYL = regLow;
-            this.registers.IYH = regHigh;
-          }
-          return 20;
+      case 0x2a: {
+        const low = this.readMemory(this.registers.PC);
+        const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+        this.registers.PC = (this.registers.PC + 2) & 0xffff;
+        const addr = (high << 8) | low;
+        const regLow = this.readMemory(addr);
+        const regHigh = this.readMemory((addr + 1) & 0xffff);
+        if (isIX) {
+          this.registers.IXL = regLow;
+          this.registers.IXH = regHigh;
+        } else {
+          this.registers.IYL = regLow;
+          this.registers.IYH = regHigh;
         }
-      
+        return 20;
+      }
+
       // JP (IX/IY) (0xE9)
       case 0xe9:
         this.registers.PC = indexReg;
         return 8;
-      
+
       // LD SP, IX/IY (0xF9)
       case 0xf9:
         this.registers.SP = indexReg;
         return 10;
-      
+
       // Standard instructions with (IX+d) or (IY+d) addressing
       // These are handled by delegating to base handlers with address calculation
       default:
@@ -2378,10 +2462,14 @@ export class Z80CPU {
           this.HL = tempHL;
           return cycles + (opcode === 0x34 || opcode === 0x35 ? 4 : 0); // Extra cycles for indexed
         }
-        
+
         if (!this.unimplementedOpcodes.has((isIX ? 0xdd00 : 0xfd00) | opcode)) {
           this.unimplementedOpcodes.add((isIX ? 0xdd00 : 0xfd00) | opcode);
-          console.warn(`Unimplemented ${isIX ? 'DD' : 'FD'} opcode: 0x${isIX ? 'DD' : 'FD'} 0x${opcode.toString(16).toUpperCase().padStart(2, "0")}`);
+          console.warn(
+            `Unimplemented ${isIX ? "DD" : "FD"} opcode: 0x${
+              isIX ? "DD" : "FD"
+            } 0x${opcode.toString(16).toUpperCase().padStart(2, "0")}`
+          );
         }
         return 8;
     }
@@ -2390,7 +2478,7 @@ export class Z80CPU {
   addIndexReg(indexReg, value, isIX) {
     const result = indexReg + value;
     this.flagC = result > 0xffff;
-    this.flagH = ((indexReg & 0x0fff) + (value & 0x0fff)) > 0x0fff;
+    this.flagH = (indexReg & 0x0fff) + (value & 0x0fff) > 0x0fff;
     this.flagN = false;
     if (isIX) {
       this.IX = result & 0xffff;
@@ -2404,25 +2492,543 @@ export class Z80CPU {
     // Execute CB operation on indexed address
     const reg = cbOpcode & 0x07;
     const base = cbOpcode & 0xf8;
-    
+
     switch (base) {
-      case 0x00: return this.rlcMem(addr);
-      case 0x08: return this.rrcMem(addr);
-      case 0x10: return this.rlMem(addr);
-      case 0x18: return this.rrMem(addr);
-      case 0x20: return this.slaMem(addr);
-      case 0x28: return this.sraMem(addr);
-      case 0x30: return this.sllMem(addr);
-      case 0x38: return this.srlMem(addr);
-      case 0x40: case 0x48: case 0x50: case 0x58: case 0x60: case 0x68: case 0x70: case 0x78:
+      case 0x00:
+        return this.rlcMem(addr);
+      case 0x08:
+        return this.rrcMem(addr);
+      case 0x10:
+        return this.rlMem(addr);
+      case 0x18:
+        return this.rrMem(addr);
+      case 0x20:
+        return this.slaMem(addr);
+      case 0x28:
+        return this.sraMem(addr);
+      case 0x30:
+        return this.sllMem(addr);
+      case 0x38:
+        return this.srlMem(addr);
+      case 0x40:
+      case 0x48:
+      case 0x50:
+      case 0x58:
+      case 0x60:
+      case 0x68:
+      case 0x70:
+      case 0x78:
         return this.bitMem(addr, (base >> 3) & 0x07);
-      case 0x80: case 0x88: case 0x90: case 0x98: case 0xa0: case 0xa8: case 0xb0: case 0xb8:
+      case 0x80:
+      case 0x88:
+      case 0x90:
+      case 0x98:
+      case 0xa0:
+      case 0xa8:
+      case 0xb0:
+      case 0xb8:
         return this.resMem(addr, (base >> 3) & 0x07);
-      case 0xc0: case 0xc8: case 0xd0: case 0xd8: case 0xe0: case 0xe8: case 0xf0: case 0xf8:
+      case 0xc0:
+      case 0xc8:
+      case 0xd0:
+      case 0xd8:
+      case 0xe0:
+      case 0xe8:
+      case 0xf0:
+      case 0xf8:
         return this.setMem(addr, (base >> 3) & 0x07);
       default:
         return 8;
     }
   }
-}
 
+  // Block Transfer Instructions
+  /**
+   * LDI - Load and Increment
+   * Copies byte from (HL) to (DE), increments HL and DE, decrements BC
+   * Flags: H=0, N=0, PV=1 if BC-1 != 0, else 0
+   */
+  ldi() {
+    const value = this.readMemory(this.HL);
+    this.writeMemory(this.DE, value);
+    this.HL = (this.HL + 1) & 0xffff;
+    this.DE = (this.DE + 1) & 0xffff;
+    this.BC = (this.BC - 1) & 0xffff;
+
+    // Flag updates
+    this.flagH = false;
+    this.flagN = false;
+    this.flagPV = this.BC !== 0;
+
+    return 16;
+  }
+
+  /**
+   * LDIR - Load, Increment, Repeat
+   * Repeats LDI until BC = 0
+   */
+  ldir() {
+    const cycles = this.ldi();
+    if (this.BC !== 0) {
+      // Repeat: decrement PC by 2 to re-execute instruction
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5; // Extra cycles for repeat
+    }
+    return cycles;
+  }
+
+  /**
+   * LDD - Load and Decrement
+   * Copies byte from (HL) to (DE), decrements HL and DE, decrements BC
+   */
+  ldd() {
+    const value = this.readMemory(this.HL);
+    this.writeMemory(this.DE, value);
+    this.HL = (this.HL - 1) & 0xffff;
+    this.DE = (this.DE - 1) & 0xffff;
+    this.BC = (this.BC - 1) & 0xffff;
+
+    // Flag updates
+    this.flagH = false;
+    this.flagN = false;
+    this.flagPV = this.BC !== 0;
+
+    return 16;
+  }
+
+  /**
+   * LDDR - Load, Decrement, Repeat
+   * Repeats LDD until BC = 0
+   */
+  lddr() {
+    const cycles = this.ldd();
+    if (this.BC !== 0) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  // Block Compare Instructions
+  /**
+   * CPI - Compare and Increment
+   * Compares A with (HL), increments HL, decrements BC
+   * Flags: Z=1 if A==(HL), H from subtraction, N=1, PV=1 if BC-1 != 0
+   */
+  cpi() {
+    const value = this.readMemory(this.HL);
+    const a = this.registers.A;
+    const result = (a - value) & 0xff;
+
+    this.HL = (this.HL + 1) & 0xffff;
+    this.BC = (this.BC - 1) & 0xffff;
+
+    // Flag updates
+    this.flagZ = result === 0;
+    this.flagS = (result & 0x80) !== 0;
+    this.flagH = (a & 0x0f) - (value & 0x0f) < 0;
+    this.flagPV = this.BC !== 0;
+    this.flagN = 1;
+
+    return 16;
+  }
+
+  /**
+   * CPIR - Compare, Increment, Repeat
+   * Repeats CPI until BC = 0 or match found (Z=1)
+   */
+  cpir() {
+    const cycles = this.cpi();
+    if (this.BC !== 0 && !this.flagZ) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  /**
+   * CPD - Compare and Decrement
+   * Compares A with (HL), decrements HL, decrements BC
+   */
+  cpd() {
+    const value = this.readMemory(this.HL);
+    const a = this.registers.A;
+    const result = (a - value) & 0xff;
+
+    this.HL = (this.HL - 1) & 0xffff;
+    this.BC = (this.BC - 1) & 0xffff;
+
+    // Flag updates
+    this.flagZ = result === 0;
+    this.flagS = (result & 0x80) !== 0;
+    this.flagH = (a & 0x0f) - (value & 0x0f) < 0;
+    this.flagPV = this.BC !== 0;
+    this.flagN = 1;
+
+    return 16;
+  }
+
+  /**
+   * CPDR - Compare, Decrement, Repeat
+   * Repeats CPD until BC = 0 or match found (Z=1)
+   */
+  cpdr() {
+    const cycles = this.cpd();
+    if (this.BC !== 0 && !this.flagZ) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  // Extended Load Instructions
+  /**
+   * LD BC, (nn) - Load BC from memory address
+   */
+  ldBCnn() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    const valueLow = this.readMemory(addr);
+    const valueHigh = this.readMemory((addr + 1) & 0xffff);
+    this.BC = (valueHigh << 8) | valueLow;
+    return 20;
+  }
+
+  /**
+   * LD DE, (nn) - Load DE from memory address
+   */
+  ldDEnn() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    const valueLow = this.readMemory(addr);
+    const valueHigh = this.readMemory((addr + 1) & 0xffff);
+    this.DE = (valueHigh << 8) | valueLow;
+    return 20;
+  }
+
+  /**
+   * LD HL, (nn) - Load HL from memory address
+   */
+  ldHLnn() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    const valueLow = this.readMemory(addr);
+    const valueHigh = this.readMemory((addr + 1) & 0xffff);
+    this.HL = (valueHigh << 8) | valueLow;
+    return 20;
+  }
+
+  /**
+   * LD SP, (nn) - Load SP from memory address
+   */
+  ldSPnn() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    const valueLow = this.readMemory(addr);
+    const valueHigh = this.readMemory((addr + 1) & 0xffff);
+    this.registers.SP = (valueHigh << 8) | valueLow;
+    return 20;
+  }
+
+  /**
+   * LD (nn), BC - Store BC to memory address
+   */
+  ldnnBC() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    this.writeMemory(addr, this.registers.C);
+    this.writeMemory((addr + 1) & 0xffff, this.registers.B);
+    return 20;
+  }
+
+  /**
+   * LD (nn), DE - Store DE to memory address
+   */
+  ldnnDE() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    this.writeMemory(addr, this.registers.E);
+    this.writeMemory((addr + 1) & 0xffff, this.registers.D);
+    return 20;
+  }
+
+  /**
+   * LD (nn), HL - Store HL to memory address
+   */
+  ldnnHL() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    this.writeMemory(addr, this.registers.L);
+    this.writeMemory((addr + 1) & 0xffff, this.registers.H);
+    return 20;
+  }
+
+  /**
+   * LD (nn), SP - Store SP to memory address
+   */
+  ldnnSP() {
+    const low = this.readMemory(this.registers.PC);
+    const high = this.readMemory((this.registers.PC + 1) & 0xffff);
+    this.registers.PC = (this.registers.PC + 2) & 0xffff;
+    const addr = (high << 8) | low;
+    this.writeMemory(addr, this.registers.SP & 0xff);
+    this.writeMemory((addr + 1) & 0xffff, (this.registers.SP >> 8) & 0xff);
+    return 20;
+  }
+
+  // Extended Arithmetic Instructions
+  /**
+   * ADC HL, rr - Add with carry to HL
+   */
+  adcHL(value) {
+    const hl = this.HL;
+    const carry = this.flagC ? 1 : 0;
+    const result = hl + value + carry;
+
+    this.flagC = result > 0xffff;
+    this.flagH = (hl & 0x0fff) + (value & 0x0fff) + carry > 0x0fff;
+    this.flagN = false;
+    this.flagPV = ((hl ^ value ^ 0xffff) & (hl ^ result) & 0x8000) !== 0;
+    this.HL = result & 0xffff;
+    this.flagS = (this.HL & 0x8000) !== 0;
+    this.flagZ = this.HL === 0;
+
+    return 15;
+  }
+
+  /**
+   * SBC HL, rr - Subtract with borrow from HL
+   */
+  sbcHL(value) {
+    const hl = this.HL;
+    const borrow = this.flagC ? 1 : 0;
+    const result = hl - value - borrow;
+
+    this.flagC = result < 0;
+    this.flagH = (hl & 0x0fff) - (value & 0x0fff) - borrow < 0;
+    this.flagN = true;
+    this.flagPV = ((hl ^ value) & (hl ^ result) & 0x8000) !== 0;
+    this.HL = result & 0xffff;
+    this.flagS = (this.HL & 0x8000) !== 0;
+    this.flagZ = this.HL === 0;
+
+    return 15;
+  }
+
+  /**
+   * NEG - Negate accumulator (two's complement)
+   */
+  neg() {
+    const a = this.registers.A;
+    const result = (0 - a) & 0xff;
+
+    this.registers.A = result;
+    this.flagC = a !== 0;
+    this.flagH = (a & 0x0f) !== 0;
+    this.flagN = true;
+    this.flagPV = a === 0x80;
+    this.flagZ = result === 0;
+    this.flagS = (result & 0x80) !== 0;
+
+    return 8;
+  }
+
+  // Extended I/O Instructions
+  /**
+   * IN r, (C) - Input from port C to register
+   * Register mapping: 0=B, 1=C, 2=D, 3=E, 4=H, 5=L, 6=(HL), 7=A
+   */
+  inrC(regIndex) {
+    const port = this.registers.C;
+    const value = this.readPort(port);
+
+    const regs = ["B", "C", "D", "E", "H", "L", null, "A"];
+    if (regIndex === 6) {
+      // (HL) case
+      this.writeMemory(this.HL, value);
+    } else {
+      this.registers[regs[regIndex]] = value;
+    }
+
+    // Flag updates
+    this.flagZ = value === 0;
+    this.flagS = (value & 0x80) !== 0;
+    this.flagH = false;
+    this.flagPV = this.parity(value);
+    this.flagN = false;
+
+    return regIndex === 6 ? 12 : 12;
+  }
+
+  /**
+   * OUT (C), r - Output register to port C
+   */
+  outCr(regIndex) {
+    const port = this.registers.C;
+    const regs = ["B", "C", "D", "E", "H", "L", null, "A"];
+    const value =
+      regIndex === 6
+        ? this.readMemory(this.HL)
+        : this.registers[regs[regIndex]];
+    this.writePort(port, value);
+    return regIndex === 6 ? 12 : 12;
+  }
+
+  /**
+   * INI - Input and Increment
+   * Inputs from port C to (HL), increments HL, decrements B
+   */
+  ini() {
+    const port = this.registers.C;
+    const value = this.readPort(port);
+    this.writeMemory(this.HL, value);
+    this.HL = (this.HL + 1) & 0xffff;
+    this.registers.B = (this.registers.B - 1) & 0xff;
+
+    // Flag updates
+    this.flagZ = this.registers.B === 0;
+    this.flagN = (value & 0x80) !== 0;
+
+    return 16;
+  }
+
+  /**
+   * INIR - Input, Increment, Repeat
+   * Repeats INI until B = 0
+   */
+  inir() {
+    const cycles = this.ini();
+    if (this.registers.B !== 0) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  /**
+   * IND - Input and Decrement
+   */
+  ind() {
+    const port = this.registers.C;
+    const value = this.readPort(port);
+    this.writeMemory(this.HL, value);
+    this.HL = (this.HL - 1) & 0xffff;
+    this.registers.B = (this.registers.B - 1) & 0xff;
+
+    this.flagZ = this.registers.B === 0;
+    this.flagN = (value & 0x80) !== 0;
+
+    return 16;
+  }
+
+  /**
+   * INDR - Input, Decrement, Repeat
+   */
+  indr() {
+    const cycles = this.ind();
+    if (this.registers.B !== 0) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  /**
+   * OUTI - Output and Increment
+   */
+  outi() {
+    const port = this.registers.C;
+    const value = this.readMemory(this.HL);
+    this.writePort(port, value);
+    this.HL = (this.HL + 1) & 0xffff;
+    this.registers.B = (this.registers.B - 1) & 0xff;
+
+    this.flagZ = this.registers.B === 0;
+    this.flagN = (value & 0x80) !== 0;
+
+    return 16;
+  }
+
+  /**
+   * OTIR - Output, Increment, Repeat
+   */
+  otir() {
+    const cycles = this.outi();
+    if (this.registers.B !== 0) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  /**
+   * OUTD - Output and Decrement
+   */
+  outd() {
+    const port = this.registers.C;
+    const value = this.readMemory(this.HL);
+    this.writePort(port, value);
+    this.HL = (this.HL - 1) & 0xffff;
+    this.registers.B = (this.registers.B - 1) & 0xff;
+
+    this.flagZ = this.registers.B === 0;
+    this.flagN = (value & 0x80) !== 0;
+
+    return 16;
+  }
+
+  /**
+   * OTDR - Output, Decrement, Repeat
+   */
+  otdr() {
+    const cycles = this.outd();
+    if (this.registers.B !== 0) {
+      this.registers.PC = (this.registers.PC - 2) & 0xffff;
+      return cycles + 5;
+    }
+    return cycles;
+  }
+
+  // Interrupt Handling Instructions
+  /**
+   * RETI - Return from Interrupt
+   * Same as RET but signals interrupt controller
+   */
+  reti() {
+    const low = this.readMemory(this.registers.SP);
+    const high = this.readMemory((this.registers.SP + 1) & 0xffff);
+    this.registers.SP = (this.registers.SP + 2) & 0xffff;
+    this.registers.PC = (high << 8) | low;
+    // IFF2 is copied to IFF1 on RETI
+    this.IFF1 = this.IFF2;
+    return 14;
+  }
+
+  /**
+   * RETN - Return from Non-Maskable Interrupt
+   * Same as RET but restores IFF1 from IFF2
+   */
+  retn() {
+    const low = this.readMemory(this.registers.SP);
+    const high = this.readMemory((this.registers.SP + 1) & 0xffff);
+    this.registers.SP = (this.registers.SP + 2) & 0xffff;
+    this.registers.PC = (high << 8) | low;
+    // IFF2 is copied to IFF1 on RETN
+    this.IFF1 = this.IFF2;
+    return 14;
+  }
+}

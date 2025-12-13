@@ -843,8 +843,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
   });
 
   describe("Block Transfer Operations", () => {
-    it.skip("should execute LDI (load and increment) - requires helper method implementation", () => {
-      // TODO: Implement ldi() helper method in Z80CPU
+    it("should execute LDI (load and increment)", () => {
       cpu.HL = 0x4000;
       cpu.DE = 0x5000;
       cpu.BC = 0x0005;
@@ -861,8 +860,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagPV).toBe(1); // BC != 0
     });
 
-    it.skip("should execute LDIR (load, increment, repeat) - requires helper method implementation", () => {
-      // TODO: Implement ldir() helper method in Z80CPU
+    it("should execute LDIR (load, increment, repeat)", () => {
       cpu.HL = 0x4000;
       cpu.DE = 0x5000;
       cpu.BC = 0x0003;
@@ -886,8 +884,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagPV).toBe(0);
     });
 
-    it.skip("should execute LDD (load and decrement) - requires helper method implementation", () => {
-      // TODO: Implement ldd() helper method in Z80CPU
+    it("should execute LDD (load and decrement)", () => {
       cpu.HL = 0x4002;
       cpu.DE = 0x5002;
       cpu.BC = 0x0003;
@@ -903,8 +900,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.BC).toBe(0x0002);
     });
 
-    it.skip("should execute CPI (compare and increment) - requires helper method implementation", () => {
-      // TODO: Implement cpi() helper method in Z80CPU
+    it("should execute CPI (compare and increment)", () => {
       cpu.HL = 0x4000;
       cpu.BC = 0x0005;
       cpu.registers.A = 0x42;
@@ -920,8 +916,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagPV).toBe(1); // BC != 0
     });
 
-    it.skip("should execute CPIR (compare, increment, repeat) - requires helper method implementation", () => {
-      // TODO: Implement cpir() helper method in Z80CPU
+    it("should execute CPIR (compare, increment, repeat)", () => {
       cpu.HL = 0x4000;
       cpu.BC = 0x0005;
       cpu.registers.A = 0x42;
@@ -968,8 +963,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagPV).toBe(1); // IFF2 copied to PV
     });
 
-    it.skip("should execute LD BC, (nn) - requires helper method implementation", () => {
-      // TODO: Implement ldBCnn() helper method in Z80CPU
+    it("should execute LD BC, (nn)", () => {
       memory[0x5000] = 0x34; // Low byte
       memory[0x5001] = 0x12; // High byte
       memory[0x0000] = 0xed; // ED prefix
@@ -982,8 +976,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.BC).toBe(0x1234);
     });
 
-    it.skip("should execute LD (nn), BC - requires helper method implementation", () => {
-      // TODO: Implement ldnnBC() helper method in Z80CPU
+    it("should execute LD (nn), BC", () => {
       cpu.BC = 0x5678;
       memory[0x0000] = 0xed; // ED prefix
       memory[0x0001] = 0x43; // LD (nn), BC
@@ -998,8 +991,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
   });
 
   describe("Extended Arithmetic", () => {
-    it.skip("should execute ADC HL, BC - requires helper method implementation", () => {
-      // TODO: Implement adcHL() helper method in Z80CPU
+    it("should execute ADC HL, BC", () => {
       cpu.HL = 0x1234;
       cpu.BC = 0x5678;
       cpu.flagC = 1;
@@ -1012,8 +1004,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagC).toBe(0);
     });
 
-    it.skip("should execute SBC HL, DE - requires helper method implementation", () => {
-      // TODO: Implement sbcHL() helper method in Z80CPU
+    it("should execute SBC HL, DE", () => {
       cpu.HL = 0x5678;
       cpu.DE = 0x1234;
       cpu.flagC = 0;
@@ -1027,8 +1018,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagN).toBe(1);
     });
 
-    it.skip("should execute NEG (negate accumulator) - requires helper method implementation", () => {
-      // TODO: Implement neg() helper method in Z80CPU
+    it("should execute NEG (negate accumulator)", () => {
       cpu.registers.A = 0x42;
       memory[0x0000] = 0xed; // ED prefix
       memory[0x0001] = 0x44; // NEG
@@ -1042,8 +1032,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
   });
 
   describe("Extended I/O Operations", () => {
-    it.skip("should execute IN r, (C) - requires helper method implementation", () => {
-      // TODO: Implement inrC() helper method in Z80CPU
+    it("should execute IN r, (C)", () => {
       cpu.BC = 0x00ff;
       ports[0xff] = 0x55;
       memory[0x0000] = 0xed; // ED prefix
@@ -1055,8 +1044,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagZ).toBe(0);
     });
 
-    it.skip("should execute OUT (C), r - requires helper method implementation", () => {
-      // TODO: Implement outCr() helper method in Z80CPU
+    it("should execute OUT (C), r", () => {
       cpu.BC = 0x00ff;
       cpu.registers.B = 0x42;
       memory[0x0000] = 0xed; // ED prefix
@@ -1067,8 +1055,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(ports[0xff]).toBe(0x42);
     });
 
-    it.skip("should execute INI (input and increment) - requires helper method implementation", () => {
-      // TODO: Implement ini() helper method in Z80CPU
+    it("should execute INI (input and increment)", () => {
       cpu.BC = 0x02ff; // B = count, C = port
       cpu.HL = 0x5000;
       ports[0xff] = 0x55;
@@ -1083,8 +1070,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.flagZ).toBe(0);
     });
 
-    it.skip("should execute OUTI (output and increment) - requires helper method implementation", () => {
-      // TODO: Implement outi() helper method in Z80CPU
+    it("should execute OUTI (output and increment)", () => {
       cpu.BC = 0x02ff;
       cpu.HL = 0x5000;
       memory[0x5000] = 0x42;
@@ -1100,8 +1086,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
   });
 
   describe("Interrupt Handling", () => {
-    it.skip("should execute RETI (return from interrupt) - requires helper method implementation", () => {
-      // TODO: Implement reti() helper method in Z80CPU
+    it("should execute RETI (return from interrupt)", () => {
       cpu.IFF1 = false;
       cpu.IFF2 = true;
       cpu.registers.SP = 0xfffd;
@@ -1116,8 +1101,7 @@ describe("Z80CPU - Advanced ED Prefix Instructions", () => {
       expect(cpu.IFF1).toBe(true); // IFF2 copied to IFF1
     });
 
-    it.skip("should execute RETN (return from NMI) - requires helper method implementation", () => {
-      // TODO: Implement retn() helper method in Z80CPU
+    it("should execute RETN (return from NMI)", () => {
       cpu.IFF1 = false;
       cpu.IFF2 = true;
       cpu.registers.SP = 0xfffd;
@@ -1505,8 +1489,7 @@ describe("Z80CPU - Advanced Arithmetic Sequences", () => {
     };
   });
 
-  it.skip("should execute 16-bit addition sequence - requires helper method implementation", () => {
-    // TODO: Implement adcHL() helper method in Z80CPU
+  it("should execute 16-bit addition sequence", () => {
     // ADD HL, BC; ADC HL, DE
     cpu.HL = 0x1000;
     cpu.BC = 0x0234;
@@ -1524,8 +1507,7 @@ describe("Z80CPU - Advanced Arithmetic Sequences", () => {
     expect(cpu.HL).toBe(0x179b);
   });
 
-  it.skip("should execute multi-byte subtraction - requires helper method implementation", () => {
-    // TODO: Implement sbcHL() helper method in Z80CPU
+  it("should execute multi-byte subtraction", () => {
     // SBC HL, BC
     cpu.HL = 0x5678;
     cpu.BC = 0x1234;
@@ -1598,8 +1580,7 @@ describe("Z80CPU - TRS-80 Model III Specific Patterns", () => {
     expect(cpu.registers.PC).toBe(0x1000);
   });
 
-  it.skip("should execute string copy routine (LDIR pattern) - requires helper method implementation", () => {
-    // TODO: Implement ldir() helper method in Z80CPU
+  it("should execute string copy routine (LDIR pattern)", () => {
     // Copy 5 bytes from 0x4000 to 0x5000
     cpu.HL = 0x4000;
     cpu.DE = 0x5000;
@@ -1627,17 +1608,20 @@ describe("Z80CPU - TRS-80 Model III Specific Patterns", () => {
     expect(cpu.BC).toBe(0x0000);
   });
 
-  it.skip("should execute memory fill routine - requires helper method implementation", () => {
-    // TODO: Implement ldir() helper method in Z80CPU
+  it("should execute memory fill routine", () => {
     // Fill 10 bytes with 0xFF using LDIR pattern
     cpu.HL = 0x4000;
     cpu.DE = 0x5000;
     cpu.BC = 0x000a;
-    memory[0x4000] = 0xff; // Source byte
 
-    // Simulate fill: copy same byte multiple times
+    // Initialize source bytes (all 0xFF)
     for (let i = 0; i < 10; i++) {
-      memory[0x5000 + i] = 0x00; // Initialize destination
+      memory[0x4000 + i] = 0xff;
+    }
+
+    // Initialize destination bytes (all 0x00)
+    for (let i = 0; i < 10; i++) {
+      memory[0x5000 + i] = 0x00;
     }
 
     // Use LDIR to copy
