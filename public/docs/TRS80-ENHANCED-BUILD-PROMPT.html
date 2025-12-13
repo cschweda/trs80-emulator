@@ -1,0 +1,4234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRS80 ENHANCED BUILD PROMPT - TRS-80 Emulator</title>
+  <style>
+    html {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #4CAF50;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+    h1 {
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 0.3em;
+    }
+    h2 {
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.3em;
+    }
+    code {
+      background: #2a2a2a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      color: #ff6b6b;
+    }
+    pre {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      border-left: 4px solid #4CAF50;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: #e0e0e0;
+    }
+    a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    blockquote {
+      border-left: 4px solid #4CAF50;
+      margin: 0;
+      padding-left: 20px;
+      color: #b0b0b0;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #2a2a2a;
+      color: #4CAF50;
+    }
+    tr:nth-child(even) {
+      background: #222;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: #000;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .back-link:hover {
+      background: #45a049;
+      text-decoration: none;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #333;
+      margin: 2em 0;
+    }
+  </style>
+  <script>
+    // Detect if we're in an iframe
+    const isInIframe = window.self !== window.top;
+    
+    // Handle back link based on context
+    function handleBackLink(event) {
+      if (isInIframe) {
+        // If in iframe, try to close the design doc in parent window
+        event.preventDefault();
+        try {
+          if (window.parent && typeof window.parent.hideDesignDoc === 'function') {
+            window.parent.hideDesignDoc();
+          } else {
+            // Fallback: try to navigate parent to root
+            window.parent.location.href = window.parent.location.origin + window.parent.location.pathname.replace(/\/[^\/]*$/, '') + '/';
+          }
+        } catch (e) {
+          // Cross-origin or other error - open in new window
+          window.open('/', '_blank');
+        }
+      }
+      // If not in iframe, normal link behavior (no preventDefault)
+    }
+    
+    // Hide back link when in iframe (since parent has close button)
+    window.addEventListener('DOMContentLoaded', function() {
+      const backLink = document.querySelector('.back-link');
+      const footerLinks = document.querySelectorAll('p a[href="/"]');
+      
+      if (isInIframe) {
+        // Hide the back link when in iframe
+        if (backLink) {
+          backLink.style.display = 'none';
+        }
+        // Update footer links to open in new window
+        footerLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.open('/', '_blank');
+          });
+        });
+      } else {
+        // Not in iframe - add click handler to back link
+        if (backLink) {
+          backLink.addEventListener('click', handleBackLink);
+        }
+      }
+    });
+  </script>
+</head>
+<body>
+  <a href="/" class="back-link">← Back to Emulator</a>
+  <h1>Complete TRS-80 Model III Browser Emulator Build Prompt</h1>
+<h2>Enhanced Comprehensive Implementation Guide with Z80 Assembler Integration</h2>
+<p><strong>Version:</strong> Enhanced 2.0<br><strong>Last Updated:</strong> 2025<br><strong>Status:</strong> Production-Ready for LLM Implementation</p>
+<hr>
+<h2>EXECUTIVE SUMMARY</h2>
+<p>Build a complete, production-ready TRS-80 Model III emulator that runs in modern web browsers with:</p>
+<ul>
+<li>Complete Z80 CPU emulation with full instruction set (all 252+ opcodes including CB, ED, DD, FD prefixes)</li>
+<li>16K ROM + 48K RAM memory system (supports 14KB ROMs)</li>
+<li>Cassette interface simulation</li>
+<li>128×48 pixel graphics mode with SET/RESET/POINT commands</li>
+<li>Keyboard input handling</li>
+<li><strong>Built-in library of 12 BASIC programs</strong> ready to run</li>
+<li><strong>5+ assembly routines</strong> with <strong>in-browser Z80 assembler</strong> for editing and creating assembly code</li>
+<li><strong>In-browser program editor</strong> for both BASIC and Assembly programs</li>
+<li><strong>Complete Z80 assembler integration</strong> - write, edit, assemble, and run assembly code</li>
+<li>Modern development workflow with Vite and Yarn</li>
+<li><strong>Comprehensive test suite</strong> (172+ tests) with phase-by-phase test gates</li>
+<li>Netlify deployment with complete configuration</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Boots to BASIC prompt</li>
+<li>Instant program execution (no files needed)</li>
+<li>Pixel-level graphics with SET command</li>
+<li><strong>Edit BASIC programs in-browser</strong> (text-based programs)</li>
+<li><strong>Edit Assembly programs in-browser</strong> (with integrated Z80 assembler)</li>
+<li><strong>Assemble Z80 assembly code</strong> directly in the browser</li>
+<li>Educational and immediately useful</li>
+</ul>
+<p><strong>Development Approach:</strong></p>
+<ul>
+<li><strong>Sequential phase development</strong> - Build one phase at a time</li>
+<li><strong>Test-driven</strong> - All tests must pass before proceeding to next phase</li>
+<li><strong>172+ comprehensive tests</strong> provided in <code>TRS80-COMPLETE-TEST-SUITE.md</code></li>
+<li><strong>Phase gates</strong> - Explicit test requirements between phases</li>
+<li><strong>Vite build system</strong> with hot module replacement</li>
+<li><strong>Netlify deployment</strong> ready</li>
+</ul>
+<p><strong>Important Notes:</strong></p>
+<ul>
+<li><strong>BASIC programs</strong> are text-based source code and can be edited</li>
+<li><strong>Assembly programs</strong> are now editable source code (not pre-assembled bytes)</li>
+<li><strong>Z80 assembler</strong> is integrated - users can write and edit assembly code</li>
+<li><strong>ROM size flexibility</strong> - Supports both 14KB and 16KB ROMs</li>
+<li><strong>Complete test coverage</strong> - Every phase has comprehensive tests</li>
+</ul>
+<hr>
+<h2>TABLE OF CONTENTS</h2>
+<h3>Core Sections</h3>
+<ul>
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#project-structure">Project Structure</a></li>
+<li><a href="#development-workflow">Development Workflow</a></li>
+<li><a href="#initial-setup-files">Initial Setup Files</a></li>
+</ul>
+<h3>Development Phases</h3>
+<ul>
+<li><a href="#phase-0-rom-analysis-and-setup">Phase 0: ROM Analysis and Setup</a></li>
+<li><a href="#phase-1-z80-cpu-core-implementation">Phase 1: Z80 CPU Core Implementation</a></li>
+<li><a href="#phase-2-memory-management-system">Phase 2: Memory Management System</a></li>
+<li><a href="#phase-3-cassette-io-system">Phase 3: Cassette I/O System</a></li>
+<li><a href="#phase-4-video-display-system-with-graphics-support">Phase 4: Video Display System with Graphics Support</a></li>
+<li><a href="#phase-5-system-integration">Phase 5: System Integration</a></li>
+<li><a href="#phase-6-sample-programs-library-and-user-interface">Phase 6: Sample Programs Library and User Interface</a></li>
+<li><a href="#phase-7-z80-assembler-integration">Phase 7: Z80 Assembler Integration</a></li>
+</ul>
+<h3>Testing &amp; Quality</h3>
+<ul>
+<li><a href="#testing-requirements">Testing Requirements</a></li>
+<li><a href="#build-system">Build System</a></li>
+<li><a href="#deployment">Deployment</a></li>
+<li><a href="#error-handling-strategy">Error Handling Strategy</a></li>
+<li><a href="#performance-specifications">Performance Specifications</a></li>
+</ul>
+<h3>Reference &amp; Guides</h3>
+<ul>
+<li><a href="#rom-analysis-and-requirements">ROM Analysis and Requirements</a></li>
+<li><a href="#success-criteria">Success Criteria</a></li>
+<li><a href="#quick-start-guide">Quick Start Guide</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#quick-reference">Quick Reference</a></li>
+<li><a href="#notes-for-llm-implementation">Notes for LLM Implementation</a></li>
+</ul>
+<h3>Document Information</h3>
+<ul>
+<li><a href="#document-improvements-summary">Document Improvements Summary</a></li>
+</ul>
+<hr>
+<h2>DOCUMENT CROSS-REFERENCES</h2>
+<p>This enhanced build prompt references the following documents for complete implementation details:</p>
+<p><strong>Primary Source Documents:</strong></p>
+<ul>
+<li><p><strong><code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code></strong> - Contains complete implementation code for all components</p>
+<ul>
+<li>Z80CPU implementation: Lines 349-877</li>
+<li>MemorySystem implementation: Lines 952-1047</li>
+<li>CassetteSystem implementation: Lines 1120-1242</li>
+<li>IOSystem implementation: Lines 1245-1318</li>
+<li>VideoSystem implementation: Lines 1330-1647</li>
+<li>KeyboardHandler implementation: Lines 1654-1724</li>
+<li>TRS80System implementation: Lines 1726-1863</li>
+<li>ProgramLoader implementation: Lines 2223-2497</li>
+<li>Sample programs: Lines 1878-2096</li>
+<li>Sample assembly: Lines 2099-2220</li>
+<li>HTML structure: Lines 2549-2660</li>
+<li>CSS styles: Lines 2828-3139</li>
+</ul>
+</li>
+<li><p><strong><code>docs/TRS80-COMPLETE-TEST-SUITE.md</code></strong> - Contains all test files (172+ tests)</p>
+<ul>
+<li>Copy test files to <code>tests/</code> directory as you implement each phase</li>
+<li>Tests are organized by phase for easy reference</li>
+</ul>
+</li>
+<li><p><strong><code>docs/cschweda-z80-assembler-8a5edab282632443.txt</code></strong> - Complete Z80 assembler implementation</p>
+<ul>
+<li>Contains all assembler modules needed for Phase 7</li>
+<li>Copy modules to <code>src/assembler/</code> directory</li>
+<li>Update memory map constants for TRS-80</li>
+</ul>
+</li>
+</ul>
+<p><strong>When to Reference Each Document:</strong></p>
+<ul>
+<li><strong>TRS80-COMPLETE-BUILD-PROMPT.md</strong>: When you need complete implementation code for any component</li>
+<li><strong>TRS80-COMPLETE-TEST-SUITE.md</strong>: When setting up tests for each phase</li>
+<li><strong>cschweda-z80-assembler-8a5edab282632443.txt</strong>: When integrating the Z80 assembler in Phase 7</li>
+</ul>
+<hr>
+<h2>PROJECT STRUCTURE</h2>
+<pre><code>trs80-emulator/
+├── src/
+│   ├── core/
+│   │   ├── z80cpu.js          # Z80 CPU emulation core
+│   │   ├── memory.js          # Memory management system
+│   │   ├── io.js              # I/O port handling
+│   │   └── timing.js          # Cycle-accurate timing
+│   ├── peripherals/
+│   │   ├── cassette.js        # Cassette interface simulation
+│   │   ├── video.js           # Display system with graphics
+│   │   └── keyboard.js        # Keyboard input handling
+│   ├── system/
+│   │   ├── trs80.js           # Main system integration
+│   │   └── rom-loader.js      # ROM loading utilities
+│   ├── assembler/             # NEW: Z80 Assembler modules
+│   │   ├── assembler.js       # Main assembler orchestrator
+│   │   ├── lexer.js           # Tokenizer
+│   │   ├── parser.js          # Two-pass parser
+│   │   ├── codegen.js         # Code generator
+│   │   ├── evaluator.js       # Expression evaluator
+│   │   ├── opcodes.js         # Instruction encoding tables
+│   │   └── constants.js       # Z80 constants and enums
+│   ├── ui/
+│   │   ├── emulator-app.js    # Application controller
+│   │   ├── controls.js        # UI control handlers
+│   │   ├── program-loader.js  # Sample program loader UI
+│   │   └── assembly-editor.js  # NEW: Assembly code editor
+│   ├── utils/
+│   │   ├── helpers.js         # Utility functions
+│   │   ├── debugger.js        # Debug tools
+│   │   └── formatter.js       # NEW: Memory dump formatter
+│   ├── data/
+│   │   ├── character-rom.js   # Character set with graphics chars
+│   │   ├── model3-rom.js      # Base64 embedded ROM (generated)
+│   │   ├── sample-programs.js # 12 BASIC programs library
+│   │   ├── sample-assembly.js # 5 Assembly routines (source code)
+│   │   └── assembly-examples.js # NEW: Additional assembly examples
+│   ├── styles/
+│   │   └── main.css           # Complete application styles
+│   └── main.js                # Application entry point
+├── public/
+│   ├── assets/
+│   │   └── model3.rom         # Original ROM file (14KB or 16KB)
+│   └── sample-programs/       # Optional external files
+├── tests/
+│   ├── unit/
+│   │   ├── cpu-tests.js       # Z80 instruction tests (45 tests)
+│   │   ├── memory-tests.js    # Memory system tests (28 tests)
+│   │   ├── cassette-tests.js   # Cassette tests (22 tests)
+│   │   ├── io-tests.js        # I/O system tests (15 tests)
+│   │   ├── video-tests.js     # Display tests (32 tests)
+│   │   └── program-loader-tests.js # Sample programs tests (18 tests)
+│   └── integration/
+│       ├── cpu-memory-integration.js # CPU-Memory integration tests
+│       ├── cassette-integration.js   # Cassette integration tests
+│       └── system-tests.js    # Full system tests
+├── scripts/
+│   ├── rom-to-base64.js       # Convert ROM to base64
+│   └── generate-char-rom.js   # Generate character ROM data
+├── .gitignore
+├── package.json
+├── vite.config.js
+├── netlify.toml
+├── index.html
+└── README.md
+</code></pre>
+<hr>
+<h2>DEVELOPMENT WORKFLOW</h2>
+<h3>Sequential Phase Development</h3>
+<p>This project uses a <strong>test-driven, phase-by-phase development approach</strong>. Each phase must be completed and tested before proceeding to the next phase.</p>
+<h3>Phase Development Process</h3>
+<p><strong>CRITICAL:</strong> Follow these steps EXACTLY for each phase. Do not skip any step.</p>
+<ol>
+<li><strong>Copy Test Files</strong> - Copy test files for current phase BEFORE implementing code</li>
+<li><strong>Verify Test Files</strong> - Ensure test files exist and are in correct location</li>
+<li><strong>Read Phase Specification</strong> - Understand what needs to be built</li>
+<li><strong>Implement Code</strong> - Write code according to specifications</li>
+<li><strong>Run Phase Tests</strong> - Execute tests using phase workflow script</li>
+<li><strong>Fix Issues</strong> - If tests fail, fix code and re-run tests (loop until all pass)</li>
+<li><strong>Verify Completion</strong> - Ensure all phase criteria are met</li>
+<li><strong>User Confirmation</strong> - Wait for explicit user confirmation before proceeding</li>
+<li><strong>Proceed to Next Phase</strong> - Only after 100% test pass rate AND user confirmation</li>
+</ol>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests are copied BEFORE implementation begins</li>
+<li>Tests define the expected behavior</li>
+<li>Implementation is done to make tests pass</li>
+<li>No proceeding to next phase until current phase tests</li>
+</ul>
+<h3>Test Execution Commands</h3>
+<p><strong>For each phase, run the corresponding tests:</strong></p>
+<pre><code class="language-bash"># Phase 1: CPU Tests
+yarn test:run tests/unit/cpu-tests.js
+
+# Phase 2: Memory Tests
+yarn test:run tests/unit/memory-tests.js
+
+# Phase 3: Cassette &amp; I/O Tests
+yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
+
+# Phase 4: Video Tests
+yarn test:run tests/unit/video-tests.js
+
+# Phase 5: Integration Tests
+yarn test:run tests/integration/cpu-memory-integration.js
+
+# Phase 6: Program Loader Tests
+yarn test:run tests/unit/program-loader-tests.js
+
+# Phase 7: Assembler Integration (if applicable)
+yarn test:run tests/unit/assembler-tests.js
+
+# All Integration Tests
+yarn test:run tests/integration/
+</code></pre>
+<h3>Test Gate Requirements</h3>
+<p><strong>CRITICAL:</strong> Each phase has a <strong>test gate</strong> that must be passed before proceeding:</p>
+<ul>
+<li>✅ <strong>100% test pass rate</strong> - All tests for the phase must pass</li>
+<li>✅ <strong>No console errors</strong> - Clean test execution</li>
+<li>✅ <strong>Phase completion criteria met</strong> - All criteria satisfied</li>
+<li>✅ <strong>Code follows specifications</strong> - Implementation matches requirements</li>
+</ul>
+<p><strong>If any test fails, fix the issues before proceeding to the next phase.</strong></p>
+<h3>Test File Preparation</h3>
+<p><strong>IMPORTANT:</strong> Test files MUST be copied BEFORE starting implementation of each phase.</p>
+<p><strong>Test File Source:</strong> All test files are provided in <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code></p>
+<p><strong>Test File Setup Process:</strong></p>
+<ol>
+<li><strong>Before Phase 1:</strong> Copy <code>tests/unit/cpu-tests.js</code> from test suite document</li>
+<li><strong>Before Phase 2:</strong> Copy <code>tests/unit/memory-tests.js</code> from test suite document</li>
+<li><strong>Before Phase 3:</strong> Copy <code>tests/unit/cassette-tests.js</code> and <code>tests/unit/io-tests.js</code></li>
+<li><strong>Before Phase 4:</strong> Copy <code>tests/unit/video-tests.js</code> from test suite document</li>
+<li><strong>Before Phase 5:</strong> Copy <code>tests/integration/cpu-memory-integration.js</code></li>
+<li><strong>Before Phase 6:</strong> Copy <code>tests/unit/program-loader-tests.js</code></li>
+<li><strong>Before Phase 7:</strong> Copy <code>tests/unit/assembler-tests.js</code> (if creating)</li>
+</ol>
+<p><strong>Test File Locations in Test Suite Document:</strong></p>
+<ul>
+<li><strong>Phase 1:</strong> <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 1: CPU Tests&quot; (starts line 21)</li>
+<li><strong>Phase 2:</strong> <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 2: Memory Tests&quot; (starts line 675)</li>
+<li><strong>Phase 3:</strong> <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 3: Cassette &amp; I/O Tests&quot; (starts line 1004)</li>
+<li><strong>Phase 4:</strong> <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 4: Video Tests&quot; (starts line 1408)</li>
+<li><strong>Phase 5:</strong> <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 5: System Integration Tests&quot; (starts line 1684)</li>
+<li><strong>Phase 6:</strong> <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 6: Program Loader Tests&quot; (starts line 1837)</li>
+</ul>
+<p><strong>Verification After Copying Test Files:</strong></p>
+<pre><code class="language-bash"># Verify test file exists
+ls -lh tests/unit/cpu-tests.js
+
+# Verify test file structure (should import from @core, @peripherals, etc.)
+head -10 tests/unit/cpu-tests.js
+</code></pre>
+<p><strong>Test Coverage:</strong></p>
+<ul>
+<li>Phase 1: 45 tests (CPU core)</li>
+<li>Phase 2: 28 tests (Memory system)</li>
+<li>Phase 3: 37 tests (Cassette + I/O)</li>
+<li>Phase 4: 32 tests (Video system)</li>
+<li>Phase 5: Integration tests</li>
+<li>Phase 6: 18 tests (Program loader)</li>
+<li><strong>Total: 172+ tests</strong></li>
+</ul>
+<hr>
+<h2>INITIAL SETUP FILES</h2>
+<h3>package.json</h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;trs80-model3-emulator&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;Browser-based TRS-80 Model III emulator with cassette interface, graphics, and integrated Z80 assembler&quot;,
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;scripts&quot;: {
+    &quot;dev&quot;: &quot;vite&quot;,
+    &quot;build&quot;: &quot;vite build&quot;,
+    &quot;preview&quot;: &quot;vite preview&quot;,
+    &quot;test&quot;: &quot;vitest&quot;,
+    &quot;test:ui&quot;: &quot;vitest --ui&quot;,
+    &quot;test:run&quot;: &quot;vitest run&quot;,
+    &quot;test:coverage&quot;: &quot;vitest run --coverage&quot;,
+    &quot;rom:embed&quot;: &quot;node scripts/rom-to-base64.js&quot;,
+    &quot;deploy&quot;: &quot;yarn test:run &amp;&amp; yarn build &amp;&amp; netlify deploy --prod&quot;,
+    &quot;phase:1&quot;: &quot;node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js&quot;,
+    &quot;phase:2&quot;: &quot;node scripts/phase-workflow.js 2 tests/unit/memory-tests.js&quot;,
+    &quot;phase:3&quot;: &quot;node scripts/phase-workflow.js 3 \&quot;tests/unit/cassette-tests.js tests/unit/io-tests.js\&quot;&quot;,
+    &quot;phase:4&quot;: &quot;node scripts/phase-workflow.js 4 tests/unit/video-tests.js&quot;,
+    &quot;phase:5&quot;: &quot;node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js&quot;,
+    &quot;phase:6&quot;: &quot;node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js&quot;,
+    &quot;phase:7&quot;: &quot;node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;vite&quot;: &quot;^5.4.0&quot;,
+    &quot;vitest&quot;: &quot;^1.6.0&quot;,
+    &quot;@vitest/ui&quot;: &quot;^1.6.0&quot;,
+    &quot;@vitest/coverage-v8&quot;: &quot;^1.6.0&quot;,
+    &quot;terser&quot;: &quot;^5.31.0&quot;
+  },
+  &quot;engines&quot;: {
+    &quot;node&quot;: &quot;&gt;=20.0.0&quot;,
+    &quot;yarn&quot;: &quot;&gt;=1.22.22&quot;
+  },
+  &quot;keywords&quot;: [
+    &quot;trs80&quot;,
+    &quot;emulator&quot;,
+    &quot;z80&quot;,
+    &quot;retro-computing&quot;,
+    &quot;model-iii&quot;,
+    &quot;graphics&quot;,
+    &quot;assembler&quot;
+  ],
+  &quot;author&quot;: &quot;Your Name&quot;,
+  &quot;license&quot;: &quot;MIT&quot;
+}
+</code></pre>
+<h3>vite.config.js (Enhanced)</h3>
+<pre><code class="language-javascript">import { defineConfig } from &quot;vite&quot;;
+import { resolve } from &quot;path&quot;;
+
+export default defineConfig({
+  base: &quot;./&quot;,
+
+  build: {
+    outDir: &quot;dist&quot;,
+    assetsDir: &quot;assets&quot;,
+    sourcemap: true,
+    minify: &quot;terser&quot;,
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, &quot;index.html&quot;),
+      },
+      output: {
+        manualChunks: {
+          core: [
+            &quot;./src/core/z80cpu.js&quot;,
+            &quot;./src/core/memory.js&quot;,
+            &quot;./src/core/io.js&quot;,
+          ],
+          peripherals: [
+            &quot;./src/peripherals/video.js&quot;,
+            &quot;./src/peripherals/cassette.js&quot;,
+            &quot;./src/peripherals/keyboard.js&quot;,
+          ],
+          assembler: [
+            &quot;./src/assembler/assembler.js&quot;,
+            &quot;./src/assembler/lexer.js&quot;,
+            &quot;./src/assembler/parser.js&quot;,
+            &quot;./src/assembler/codegen.js&quot;,
+            &quot;./src/assembler/evaluator.js&quot;,
+            &quot;./src/assembler/opcodes.js&quot;,
+          ],
+        },
+      },
+    },
+    target: &quot;es2020&quot;,
+    chunkSizeWarningLimit: 1000,
+  },
+
+  server: {
+    port: 3000,
+    open: true,
+    cors: true,
+    hmr: {
+      overlay: true,
+    },
+  },
+
+  preview: {
+    port: 4173,
+    open: true,
+  },
+
+  resolve: {
+    alias: {
+      &quot;@&quot;: resolve(__dirname, &quot;./src&quot;),
+      &quot;@core&quot;: resolve(__dirname, &quot;./src/core&quot;),
+      &quot;@peripherals&quot;: resolve(__dirname, &quot;./src/peripherals&quot;),
+      &quot;@system&quot;: resolve(__dirname, &quot;./src/system&quot;),
+      &quot;@ui&quot;: resolve(__dirname, &quot;./src/ui&quot;),
+      &quot;@utils&quot;: resolve(__dirname, &quot;./src/utils&quot;),
+      &quot;@data&quot;: resolve(__dirname, &quot;./src/data&quot;),
+      &quot;@assembler&quot;: resolve(__dirname, &quot;./src/assembler&quot;),
+    },
+  },
+
+  test: {
+    globals: true,
+    environment: &quot;jsdom&quot;,
+    coverage: {
+      provider: &quot;v8&quot;,
+      reporter: [&quot;text&quot;, &quot;json&quot;, &quot;html&quot;],
+      exclude: [&quot;node_modules/&quot;, &quot;tests/&quot;, &quot;scripts/&quot;, &quot;dist/&quot;],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
+    include: [&quot;tests/**/*.{js,ts}&quot;],
+    exclude: [&quot;node_modules&quot;, &quot;dist&quot;],
+  },
+});
+</code></pre>
+<h3>netlify.toml (Enhanced)</h3>
+<pre><code class="language-toml">[build]
+  publish = &quot;dist&quot;
+  command = &quot;yarn test:run &amp;&amp; yarn build&quot;
+
+[build.environment]
+  NODE_VERSION = &quot;20&quot;
+  YARN_VERSION = &quot;1.22.22&quot;
+
+# SPA routing - redirect all routes to index.html
+[[redirects]]
+  from = &quot;/*&quot;
+  to = &quot;/index.html&quot;
+  status = 200
+
+# Security headers
+[[headers]]
+  for = &quot;/*&quot;
+  [headers.values]
+    X-Frame-Options = &quot;DENY&quot;
+    X-Content-Type-Options = &quot;nosniff&quot;
+    Referrer-Policy = &quot;no-referrer&quot;
+    X-XSS-Protection = &quot;1; mode=block&quot;
+
+# Cache static assets
+[[headers]]
+  for = &quot;/assets/*&quot;
+  [headers.values]
+    Cache-Control = &quot;public, max-age=31536000, immutable&quot;
+
+# Don&#39;t cache HTML
+[[headers]]
+  for = &quot;/*.html&quot;
+  [headers.values]
+    Cache-Control = &quot;public, max-age=0, must-revalidate&quot;
+</code></pre>
+<h3>File: index.html</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 2549-2660 for the complete HTML structure.</p>
+<p><strong>Key Elements:</strong></p>
+<ul>
+<li>Main application container (<code>#app</code>)</li>
+<li>Emulator controls (power, reset, system buttons)</li>
+<li>Sample program selectors (BASIC and Assembly)</li>
+<li>Canvas element for TRS-80 display (<code>#trs80-screen</code>)</li>
+<li>Edit modal for BASIC programs</li>
+<li><strong>Entry Point:</strong> <code>&lt;script type=&quot;module&quot; src=&quot;./src/main.js&quot;&gt;&lt;/script&gt;</code></li>
+</ul>
+<p><strong>Important:</strong> The HTML file must reference <code>./src/main.js</code> as the entry point. Vite will process this during build.</p>
+<h3>File: src/main.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 2662-2826 for the complete main.js implementation.</p>
+<p><strong>Key Responsibilities:</strong></p>
+<ul>
+<li>Initialize emulator system</li>
+<li>Load ROM from embedded base64 data</li>
+<li>Setup UI event handlers</li>
+<li>Start/stop emulator execution</li>
+<li>Handle program loading and execution</li>
+</ul>
+<p><strong>Entry Point Flow:</strong></p>
+<ol>
+<li><code>index.html</code> loads → references <code>./src/main.js</code></li>
+<li><code>main.js</code> imports TRS80System, ROM loader, ProgramLoader</li>
+<li>ROM is loaded from embedded <code>src/data/model3-rom.js</code></li>
+<li>Emulator initializes and waits for &quot;Power On&quot;</li>
+<li>UI event handlers are attached</li>
+</ol>
+<h3>.gitignore</h3>
+<pre><code># Dependencies
+node_modules/
+
+# Build output
+dist/
+*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing
+coverage/
+.nyc_output
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Generated ROM file
+src/data/model3-rom.js
+
+# OS files
+Thumbs.db
+</code></pre>
+<h3>scripts/phase-workflow.js</h3>
+<pre><code class="language-javascript">#!/usr/bin/env node
+/**
+ * Phase-by-Phase Test Workflow Script
+ *
+ * Enforces test gates between development phases.
+ * Runs tests for a phase and waits for user confirmation before proceeding.
+ *
+ * Usage:
+ *   node scripts/phase-workflow.js &lt;phase-number&gt; &lt;test-file-or-files&gt;
+ *
+ * Examples:
+ *   node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js
+ *   node scripts/phase-workflow.js 3 &quot;tests/unit/cassette-tests.js tests/unit/io-tests.js&quot;
+ */
+
+import { execSync } from &quot;child_process&quot;;
+import readline from &quot;readline&quot;;
+
+const phaseNumber = process.argv[2];
+const testFiles = process.argv[3];
+
+if (!phaseNumber || !testFiles) {
+  console.error(
+    &quot;Usage: node scripts/phase-workflow.js &lt;phase-number&gt; &lt;test-files&gt;&quot;
+  );
+  console.error(
+    &quot;Example: node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js&quot;
+  );
+  process.exit(1);
+}
+
+const phaseNames = {
+  0: &quot;ROM Analysis and Setup&quot;,
+  1: &quot;Z80 CPU Core Implementation&quot;,
+  2: &quot;Memory Management System&quot;,
+  3: &quot;Cassette I/O System&quot;,
+  4: &quot;Video Display System&quot;,
+  5: &quot;System Integration&quot;,
+  6: &quot;Sample Programs Library and User Interface&quot;,
+  7: &quot;Z80 Assembler Integration&quot;,
+};
+
+const phaseName = phaseNames[phaseNumber] || `Phase ${phaseNumber}`;
+
+console.log(&quot;\n&quot; + &quot;=&quot;.repeat(70));
+console.log(`PHASE ${phaseNumber} TEST GATE: ${phaseName}`);
+console.log(&quot;=&quot;.repeat(70));
+console.log(`\nRunning tests for Phase ${phaseNumber}...\n`);
+
+try {
+  // Run tests
+  const testCommand = `yarn test:run ${testFiles}`;
+  console.log(`Command: ${testCommand}\n`);
+
+  execSync(testCommand, {
+    stdio: &quot;inherit&quot;,
+    cwd: process.cwd(),
+  });
+
+  // If we get here, tests passed (execSync throws on non-zero exit)
+  console.log(&quot;\n&quot; + &quot;=&quot;.repeat(70));
+  console.log(`✅ PHASE ${phaseNumber} TESTS PASSED`);
+  console.log(&quot;=&quot;.repeat(70));
+  console.log(`\nAll tests for ${phaseName} have passed successfully.`);
+  console.log(&quot;\nPhase Completion Checklist:&quot;);
+  console.log(&quot;  ✅ All unit tests pass (100% success rate)&quot;);
+  console.log(&quot;  ✅ No console errors&quot;);
+  console.log(&quot;  ✅ Phase completion criteria met&quot;);
+  console.log(&quot;  ✅ Code follows specifications&quot;);
+
+  // Wait for user confirmation
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  rl.question(&quot;\n⚠️  Ready to proceed to next phase? (yes/no): &quot;, (answer) =&gt; {
+    rl.close();
+
+    if (answer.toLowerCase() === &quot;yes&quot; || answer.toLowerCase() === &quot;y&quot;) {
+      console.log(&quot;\n✅ User confirmed. Proceeding to next phase...\n&quot;);
+      process.exit(0);
+    } else {
+      console.log(
+        &quot;\n⏸️  Phase advancement paused. Fix any issues or review code before proceeding.\n&quot;
+      );
+      console.log(&quot;When ready, run the workflow script for the next phase.&quot;);
+      process.exit(0);
+    }
+  });
+} catch (error) {
+  // Tests failed
+  console.log(&quot;\n&quot; + &quot;=&quot;.repeat(70));
+  console.log(`❌ PHASE ${phaseNumber} TESTS FAILED`);
+  console.log(&quot;=&quot;.repeat(70));
+  console.log(`\nTests for ${phaseName} have failed.`);
+  console.log(
+    &quot;\n⚠️  BLOCKING: Cannot proceed to next phase until all tests pass.&quot;
+  );
+  console.log(&quot;\nNext Steps:&quot;);
+  console.log(&quot;  1. Review test failures above&quot;);
+  console.log(&quot;  2. Fix implementation issues&quot;);
+  console.log(&quot;  3. Re-run tests: yarn test:run &quot; + testFiles);
+  console.log(&quot;  4. Once all tests pass, run this workflow script again&quot;);
+  console.log(&quot;\nDo not proceed to the next phase until all tests pass.\n&quot;);
+  process.exit(1);
+}
+</code></pre>
+<h3>scripts/rom-to-base64.js</h3>
+<pre><code class="language-javascript">#!/usr/bin/env node
+import { readFileSync, writeFileSync } from &quot;fs&quot;;
+import { fileURLToPath } from &quot;url&quot;;
+import { dirname, join } from &quot;path&quot;;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Read ROM file
+const romPath = join(__dirname, &quot;../public/assets/model3.rom&quot;);
+let romBuffer;
+
+try {
+  romBuffer = readFileSync(romPath);
+} catch (error) {
+  console.error(`Error reading ROM file: ${error.message}`);
+  process.exit(1);
+}
+
+// Validate ROM size (supports both 14KB and 16KB)
+const romSize = romBuffer.length;
+if (romSize !== 14336 &amp;&amp; romSize !== 16384) {
+  console.warn(
+    `Warning: ROM size is ${romSize} bytes (expected 14336 or 16384)`
+  );
+}
+
+// Convert to base64
+const base64ROM = romBuffer.toString(&quot;base64&quot;);
+
+// Generate JavaScript module
+const output = `/**
+ * TRS-80 Model III ROM (${romSize} bytes)
+ * Auto-generated from model3.rom
+ * DO NOT EDIT MANUALLY
+ */
+
+const ROM_BASE64 = &#39;${base64ROM}&#39;;
+
+/**
+ * Decode ROM from base64
+ * @returns {Uint8Array} ROM data
+ */
+export function getROMData() {
+  const binaryString = atob(ROM_BASE64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i &lt; binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+export const ROM_SIZE = ${romSize};
+export const ROM_START = 0x0000;
+export const ROM_END = ${romSize === 16384 ? &quot;0x3FFF&quot; : &quot;0x37FF&quot;};
+`;
+
+// Write to src/data
+const outputPath = join(__dirname, &quot;../src/data/model3-rom.js&quot;);
+writeFileSync(outputPath, output);
+
+console.log(`✓ ROM converted to base64 (${romSize} bytes)`);
+console.log(`✓ Written to: ${outputPath}`);
+</code></pre>
+<hr>
+<h2>PHASE 0: ROM Analysis and Setup</h2>
+<h3>Objectives</h3>
+<p>Before starting implementation, analyze the ROM file to understand:</p>
+<ul>
+<li>ROM format and size (14KB or 16KB)</li>
+<li>Required Z80 instructions for ROM execution</li>
+<li>ROM entry points for BASIC interpreter</li>
+<li>Memory layout and BASIC program areas</li>
+</ul>
+<h3>ROM Analysis Tasks</h3>
+<ol>
+<li><p><strong>Verify ROM File</strong></p>
+<ul>
+<li>Check ROM file exists at <code>public/assets/model3.rom</code></li>
+<li>Verify ROM size (should be 14336 or 16384 bytes)</li>
+<li>Run ROM validation script</li>
+</ul>
+</li>
+<li><p><strong>Identify Required Instructions</strong></p>
+<ul>
+<li>Analyze ROM to find which Z80 instructions are used</li>
+<li><strong>Note:</strong> While ROM analysis helps identify frequently used instructions, ALL Z80 instructions must be implemented for full Model III compatibility</li>
+<li>Document which instructions are used by ROM (for testing priority)</li>
+<li><strong>CRITICAL:</strong> The complete Z80 instruction set (all 252+ opcodes) must be implemented regardless of ROM usage</li>
+</ul>
+</li>
+<li><p><strong>Map ROM Entry Points</strong></p>
+<ul>
+<li>Identify BASIC interpreter entry points</li>
+<li>Document SET/RESET/POINT hook addresses</li>
+<li>Map video RAM and system variable addresses</li>
+</ul>
+</li>
+</ol>
+<h3>ROM Validation Script</h3>
+<p>Create <code>scripts/validate-rom.js</code>:</p>
+<pre><code class="language-javascript">#!/usr/bin/env node
+import { readFileSync } from &quot;fs&quot;;
+import { fileURLToPath } from &quot;url&quot;;
+import { dirname, join } from &quot;path&quot;;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const romPath = join(__dirname, &quot;../public/assets/model3.rom&quot;);
+
+try {
+  const romBuffer = readFileSync(romPath);
+  const size = romBuffer.length;
+
+  console.log(`ROM File: ${romPath}`);
+  console.log(`ROM Size: ${size} bytes (${(size / 1024).toFixed(1)}KB)`);
+
+  if (size === 14336) {
+    console.log(&quot;✓ Valid 14KB ROM&quot;);
+  } else if (size === 16384) {
+    console.log(&quot;✓ Valid 16KB ROM&quot;);
+  } else {
+    console.warn(`⚠ Unexpected ROM size (expected 14336 or 16384)`);
+  }
+
+  // Check for non-zero content
+  let nonZeroCount = 0;
+  for (let i = 0; i &lt; Math.min(1000, size); i++) {
+    if (romBuffer[i] !== 0) nonZeroCount++;
+  }
+
+  if (nonZeroCount &lt; 100) {
+    console.warn(&quot;⚠ ROM appears to be mostly zeros - may be corrupted&quot;);
+  } else {
+    console.log(
+      `✓ ROM appears valid (${nonZeroCount} non-zero bytes in first 1KB)`
+    );
+  }
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+  process.exit(1);
+}
+</code></pre>
+<h3>Phase 0 Completion Criteria</h3>
+<ul>
+<li>✅ ROM file verified and validated</li>
+<li>✅ ROM size documented (14KB or 16KB)</li>
+<li>✅ ROM analysis complete</li>
+<li>✅ ROM instruction usage analyzed (for testing priority)</li>
+<li>✅ Complete Z80 instruction set requirement confirmed (all 252+ opcodes)</li>
+<li>✅ Ready to proceed to Phase 1</li>
+</ul>
+<p><strong>Verification:</strong></p>
+<pre><code class="language-bash">node scripts/validate-rom.js
+</code></pre>
+<hr>
+<h2>PHASE 1: Z80 CPU Core Implementation</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, copy the test file:</strong></p>
+<ol>
+<li><p><strong>Copy Test File:</strong></p>
+<ul>
+<li>Source: <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 1: CPU Tests&quot; (starts at line 21)</li>
+<li>Destination: <code>tests/unit/cpu-tests.js</code></li>
+<li>Copy the complete test file content</li>
+</ul>
+</li>
+<li><p><strong>Verify Test File:</strong></p>
+<pre><code class="language-bash"># Check file exists
+ls -lh tests/unit/cpu-tests.js
+
+# Verify imports (should use @core alias)
+head -5 tests/unit/cpu-tests.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Count:</strong> 45 tests</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with implementation until test file is copied and verified.</strong></p>
+<h3>Objectives</h3>
+<p>Implement a <strong>COMPLETE Z80 CPU emulator</strong> with full instruction set support. This must include ALL Z80 instructions (252+ opcodes) to match the real TRS-80 Model III behavior. The emulator must support:</p>
+<ul>
+<li><strong>All standard Z80 instructions</strong> (0x00-0xFF base opcodes)</li>
+<li><strong>CB prefix instructions</strong> (0xCB00-0xCBFF) - Bit operations, rotates, shifts</li>
+<li><strong>ED prefix instructions</strong> (0xED00-0xEDFF) - Extended instructions, block operations, I/O</li>
+<li><strong>DD prefix instructions</strong> (0xDD00-0xDDFF) - IX register operations</li>
+<li><strong>FD prefix instructions</strong> (0xFD00-0xFDFF) - IY register operations</li>
+<li><strong>All addressing modes</strong> - Immediate, register, indirect, indexed, relative</li>
+<li><strong>All flag operations</strong> - Complete flag calculations for all instructions</li>
+<li><strong>Cycle-accurate timing</strong> - Correct T-state counts for all instructions</li>
+</ul>
+<p><strong>CRITICAL:</strong> This is a FULL Z80 implementation, not a subset. The Model III ROM and BASIC interpreter use the complete instruction set, so all instructions must be implemented.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests define expected CPU behavior</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>Complete Z80 Instruction Set Requirements</h3>
+<p><strong>Reference:</strong> The Z80 instruction set consists of 252 single-byte opcodes plus extended instructions using prefixes CB, ED, DD, and FD. See <code>docs/cschweda-z80-assembler-8a5edab282632443.txt</code> (opcodes.js section starting at line 3429) for a complete reference of all instructions that must be supported.</p>
+<p><strong>Instruction Categories (ALL must be implemented):</strong></p>
+<ol>
+<li><strong>8-Bit Load Instructions</strong> - All LD r, r&#39;; LD r, n; LD r, (HL); LD (HL), r; LD A, (BC/DE/nn); LD (BC/DE/nn), A; LD A, I/R; LD I/R, A</li>
+<li><strong>16-Bit Load Instructions</strong> - LD dd, nn; LD HL, (nn); LD (nn), HL; LD SP, HL; LD dd, (nn); LD (nn), dd; PUSH/POP all register pairs</li>
+<li><strong>Exchange Instructions</strong> - EX DE, HL; EX AF, AF&#39;; EX (SP), HL; EXX</li>
+<li><strong>8-Bit Arithmetic</strong> - ADD/ADC/SUB/SBC A, r/n/(HL); INC/DEC r/(HL); CP/AND/OR/XOR r/n/(HL); DAA; CPL; NEG</li>
+<li><strong>16-Bit Arithmetic</strong> - ADD HL, dd; ADC/SBC HL, dd; INC/DEC dd; ADD IX/IY, pp</li>
+<li><strong>Rotate and Shift</strong> - RLCA/RLA/RRCA/RRA; RLC/RL/RRC/RR r/(HL); SLA/SRA/SLL/SRL r/(HL); RLD/RRD</li>
+<li><strong>Bit Operations</strong> - BIT/SET/RES b, r/(HL) (all CB prefix instructions)</li>
+<li><strong>Jump Instructions</strong> - JP nn; JP cc, nn; JP (HL)/(IX)/(IY); JR e; JR cc, e; DJNZ e</li>
+<li><strong>Call and Return</strong> - CALL nn; CALL cc, nn; RET; RET cc; RETI; RETN; RST p</li>
+<li><strong>Input/Output</strong> - IN A, (n); IN r, (C); OUT (n), A; OUT (C), r; INI/INIR/IND/INDR; OUTI/OTIR/OUTD/OTDR</li>
+<li><strong>Block Transfer</strong> - LDI/LDIR/LDD/LDDR; CPI/CPIR/CPD/CPDR</li>
+<li><strong>Control Instructions</strong> - NOP; HALT; DI; EI; IM 0/1/2; SCF; CCF</li>
+</ol>
+<p><strong>Index Register Instructions (DD/FD prefixes):</strong></p>
+<ul>
+<li>All standard instructions using IX/IY instead of HL</li>
+<li>IX/IY displacement addressing: (IX+d), (IY+d)</li>
+<li>Special IX/IY instructions: ADD IX/IY, pp; LD IX/IY, nn; LD (nn), IX/IY; LD IX/IY, (nn)</li>
+</ul>
+<p><strong>Implementation Priority (for incremental development):</strong></p>
+<p>While ALL instructions must be implemented, you can implement them in this order:</p>
+<ol>
+<li><strong>Phase 1a - Core Instructions:</strong> Implement all instructions needed for ROM boot (see original priority list)</li>
+<li><strong>Phase 1b - Standard Instructions:</strong> Implement remaining standard opcodes (0x00-0xFF)</li>
+<li><strong>Phase 1c - CB Prefix:</strong> Implement all CB prefix instructions (bit operations, rotates, shifts)</li>
+<li><strong>Phase 1d - ED Prefix:</strong> Implement all ED prefix instructions (extended, block operations)</li>
+<li><strong>Phase 1e - DD/FD Prefixes:</strong> Implement all DD/FD prefix instructions (IX/IY register operations)</li>
+</ol>
+<p><strong>However, ALL phases must be completed before Phase 1 is considered done.</strong></p>
+<h3>File: src/core/z80cpu.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 349-877 for the full Z80CPU implementation.</p>
+<p><strong>Key Implementation Notes:</strong></p>
+<ul>
+<li><strong>COMPLETE instruction set required</strong> - All 252+ Z80 opcodes must be implemented</li>
+<li>All register pair getters/setters (BC, DE, HL, IX, IY, SP, AF, AF&#39;)</li>
+<li>Complete flag operations (getFlag, setFlag, and individual flag getters/setters)</li>
+<li>Reset method with proper initialization</li>
+<li>setupOpcodeHandlers must implement ALL opcodes (0x00-0xFF base + CB/ED/DD/FD prefixes)</li>
+<li>Arithmetic methods (addA, subA, incReg, decReg, addHL, etc.) with detailed flag calculations</li>
+<li><strong>ALL extended instruction handlers</strong> (CB, ED, DD, FD) must be fully implemented, not stubs</li>
+<li>Cycle-accurate timing for all instructions</li>
+<li>Proper handling of all addressing modes (immediate, register, indirect, indexed, relative)</li>
+</ul>
+<p><strong>Reference Implementation:</strong></p>
+<ul>
+<li>See <code>docs/cschweda-z80-assembler-8a5edab282632443.txt</code> (opcodes.js, lines 3429+) for complete instruction encoding reference</li>
+<li>See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 349-877 for base CPU structure</li>
+<li>Use assembler&#39;s MNEMONICS set (line 2454) as checklist for instruction coverage</li>
+</ul>
+<p><strong>Enhanced Error Handling:</strong> The implementation below includes enhanced error handling for unimplemented opcodes:</p>
+<pre><code class="language-javascript">/**
+ * Z80 CPU Emulator Core
+ * Implements COMPLETE Z80 instruction set with cycle-accurate timing
+ *
+ * This is a FULL Z80 implementation matching the real TRS-80 Model III.
+ * ALL instructions must be implemented:
+ * - Base opcodes: 0x00-0xFF (252 instructions)
+ * - CB prefix: 0xCB00-0xCBFF (bit operations, rotates, shifts)
+ * - ED prefix: 0xED00-0xEDFF (extended instructions, block operations)
+ * - DD prefix: 0xDD00-0xDDFF (IX register operations)
+ * - FD prefix: 0xFD00-0xFDFF (IY register operations)
+ *
+ * Reference: docs/cschweda-z80-assembler-8a5edab282632443.txt (opcodes.js)
+ */
+
+// Flag bit positions
+const FLAG_C = 0; // Carry
+const FLAG_N = 1; // Add/Subtract
+const FLAG_PV = 2; // Parity/Overflow
+const FLAG_H = 4; // Half Carry
+const FLAG_Z = 6; // Zero
+const FLAG_S = 7; // Sign
+
+export class Z80CPU {
+  constructor() {
+    // 8-bit registers
+    this.registers = {
+      // Main register set
+      A: 0x00, // Accumulator
+      F: 0x00, // Flags
+      B: 0x00,
+      C: 0x00,
+      D: 0x00,
+      E: 0x00,
+      H: 0x00,
+      L: 0x00,
+
+      // Alternate register set
+      A_: 0x00,
+      F_: 0x00,
+      B_: 0x00,
+      C_: 0x00,
+      D_: 0x00,
+      E_: 0x00,
+      H_: 0x00,
+      L_: 0x00,
+
+      // Index registers
+      IXH: 0x00,
+      IXL: 0x00,
+      IYH: 0x00,
+      IYL: 0x00,
+
+      // Special registers
+      I: 0x00, // Interrupt vector
+      R: 0x00, // Memory refresh
+
+      // 16-bit registers
+      SP: 0xffff, // Stack pointer
+      PC: 0x0000, // Program counter
+    };
+
+    // Interrupt system
+    this.IFF1 = false;
+    this.IFF2 = false;
+    this.interruptMode = 0;
+    this.halted = false;
+
+    // Execution state
+    this.cycles = 0;
+    this.lastOpCycles = 0;
+
+    // External interfaces (connected by system)
+    this.readMemory = (address) =&gt; 0x00;
+    this.writeMemory = (address, value) =&gt; {};
+    this.readPort = (port) =&gt; 0x00;
+    this.writePort = (port, value) =&gt; {};
+
+    // Unimplemented opcode tracking (for debugging)
+    this.unimplementedOpcodes = new Set();
+
+    // Setup opcode handlers
+    this.setupOpcodeHandlers();
+  }
+
+  // Register pair getters/setters (see TRS80-COMPLETE-BUILD-PROMPT.md lines 422-445)
+  getRegisterPair(high, low) {
+    return (this.registers[high] &lt;&lt; 8) | this.registers[low];
+  }
+
+  setRegisterPair(high, low, value) {
+    this.registers[high] = (value &gt;&gt; 8) &amp; 0xff;
+    this.registers[low] = value &amp; 0xff;
+  }
+
+  get BC() {
+    return this.getRegisterPair(&quot;B&quot;, &quot;C&quot;);
+  }
+  set BC(value) {
+    this.setRegisterPair(&quot;B&quot;, &quot;C&quot;, value);
+  }
+
+  get DE() {
+    return this.getRegisterPair(&quot;D&quot;, &quot;E&quot;);
+  }
+  set DE(value) {
+    this.setRegisterPair(&quot;D&quot;, &quot;E&quot;, value);
+  }
+
+  get HL() {
+    return this.getRegisterPair(&quot;H&quot;, &quot;L&quot;);
+  }
+  set HL(value) {
+    this.setRegisterPair(&quot;H&quot;, &quot;L&quot;, value);
+  }
+
+  get IX() {
+    return this.getRegisterPair(&quot;IXH&quot;, &quot;IXL&quot;);
+  }
+  set IX(value) {
+    this.setRegisterPair(&quot;IXH&quot;, &quot;IXL&quot;, value);
+  }
+
+  get IY() {
+    return this.getRegisterPair(&quot;IYH&quot;, &quot;IYL&quot;);
+  }
+  set IY(value) {
+    this.setRegisterPair(&quot;IYH&quot;, &quot;IYL&quot;, value);
+  }
+
+  // Flag operations (see TRS80-COMPLETE-BUILD-PROMPT.md lines 447-476)
+  getFlag(flag) {
+    return (this.registers.F &gt;&gt; flag) &amp; 1;
+  }
+
+  setFlag(flag, value) {
+    if (value) {
+      this.registers.F |= 1 &lt;&lt; flag;
+    } else {
+      this.registers.F &amp;= ~(1 &lt;&lt; flag);
+    }
+  }
+
+  get flagC() {
+    return this.getFlag(FLAG_C);
+  }
+  set flagC(v) {
+    this.setFlag(FLAG_C, v);
+  }
+
+  get flagN() {
+    return this.getFlag(FLAG_N);
+  }
+  set flagN(v) {
+    this.setFlag(FLAG_N, v);
+  }
+
+  get flagPV() {
+    return this.getFlag(FLAG_PV);
+  }
+  set flagPV(v) {
+    this.setFlag(FLAG_PV, v);
+  }
+
+  get flagH() {
+    return this.getFlag(FLAG_H);
+  }
+  set flagH(v) {
+    this.setFlag(FLAG_H, v);
+  }
+
+  get flagZ() {
+    return this.getFlag(FLAG_Z);
+  }
+  set flagZ(v) {
+    this.setFlag(FLAG_Z, v);
+  }
+
+  get flagS() {
+    return this.getFlag(FLAG_S);
+  }
+  set flagS(v) {
+    this.setFlag(FLAG_S, v);
+  }
+
+  // Reset CPU (see TRS80-COMPLETE-BUILD-PROMPT.md lines 478-489)
+  reset() {
+    this.registers.PC = 0x0000;
+    this.registers.SP = 0xffff;
+    this.registers.A = 0xff;
+    this.registers.F = 0xff;
+    this.halted = false;
+    this.IFF1 = false;
+    this.IFF2 = false;
+    this.interruptMode = 0;
+    this.cycles = 0;
+  }
+
+  // Execute single instruction
+  executeInstruction() {
+    if (this.halted) {
+      this.lastOpCycles = 4;
+      this.cycles += 4;
+      return 4;
+    }
+
+    const opcode = this.readMemory(this.registers.PC);
+    this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+
+    // Increment refresh register
+    this.registers.R = (this.registers.R + 1) &amp; 0x7f;
+
+    const cycles = this.decodeAndExecute(opcode);
+
+    this.lastOpCycles = cycles;
+    this.cycles += cycles;
+
+    return cycles;
+  }
+
+  // Decode and execute opcode
+  decodeAndExecute(opcode) {
+    // Extended instructions
+    if (opcode === 0xcb) return this.executeCB();
+    if (opcode === 0xed) return this.executeED();
+    if (opcode === 0xdd) return this.executeDD();
+    if (opcode === 0xfd) return this.executeFD();
+
+    // Standard instructions
+    const handler = this.opcodeHandlers[opcode];
+    if (handler) {
+      return handler.call(this);
+    }
+
+    // Unimplemented opcode handling
+    if (!this.unimplementedOpcodes.has(opcode)) {
+      this.unimplementedOpcodes.add(opcode);
+      console.warn(
+        `Unimplemented opcode: 0x${opcode
+          .toString(16)
+          .toUpperCase()
+          .padStart(2, &quot;0&quot;)} at PC=0x${this.registers.PC.toString(16).padStart(
+          4,
+          &quot;0&quot;
+        )}`
+      );
+    }
+
+    // Return NOP-equivalent cycles (safe fallback)
+    return 4;
+  }
+
+  // Setup opcode handlers (see TRS80-COMPLETE-BUILD-PROMPT.md lines 531-691)
+  // This method sets up handlers for all critical and essential instructions
+  setupOpcodeHandlers() {
+    this.opcodeHandlers = {};
+
+    // NOP
+    this.opcodeHandlers[0x00] = () =&gt; 4;
+
+    // HALT
+    this.opcodeHandlers[0x76] = () =&gt; {
+      this.halted = true;
+      return 4;
+    };
+
+    // LD r, n (immediate loads) - See TRS80-COMPLETE-BUILD-PROMPT.md lines 544-557
+    const ldRegImm = (reg) =&gt; {
+      this.registers[reg] = this.readMemory(this.registers.PC);
+      this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+      return 7;
+    };
+
+    this.opcodeHandlers[0x3e] = () =&gt; ldRegImm(&quot;A&quot;);
+    this.opcodeHandlers[0x06] = () =&gt; ldRegImm(&quot;B&quot;);
+    this.opcodeHandlers[0x0e] = () =&gt; ldRegImm(&quot;C&quot;);
+    this.opcodeHandlers[0x16] = () =&gt; ldRegImm(&quot;D&quot;);
+    this.opcodeHandlers[0x1e] = () =&gt; ldRegImm(&quot;E&quot;);
+    this.opcodeHandlers[0x26] = () =&gt; ldRegImm(&quot;H&quot;);
+    this.opcodeHandlers[0x2e] = () =&gt; ldRegImm(&quot;L&quot;);
+
+    // ADD A, r - See TRS80-COMPLETE-BUILD-PROMPT.md lines 559-566
+    this.opcodeHandlers[0x87] = () =&gt; this.addA(this.registers.A);
+    this.opcodeHandlers[0x80] = () =&gt; this.addA(this.registers.B);
+    this.opcodeHandlers[0x81] = () =&gt; this.addA(this.registers.C);
+    this.opcodeHandlers[0x82] = () =&gt; this.addA(this.registers.D);
+    this.opcodeHandlers[0x83] = () =&gt; this.addA(this.registers.E);
+    this.opcodeHandlers[0x84] = () =&gt; this.addA(this.registers.H);
+    this.opcodeHandlers[0x85] = () =&gt; this.addA(this.registers.L);
+
+    // SUB r - See TRS80-COMPLETE-BUILD-PROMPT.md lines 568-571
+    this.opcodeHandlers[0x97] = () =&gt; this.subA(this.registers.A);
+    this.opcodeHandlers[0x90] = () =&gt; this.subA(this.registers.B);
+    this.opcodeHandlers[0x91] = () =&gt; this.subA(this.registers.C);
+
+    // JP nn - See TRS80-COMPLETE-BUILD-PROMPT.md lines 573-579
+    this.opcodeHandlers[0xc3] = () =&gt; {
+      const low = this.readMemory(this.registers.PC);
+      const high = this.readMemory((this.registers.PC + 1) &amp; 0xffff);
+      this.registers.PC = (high &lt;&lt; 8) | low;
+      return 10;
+    };
+
+    // JP Z, nn - See TRS80-COMPLETE-BUILD-PROMPT.md lines 581-591
+    this.opcodeHandlers[0xca] = () =&gt; {
+      const low = this.readMemory(this.registers.PC);
+      const high = this.readMemory((this.registers.PC + 1) &amp; 0xffff);
+      this.registers.PC = (this.registers.PC + 2) &amp; 0xffff;
+
+      if (this.flagZ) {
+        this.registers.PC = (high &lt;&lt; 8) | low;
+      }
+      return 10;
+    };
+
+    // CP n - See TRS80-COMPLETE-BUILD-PROMPT.md lines 593-599
+    this.opcodeHandlers[0xfe] = () =&gt; {
+      const value = this.readMemory(this.registers.PC);
+      this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+      this.subA(value, true);
+      return 7;
+    };
+
+    // RET - See TRS80-COMPLETE-BUILD-PROMPT.md lines 601-608
+    this.opcodeHandlers[0xc9] = () =&gt; {
+      const low = this.readMemory(this.registers.SP);
+      const high = this.readMemory((this.registers.SP + 1) &amp; 0xffff);
+      this.registers.SP = (this.registers.SP + 2) &amp; 0xffff;
+      this.registers.PC = (high &lt;&lt; 8) | low;
+      return 10;
+    };
+
+    // CALL nn - See TRS80-COMPLETE-BUILD-PROMPT.md lines 610-623
+    this.opcodeHandlers[0xcd] = () =&gt; {
+      const low = this.readMemory(this.registers.PC);
+      const high = this.readMemory((this.registers.PC + 1) &amp; 0xffff);
+      this.registers.PC = (this.registers.PC + 2) &amp; 0xffff;
+
+      this.registers.SP = (this.registers.SP - 1) &amp; 0xffff;
+      this.writeMemory(this.registers.SP, (this.registers.PC &gt;&gt; 8) &amp; 0xff);
+      this.registers.SP = (this.registers.SP - 1) &amp; 0xffff;
+      this.writeMemory(this.registers.SP, this.registers.PC &amp; 0xff);
+
+      this.registers.PC = (high &lt;&lt; 8) | low;
+      return 17;
+    };
+
+    // PUSH BC - See TRS80-COMPLETE-BUILD-PROMPT.md lines 625-632
+    this.opcodeHandlers[0xc5] = () =&gt; {
+      this.registers.SP = (this.registers.SP - 1) &amp; 0xffff;
+      this.writeMemory(this.registers.SP, this.registers.B);
+      this.registers.SP = (this.registers.SP - 1) &amp; 0xffff;
+      this.writeMemory(this.registers.SP, this.registers.C);
+      return 11;
+    };
+
+    // POP BC - See TRS80-COMPLETE-BUILD-PROMPT.md lines 634-641
+    this.opcodeHandlers[0xc1] = () =&gt; {
+      this.registers.C = this.readMemory(this.registers.SP);
+      this.registers.SP = (this.registers.SP + 1) &amp; 0xffff;
+      this.registers.B = this.readMemory(this.registers.SP);
+      this.registers.SP = (this.registers.SP + 1) &amp; 0xffff;
+      return 10;
+    };
+
+    // LD (HL), n - See TRS80-COMPLETE-BUILD-PROMPT.md lines 643-649
+    this.opcodeHandlers[0x36] = () =&gt; {
+      const value = this.readMemory(this.registers.PC);
+      this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+      this.writeMemory(this.HL, value);
+      return 10;
+    };
+
+    // LD A, (HL) - See TRS80-COMPLETE-BUILD-PROMPT.md lines 651-655
+    this.opcodeHandlers[0x7e] = () =&gt; {
+      this.registers.A = this.readMemory(this.HL);
+      return 7;
+    };
+
+    // INC r - See TRS80-COMPLETE-BUILD-PROMPT.md lines 657-661
+    this.opcodeHandlers[0x3c] = () =&gt; this.incReg(&quot;A&quot;);
+    this.opcodeHandlers[0x04] = () =&gt; this.incReg(&quot;B&quot;);
+    this.opcodeHandlers[0x0c] = () =&gt; this.incReg(&quot;C&quot;);
+
+    // DEC r - See TRS80-COMPLETE-BUILD-PROMPT.md lines 662-665
+    this.opcodeHandlers[0x3d] = () =&gt; this.decReg(&quot;A&quot;);
+    this.opcodeHandlers[0x05] = () =&gt; this.decReg(&quot;B&quot;);
+    this.opcodeHandlers[0x0d] = () =&gt; this.decReg(&quot;C&quot;);
+
+    // LD HL, nn - See TRS80-COMPLETE-BUILD-PROMPT.md lines 667-674
+    this.opcodeHandlers[0x21] = () =&gt; {
+      const low = this.readMemory(this.registers.PC);
+      const high = this.readMemory((this.registers.PC + 1) &amp; 0xffff);
+      this.registers.PC = (this.registers.PC + 2) &amp; 0xffff;
+      this.HL = (high &lt;&lt; 8) | low;
+      return 10;
+    };
+
+    // OUT (n), A - See TRS80-COMPLETE-BUILD-PROMPT.md lines 676-682
+    this.opcodeHandlers[0xd3] = () =&gt; {
+      const port = this.readMemory(this.registers.PC);
+      this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+      this.writePort(port, this.registers.A);
+      return 11;
+    };
+
+    // IN A, (n) - See TRS80-COMPLETE-BUILD-PROMPT.md lines 684-690
+    this.opcodeHandlers[0xdb] = () =&gt; {
+      const port = this.readMemory(this.registers.PC);
+      this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+      this.registers.A = this.readPort(port);
+      return 11;
+    };
+  }
+
+  // Extended instruction handlers (implement incrementally)
+  executeCB() {
+    const opcode = this.readMemory(this.registers.PC);
+    this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+
+    // CB instructions (bit operations) - implement as needed
+    // For now, log and return safe cycle count
+    if (!this.unimplementedOpcodes.has(0xcb00 | opcode)) {
+      this.unimplementedOpcodes.add(0xcb00 | opcode);
+      console.warn(
+        `Unimplemented CB opcode: 0xCB 0x${opcode
+          .toString(16)
+          .toUpperCase()
+          .padStart(2, &quot;0&quot;)}`
+      );
+    }
+    return 8;
+  }
+
+  executeED() {
+    const opcode = this.readMemory(this.registers.PC);
+    this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+
+    // ED instructions - implement as needed
+    if (!this.unimplementedOpcodes.has(0xed00 | opcode)) {
+      this.unimplementedOpcodes.add(0xed00 | opcode);
+      console.warn(
+        `Unimplemented ED opcode: 0xED 0x${opcode
+          .toString(16)
+          .toUpperCase()
+          .padStart(2, &quot;0&quot;)}`
+      );
+    }
+    return 8;
+  }
+
+  executeDD() {
+    const opcode = this.readMemory(this.registers.PC);
+    this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+
+    // DD (IX) instructions - implement as needed
+    if (!this.unimplementedOpcodes.has(0xdd00 | opcode)) {
+      this.unimplementedOpcodes.add(0xdd00 | opcode);
+      console.warn(
+        `Unimplemented DD opcode: 0xDD 0x${opcode
+          .toString(16)
+          .toUpperCase()
+          .padStart(2, &quot;0&quot;)}`
+      );
+    }
+    return 8;
+  }
+
+  executeFD() {
+    const opcode = this.readMemory(this.registers.PC);
+    this.registers.PC = (this.registers.PC + 1) &amp; 0xffff;
+
+    // FD (IY) instructions - implement as needed
+    if (!this.unimplementedOpcodes.has(0xfd00 | opcode)) {
+      this.unimplementedOpcodes.add(0xfd00 | opcode);
+      console.warn(
+        `Unimplemented FD opcode: 0xFD 0x${opcode
+          .toString(16)
+          .toUpperCase()
+          .padStart(2, &quot;0&quot;)}`
+      );
+    }
+    return 8;
+  }
+
+  // Arithmetic methods (see TRS80-COMPLETE-BUILD-PROMPT.md lines 693-847)
+  /**
+   * Add a value to the accumulator (A register) with flag updates
+   * See TRS80-COMPLETE-BUILD-PROMPT.md lines 693-736 for complete implementation
+   */
+  addA(value, withCarry = false) {
+    const a = this.registers.A;
+    const carry = withCarry &amp;&amp; this.flagC ? 1 : 0;
+    const result = a + value + carry;
+
+    this.flagC = result &gt; 0xff;
+    this.flagH = (a &amp; 0x0f) + (value &amp; 0x0f) + carry &gt; 0x0f;
+    this.flagN = 0;
+    this.registers.A = result &amp; 0xff;
+    this.flagZ = this.registers.A === 0;
+    this.flagS = (this.registers.A &amp; 0x80) !== 0;
+    this.flagPV = ((a ^ value ^ 0x80) &amp; (result ^ value) &amp; 0x80) !== 0;
+
+    return 4;
+  }
+
+  /**
+   * Subtract a value from the accumulator with flag updates
+   * See TRS80-COMPLETE-BUILD-PROMPT.md lines 738-783 for complete implementation
+   */
+  subA(value, compare = false) {
+    const a = this.registers.A;
+    const result = a - value;
+
+    this.flagC = result &lt; 0;
+    this.flagH = (a &amp; 0x0f) - (value &amp; 0x0f) &lt; 0;
+    this.flagN = 1;
+
+    if (!compare) {
+      this.registers.A = result &amp; 0xff;
+    }
+
+    const finalResult = result &amp; 0xff;
+    this.flagZ = finalResult === 0;
+    this.flagS = (finalResult &amp; 0x80) !== 0;
+    this.flagPV = ((a ^ value) &amp; (a ^ finalResult) &amp; 0x80) !== 0;
+
+    return 4;
+  }
+
+  /**
+   * Increment a register with flag updates (except carry)
+   * See TRS80-COMPLETE-BUILD-PROMPT.md lines 785-815 for complete implementation
+   */
+  incReg(reg) {
+    const value = this.registers[reg];
+    const result = (value + 1) &amp; 0xff;
+
+    this.registers[reg] = result;
+    this.flagZ = result === 0;
+    this.flagS = (result &amp; 0x80) !== 0;
+    this.flagH = (value &amp; 0x0f) === 0x0f;
+    this.flagPV = value === 0x7f;
+    this.flagN = 0;
+
+    return 4;
+  }
+
+  /**
+   * Decrement a register with flag updates (except carry)
+   * See TRS80-COMPLETE-BUILD-PROMPT.md lines 817-847 for complete implementation
+   */
+  decReg(reg) {
+    const value = this.registers[reg];
+    const result = (value - 1) &amp; 0xff;
+
+    this.registers[reg] = result;
+    this.flagZ = result === 0;
+    this.flagS = (result &amp; 0x80) !== 0;
+    this.flagH = (value &amp; 0x0f) === 0x00;
+    this.flagPV = value === 0x80;
+    this.flagN = 1;
+
+    return 4;
+  }
+}
+</code></pre>
+<h3>Testing</h3>
+<p><strong>Test File:</strong> <code>tests/unit/cpu-tests.js</code><br><strong>Source:</strong> Copy from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> (Phase 1 section)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cpu-tests.js
+</code></pre>
+<p><strong>Expected Result:</strong> All 45 tests pass</p>
+<p><strong>Test Coverage:</strong></p>
+<ul>
+<li>Initialization and Reset (2 tests)</li>
+<li>Register Operations (8 tests)</li>
+<li>Flag Operations (7 tests)</li>
+<li>Arithmetic Operations (15 tests)</li>
+<li>Load Instructions (5 tests)</li>
+<li>Control Flow (4 tests)</li>
+<li>Stack Operations (2 tests)</li>
+<li>I/O Operations (2 tests)</li>
+<li>Special Instructions (3 tests)</li>
+<li>Test Program 1.1 (1 test)</li>
+<li>Cycle Counting (3 tests)</li>
+</ul>
+<h3>⚠️ PHASE 1 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 1 tests with workflow script (waits for user confirmation)
+yarn phase:1
+
+# OR manually:
+node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<pre><code>======================================================================
+PHASE 1 TEST GATE: Z80 CPU Core Implementation
+======================================================================
+
+Running tests for Phase 1...
+
+Command: yarn test:run tests/unit/cpu-tests.js
+
+✓ tests/unit/cpu-tests.js (45)
+  ✓ Z80CPU - Initialization and Reset (2)
+  ✓ Z80CPU - Register Operations (8)
+  ✓ Z80CPU - Flag Operations (7)
+  ✓ Z80CPU - Arithmetic Operations (15)
+  ✓ Z80CPU - Load Instructions (5)
+  ✓ Z80CPU - Control Flow (4)
+  ✓ Z80CPU - Stack Operations (2)
+  ✓ Z80CPU - I/O Operations (2)
+  ✓ Z80CPU - Special Instructions (3)
+  ✓ Z80CPU - Test Program 1.1 (1)
+  ✓ Z80CPU - Cycle Counting (3)
+
+Test Files  1 passed (1)
+     Tests  45 passed (45)
+
+======================================================================
+✅ PHASE 1 TESTS PASSED
+======================================================================
+
+All tests for Z80 CPU Core Implementation have passed successfully.
+
+Phase Completion Checklist:
+  ✅ All unit tests pass (100% success rate)
+  ✅ No console errors
+  ✅ Phase completion criteria met
+  ✅ Code follows specifications
+
+⚠️  Ready to proceed to next phase? (yes/no):
+</code></pre>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT proceed to Phase 2 until all tests pass</strong></li>
+</ul>
+<p><strong>Manual Verification (if not using workflow script):</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cpu-tests.js
+# Exit code must be 0 (all tests passed)
+# If exit code is non-zero, tests failed - fix issues before proceeding
+</code></pre>
+<h3>Phase 1 Completion Criteria</h3>
+<ul>
+<li>✅ All unit tests pass (100% success rate)</li>
+<li>✅ <strong>COMPLETE Z80 instruction set implemented</strong> - All 252+ opcodes</li>
+<li>✅ <strong>ALL CB prefix instructions</strong> (bit operations, rotates, shifts)</li>
+<li>✅ <strong>ALL ED prefix instructions</strong> (extended, block operations, I/O)</li>
+<li>✅ <strong>ALL DD prefix instructions</strong> (IX register operations)</li>
+<li>✅ <strong>ALL FD prefix instructions</strong> (IY register operations)</li>
+<li>✅ CPU executes all instructions correctly</li>
+<li>✅ Flags are calculated correctly for all instructions</li>
+<li>✅ Cycle counting accurate for all instructions</li>
+<li>✅ Test program 1.1 executes correctly</li>
+<li>✅ Register pairs work correctly (including alternate set and index registers)</li>
+<li>✅ Stack operations work correctly</li>
+<li>✅ I/O operations work correctly</li>
+<li>✅ All addressing modes supported (immediate, register, indirect, indexed, relative)</li>
+<li>✅ No unimplemented opcode warnings (all opcodes must be implemented)</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cpu-tests.js
+# Expected: ✓ 45 passed (45)
+# Note: Tests may need expansion to cover all instruction categories
+</code></pre>
+<p><strong>Additional Verification:</strong></p>
+<pre><code class="language-bash"># Check for unimplemented opcode warnings (should be none)
+yarn dev
+# Run emulator and execute ROM - no console warnings about unimplemented opcodes
+</code></pre>
+<hr>
+<h2>PHASE 2: Memory Management System</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, copy the test file:</strong></p>
+<ol>
+<li><p><strong>Copy Test File:</strong></p>
+<ul>
+<li>Source: <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 2: Memory Tests&quot; (starts at line 675)</li>
+<li>Destination: <code>tests/unit/memory-tests.js</code></li>
+<li>Copy the complete test file content</li>
+</ul>
+</li>
+<li><p><strong>Verify Test File:</strong></p>
+<pre><code class="language-bash"># Check file exists
+ls -lh tests/unit/memory-tests.js
+
+# Verify imports (should use @core alias)
+head -5 tests/unit/memory-tests.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Count:</strong> 28 tests</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with implementation until test file is copied and verified.</strong></p>
+<h3>Objectives</h3>
+<p>Implement the memory management system with ROM/RAM separation, memory protection, and program loading capabilities. Support both 14KB and 16KB ROMs.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests define expected memory behavior</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>File: src/core/memory.js</h3>
+<pre><code class="language-javascript">/**
+ * TRS-80 Model III Memory System
+ *
+ * Memory Map:
+ * 0x0000-0x3FFF: 16K ROM (or 0x0000-0x37FF for 14KB ROM)
+ * 0x4000-0xFFFF: 48K RAM
+ * 0x3C00-0x3FFF: Video memory (shadowed in ROM space, writable)
+ *
+ * ROM Protection:
+ * - ROM area is read-only except for video RAM (0x3C00-0x3FFF)
+ * - Video RAM writes are allowed even in ROM space
+ * - RAM area (0x4000+) is fully read/write
+ */
+
+export class MemorySystem {
+  constructor() {
+    // ROM: 16K (supports 14KB via padding)
+    this.rom = new Uint8Array(0x4000); // Always allocate 16K
+    this.romSize = 0x4000; // Actual ROM size (14KB or 16KB)
+    this.romLoaded = false;
+
+    // RAM: 48K
+    this.ram = new Uint8Array(0xc000); // 48K RAM
+
+    // Memory boundaries
+    this.VIDEO_RAM_START = 0x3c00;
+    this.VIDEO_RAM_END = 0x3fff;
+    this.VIDEO_RAM_SIZE = 0x0400; // 1K
+    this.RAM_START = 0x4000;
+    this.RAM_END = 0xffff;
+  }
+
+  /**
+   * Load ROM data into memory
+   *
+   * Supports both 14KB (14336 bytes) and 16KB (16384 bytes) ROMs.
+   * 14KB ROMs are padded to 16KB for consistent addressing.
+   *
+   * @param {Uint8Array} romData - ROM data (14336 or 16384 bytes)
+   * @returns {boolean} True if loaded successfully
+   * @throws {Error} If ROM size is invalid
+   */
+  loadROM(romData) {
+    const size = romData.length;
+
+    // Validate ROM size
+    if (size !== 14336 &amp;&amp; size !== 16384) {
+      throw new Error(
+        `Invalid ROM size: expected 14336 or 16384 bytes, got ${size}`
+      );
+    }
+
+    // Store actual ROM size
+    this.romSize = size;
+
+    // Copy ROM data (14KB ROMs will have padding at end)
+    this.rom.set(romData);
+
+    // If 14KB ROM, pad remaining space with zeros
+    if (size === 14336) {
+      this.rom.fill(0x00, 14336, 16384);
+    }
+
+    this.romLoaded = true;
+    console.log(`ROM loaded: ${size} bytes (${(size / 1024).toFixed(1)}KB)`);
+    return true;
+  }
+
+  /**
+   * Read a byte from memory
+   *
+   * @param {number} address - 16-bit address (0x0000-0xFFFF)
+   * @returns {number} Byte value (0-255)
+   */
+  readByte(address) {
+    address &amp;= 0xffff; // Ensure 16-bit
+
+    if (address &lt; this.RAM_START) {
+      // ROM area (0x0000-0x3FFF)
+      return this.rom[address];
+    } else {
+      // RAM area (0x4000-0xFFFF)
+      return this.ram[address - this.RAM_START];
+    }
+  }
+
+  /**
+   * Write a byte to memory
+   *
+   * ROM protection: Writes to ROM area are ignored except for video RAM.
+   * Video RAM (0x3C00-0x3FFF) is writable even though it&#39;s in ROM space.
+   *
+   * @param {number} address - 16-bit address
+   * @param {number} value - Byte value (0-255)
+   */
+  writeByte(address, value) {
+    address &amp;= 0xffff;
+    value &amp;= 0xff;
+
+    if (address &lt; this.RAM_START) {
+      // ROM area - only allow video RAM writes
+      if (address &gt;= this.VIDEO_RAM_START &amp;&amp; address &lt;= this.VIDEO_RAM_END) {
+        this.rom[address] = value;
+      }
+      // Other ROM writes are silently ignored (ROM protection)
+    } else {
+      // RAM area - always writable
+      this.ram[address - this.RAM_START] = value;
+    }
+  }
+
+  /**
+   * Read a 16-bit word (little-endian)
+   *
+   * @param {number} address - 16-bit address
+   * @returns {number} 16-bit value
+   */
+  readWord(address) {
+    const low = this.readByte(address);
+    const high = this.readByte((address + 1) &amp; 0xffff);
+    return (high &lt;&lt; 8) | low;
+  }
+
+  /**
+   * Write a 16-bit word (little-endian)
+   *
+   * @param {number} address - 16-bit address
+   * @param {number} value - 16-bit value
+   */
+  writeWord(address, value) {
+    this.writeByte(address, value &amp; 0xff);
+    this.writeByte((address + 1) &amp; 0xffff, (value &gt;&gt; 8) &amp; 0xff);
+  }
+
+  /**
+   * Load a program into memory
+   *
+   * @param {Uint8Array|Array} data - Program data
+   * @param {number} startAddress - Starting address (default: 0x4200 for BASIC)
+   * @returns {number} Starting address where program was loaded
+   * @throws {Error} If program exceeds memory bounds
+   */
+  loadProgram(data, startAddress = 0x4200) {
+    const programData =
+      data instanceof Uint8Array ? data : new Uint8Array(data);
+
+    if (startAddress + programData.length &gt; 0x10000) {
+      throw new Error(
+        `Program too large: ${
+          programData.length
+        } bytes at 0x${startAddress.toString(16)} exceeds memory`
+      );
+    }
+
+    for (let i = 0; i &lt; programData.length; i++) {
+      this.writeByte(startAddress + i, programData[i]);
+    }
+
+    console.log(
+      `Program loaded at 0x${startAddress.toString(16)} (${
+        programData.length
+      } bytes)`
+    );
+    return startAddress;
+  }
+
+  /**
+   * Clear all RAM (ROM unaffected)
+   */
+  clearRAM() {
+    this.ram.fill(0);
+  }
+
+  /**
+   * Get memory system statistics
+   *
+   * @returns {Object} Memory stats
+   */
+  getStats() {
+    return {
+      romSize: this.romSize,
+      ramSize: this.ram.length,
+      totalSize: this.romSize + this.ram.length,
+      romLoaded: this.romLoaded,
+      videoRamStart: this.VIDEO_RAM_START,
+      videoRamEnd: this.VIDEO_RAM_END,
+    };
+  }
+}
+</code></pre>
+<h3>Testing</h3>
+<p><strong>Test File:</strong> <code>tests/unit/memory-tests.js</code><br><strong>Source:</strong> Copy from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> (Phase 2 section)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/memory-tests.js
+</code></pre>
+<p><strong>Expected Result:</strong> All 28 tests pass</p>
+<p><strong>Test Coverage:</strong></p>
+<ul>
+<li>Initialization (3 tests)</li>
+<li>ROM Loading (3 tests - including 14KB support)</li>
+<li>Memory Reading (3 tests)</li>
+<li>Memory Writing (3 tests)</li>
+<li>ROM Protection (3 tests)</li>
+<li>RAM Operations (3 tests)</li>
+<li>Program Loading (5 tests)</li>
+<li>RAM Management (2 tests)</li>
+<li>Address Wrapping (2 tests)</li>
+</ul>
+<h3>⚠️ PHASE 2 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 2 tests with workflow script (waits for user confirmation)
+yarn phase:2
+
+# OR manually:
+node scripts/phase-workflow.js 2 tests/unit/memory-tests.js
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<ul>
+<li>All 28 tests pass</li>
+<li>Script displays success message</li>
+<li>Script waits for user confirmation before proceeding</li>
+</ul>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT proceed to Phase 3 until all tests pass</strong></li>
+</ul>
+<p><strong>Manual Verification (if not using workflow script):</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/memory-tests.js
+# Exit code must be 0 (all tests passed)
+# If exit code is non-zero, tests failed - fix issues before proceeding
+</code></pre>
+<h3>Phase 2 Completion Criteria</h3>
+<ul>
+<li>✅ All unit tests pass (100% success rate)</li>
+<li>✅ ROM loads correctly (both 14KB and 16KB)</li>
+<li>✅ ROM is read-only (except video RAM)</li>
+<li>✅ RAM is read/write</li>
+<li>✅ Program loading works</li>
+<li>✅ 16-bit word operations work</li>
+<li>✅ Memory protection enforced</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/memory-tests.js
+# Expected: ✓ 28 passed (28)
+</code></pre>
+<hr>
+<h2>PHASE 3: Cassette I/O System</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, copy the test files:</strong></p>
+<ol>
+<li><p><strong>Copy Test Files:</strong></p>
+<ul>
+<li>Source: <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 3: Cassette &amp; I/O Tests&quot; (starts at line 1004)</li>
+<li>Copy both files:<ul>
+<li><code>tests/unit/cassette-tests.js</code> (starts at line 1006)</li>
+<li><code>tests/unit/io-tests.js</code> (starts at line 1286)</li>
+</ul>
+</li>
+<li>Copy the complete test file content for both files</li>
+</ul>
+</li>
+<li><p><strong>Verify Test Files:</strong></p>
+<pre><code class="language-bash"># Check files exist
+ls -lh tests/unit/cassette-tests.js tests/unit/io-tests.js
+
+# Verify imports (should use @peripherals and @core aliases)
+head -5 tests/unit/cassette-tests.js
+head -5 tests/unit/io-tests.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Count:</strong> 37 tests total (22 cassette + 15 I/O)</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with implementation until test files are copied and verified.</strong></p>
+<h3>Objectives</h3>
+<p>Implement the cassette interface simulation and I/O port handling system.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests define expected cassette and I/O behavior</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>File: src/peripherals/cassette.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 1120-1242 for the full CassetteSystem implementation.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Tape loading and simulation</li>
+<li>CLOAD/CSAVE operations</li>
+<li>Tape position tracking</li>
+<li>Motor control simulation</li>
+</ul>
+<h3>File: src/core/io.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 1245-1318 for the full IOSystem implementation.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Port I/O handling</li>
+<li>Keyboard buffer management</li>
+<li>Cassette system integration</li>
+<li>Model III specific port mappings</li>
+</ul>
+<h3>Testing</h3>
+<p><strong>Test Files:</strong></p>
+<ul>
+<li><code>tests/unit/cassette-tests.js</code> (22 tests)</li>
+<li><code>tests/unit/io-tests.js</code> (15 tests)</li>
+</ul>
+<p><strong>Source:</strong> Copy from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> (Phase 3 section)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
+</code></pre>
+<p><strong>Expected Result:</strong> All 37 tests pass</p>
+<h3>⚠️ PHASE 3 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 3 tests with workflow script (waits for user confirmation)
+yarn phase:3
+
+# OR manually:
+node scripts/phase-workflow.js 3 &quot;tests/unit/cassette-tests.js tests/unit/io-tests.js&quot;
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<ul>
+<li>All 37 tests pass (22 cassette + 15 I/O)</li>
+<li>Script displays success message</li>
+<li>Script waits for user confirmation before proceeding</li>
+</ul>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT proceed to Phase 4 until all tests pass</strong></li>
+</ul>
+<h3>Phase 3 Completion Criteria</h3>
+<ul>
+<li>✅ All unit tests pass (100% success rate)</li>
+<li>✅ Cassette tape loading works</li>
+<li>✅ CLOAD/CSAVE operations work</li>
+<li>✅ Port I/O works correctly</li>
+<li>✅ Keyboard buffer works</li>
+<li>✅ Cassette control works</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
+# Expected: ✓ 37 passed (37)
+</code></pre>
+<hr>
+<h2>Missing File Specifications</h2>
+<h3>File: src/core/timing.js</h3>
+<p><strong>Purpose:</strong> Cycle-accurate timing system for CPU execution and frame synchronization.</p>
+<p><strong>Specification:</strong></p>
+<pre><code class="language-javascript">/**
+ * Cycle-accurate timing system
+ * Manages CPU cycle counting and frame timing
+ */
+
+export class TimingSystem {
+  constructor() {
+    this.cpuCycles = 0;
+    this.frameCycles = 0;
+    this.targetCyclesPerFrame = 33333; // ~2MHz / 60 FPS
+    this.lastFrameTime = 0;
+  }
+
+  /**
+   * Reset timing counters
+   */
+  reset() {
+    this.cpuCycles = 0;
+    this.frameCycles = 0;
+    this.lastFrameTime = performance.now();
+  }
+
+  /**
+   * Add CPU cycles
+   * @param {number} cycles - Number of cycles to add
+   */
+  addCycles(cycles) {
+    this.cpuCycles += cycles;
+    this.frameCycles += cycles;
+  }
+
+  /**
+   * Check if frame cycle budget exhausted
+   * @returns {boolean} True if should render frame
+   */
+  shouldRenderFrame() {
+    return this.frameCycles &gt;= this.targetCyclesPerFrame;
+  }
+
+  /**
+   * Reset frame cycle counter (call after rendering)
+   */
+  resetFrameCycles() {
+    this.frameCycles = 0;
+  }
+
+  /**
+   * Get current CPU cycle count
+   * @returns {number} Total CPU cycles
+   */
+  getCycles() {
+    return this.cpuCycles;
+  }
+}
+</code></pre>
+<h3>File: scripts/generate-char-rom.js</h3>
+<p><strong>Purpose:</strong> Generate character ROM data structure for video system.</p>
+<p><strong>Specification:</strong></p>
+<pre><code class="language-javascript">#!/usr/bin/env node
+/**
+ * Generate Character ROM Data
+ * Creates character bitmap data for TRS-80 Model III
+ */
+
+import { writeFileSync } from &quot;fs&quot;;
+import { fileURLToPath } from &quot;url&quot;;
+import { dirname, join } from &quot;path&quot;;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Generate character ROM data structure
+const charRom = {};
+
+// Basic ASCII characters (0-127)
+// Add character definitions here or import from source
+
+// Graphics characters (128-191) - 2×3 pixel blocks
+for (let i = 128; i &lt; 192; i++) {
+  const pattern = i - 128;
+  charRom[i] = generateGraphicsChar(pattern);
+}
+
+function generateGraphicsChar(pattern) {
+  // Generate 12-byte bitmap for 2×3 pixel block
+  // See VideoSystem.generateGraphicsChar() for implementation
+  return new Array(12).fill(0x00);
+}
+
+// Write to src/data/character-rom.js
+const output = `/**
+ * TRS-80 Model III Character ROM
+ * Auto-generated character bitmap data
+ */
+
+export const CHARACTER_ROM = ${JSON.stringify(charRom, null, 2)};
+`;
+
+const outputPath = join(__dirname, &quot;../src/data/character-rom.js&quot;);
+writeFileSync(outputPath, output);
+
+console.log(&quot;✓ Character ROM generated&quot;);
+</code></pre>
+<h3>File: src/data/character-rom.js</h3>
+<p><strong>Purpose:</strong> Character ROM data structure for video rendering.</p>
+<p><strong>Specification:</strong></p>
+<pre><code class="language-javascript">/**
+ * TRS-80 Model III Character ROM
+ * Character bitmap data for text and graphics rendering
+ *
+ * Structure:
+ * - Characters 0-127: ASCII text characters
+ * - Characters 128-191: Graphics characters (2×3 pixel blocks)
+ * - Each character is a 12-byte array representing 8×12 pixel bitmap
+ */
+
+export const CHARACTER_ROM = {
+  // ASCII characters (0-127)
+  // Each entry: Array&lt;12&gt; of bytes representing bitmap rows
+  // Graphics characters (128-191)
+  // Generated by generateGraphicsChar() function
+  // Pattern encoding: 6 bits (bits 0-5) control 2×3 pixel block
+};
+</code></pre>
+<h3>File: src/utils/debugger.js</h3>
+<p><strong>Purpose:</strong> Debug tools for emulator development and testing.</p>
+<p><strong>Specification:</strong></p>
+<pre><code class="language-javascript">/**
+ * Emulator Debugger Tools
+ * Provides breakpoint, step, and inspection capabilities
+ */
+
+export class EmulatorDebugger {
+  constructor(emulator) {
+    this.emulator = emulator;
+    this.breakpoints = new Set();
+    this.paused = false;
+    this.stepMode = false;
+  }
+
+  /**
+   * Set breakpoint at address
+   * @param {number} address - Memory address
+   */
+  setBreakpoint(address) {
+    this.breakpoints.add(address);
+  }
+
+  /**
+   * Clear breakpoint at address
+   * @param {number} address - Memory address
+   */
+  clearBreakpoint(address) {
+    this.breakpoints.delete(address);
+  }
+
+  /**
+   * Check if should break at current PC
+   * @returns {boolean} True if breakpoint hit
+   */
+  checkBreakpoint() {
+    return this.breakpoints.has(this.emulator.cpu.registers.PC);
+  }
+
+  /**
+   * Step one instruction
+   */
+  step() {
+    this.stepMode = true;
+    this.paused = false;
+  }
+
+  /**
+   * Resume execution
+   */
+  resume() {
+    this.paused = false;
+    this.stepMode = false;
+  }
+
+  /**
+   * Pause execution
+   */
+  pause() {
+    this.paused = true;
+  }
+
+  /**
+   * Get CPU state for inspection
+   * @returns {Object} CPU register and flag state
+   */
+  getCPUState() {
+    return {
+      registers: { ...this.emulator.cpu.registers },
+      flags: {
+        C: this.emulator.cpu.flagC,
+        N: this.emulator.cpu.flagN,
+        PV: this.emulator.cpu.flagPV,
+        H: this.emulator.cpu.flagH,
+        Z: this.emulator.cpu.flagZ,
+        S: this.emulator.cpu.flagS,
+      },
+      cycles: this.emulator.cpu.cycles,
+      halted: this.emulator.cpu.halted,
+    };
+  }
+
+  /**
+   * Get memory dump
+   * @param {number} start - Start address
+   * @param {number} length - Number of bytes
+   * @returns {Uint8Array} Memory contents
+   */
+  getMemoryDump(start, length) {
+    const dump = new Uint8Array(length);
+    for (let i = 0; i &lt; length; i++) {
+      dump[i] = this.emulator.memory.readByte(start + i);
+    }
+    return dump;
+  }
+}
+</code></pre>
+<hr>
+<h2>PHASE 4: Video Display System with Graphics Support</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, copy the test file:</strong></p>
+<ol>
+<li><p><strong>Copy Test File:</strong></p>
+<ul>
+<li>Source: <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 4: Video Tests&quot; (starts at line 1408)</li>
+<li>Destination: <code>tests/unit/video-tests.js</code></li>
+<li>Copy the complete test file content</li>
+</ul>
+</li>
+<li><p><strong>Verify Test File:</strong></p>
+<pre><code class="language-bash"># Check file exists
+ls -lh tests/unit/video-tests.js
+
+# Verify imports (should use @peripherals alias)
+head -5 tests/unit/video-tests.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Count:</strong> 32 tests</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with implementation until test file is copied and verified.</strong></p>
+<h3>Objectives</h3>
+<p>Implement the video display system with text mode and graphics mode support, including SET/RESET/POINT commands.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests define expected video behavior</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>File: src/peripherals/video.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 1330-1647 for the full VideoSystem implementation.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>64×16 character text display</li>
+<li>128×48 pixel graphics mode</li>
+<li>Graphics character generation (128-191)</li>
+<li>SET/RESET/POINT pixel operations</li>
+<li>Character ROM with graphics support</li>
+</ul>
+<h3>Coordinate System Specification</h3>
+<p><strong>Origin:</strong> Top-left corner (0, 0)<br><strong>X-axis:</strong> Left to right (0-127)<br><strong>Y-axis:</strong> Top to bottom (0-47)<br><strong>Character Grid:</strong> 64×16 positions<br><strong>Graphics Resolution:</strong> 128×48 pixels<br><strong>Pixel-to-Character Mapping:</strong> 2 pixels wide × 3 pixels tall per character</p>
+<h3>Testing</h3>
+<p><strong>Test File:</strong> <code>tests/unit/video-tests.js</code><br><strong>Source:</strong> Copy from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> (Phase 4 section)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/video-tests.js
+</code></pre>
+<p><strong>Expected Result:</strong> All 32 tests pass</p>
+<h3>⚠️ PHASE 4 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 4 tests with workflow script (waits for user confirmation)
+yarn phase:4
+
+# OR manually:
+node scripts/phase-workflow.js 4 tests/unit/video-tests.js
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<ul>
+<li>All 32 tests pass</li>
+<li>Script displays success message</li>
+<li>Script waits for user confirmation before proceeding</li>
+</ul>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT proceed to Phase 5 until all tests pass</strong></li>
+</ul>
+<h3>Phase 4 Completion Criteria</h3>
+<ul>
+<li>✅ All unit tests pass (100% success rate)</li>
+<li>✅ 64×16 text display works</li>
+<li>✅ Characters render correctly</li>
+<li>✅ Graphics characters (128-191) render as 2×3 pixel blocks</li>
+<li>✅ SET/RESET/POINT functions work correctly</li>
+<li>✅ Coordinate system is correct (top-left origin)</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/video-tests.js
+# Expected: ✓ 32 passed (32)
+</code></pre>
+<hr>
+<h2>PHASE 5: System Integration</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, copy the test file:</strong></p>
+<ol>
+<li><p><strong>Copy Test File:</strong></p>
+<ul>
+<li>Source: <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 5: System Integration Tests&quot; (starts at line 1684)</li>
+<li>Destination: <code>tests/integration/cpu-memory-integration.js</code></li>
+<li>Copy the complete test file content</li>
+</ul>
+</li>
+<li><p><strong>Verify Test File:</strong></p>
+<pre><code class="language-bash"># Check file exists
+ls -lh tests/integration/cpu-memory-integration.js
+
+# Verify imports (should use @core, @system aliases)
+head -5 tests/integration/cpu-memory-integration.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Count:</strong> Integration tests (varies)</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with implementation until test file is copied and verified.</strong></p>
+<h3>Objectives</h3>
+<p>Integrate all components into a complete TRS-80 system with proper component connections and system initialization.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests define expected system integration behavior</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>File: src/peripherals/keyboard.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 1654-1724 for the full KeyboardHandler implementation.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Model III key mapping</li>
+<li>Key buffer management</li>
+<li>Event handling</li>
+</ul>
+<h3>File: src/system/trs80.js</h3>
+<p><strong>Complete Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 1726-1863 for the full TRS80System implementation.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>System integration and initialization</li>
+<li>Component coordination</li>
+<li>Execution loop</li>
+<li>BASIC program loading</li>
+<li>Graphics command wrappers</li>
+</ul>
+<h3>Testing</h3>
+<p><strong>Test File:</strong> <code>tests/integration/cpu-memory-integration.js</code><br><strong>Source:</strong> Copy from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> (Phase 5 section)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/integration/cpu-memory-integration.js
+</code></pre>
+<p><strong>Expected Result:</strong> All integration tests pass</p>
+<h3>⚠️ PHASE 5 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 5 tests with workflow script (waits for user confirmation)
+yarn phase:5
+
+# OR manually:
+node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<ul>
+<li>All integration tests pass</li>
+<li>Script displays success message</li>
+<li>Script waits for user confirmation before proceeding</li>
+</ul>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT proceed to Phase 6 until all tests pass</strong></li>
+</ul>
+<h3>Phase 5 Completion Criteria</h3>
+<ul>
+<li>✅ All integration tests pass</li>
+<li>✅ System boots to ROM</li>
+<li>✅ All components integrated</li>
+<li>✅ Keyboard input works</li>
+<li>✅ Display updates properly</li>
+<li>✅ Graphics commands functional</li>
+<li>✅ CPU-Memory integration works</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/integration/cpu-memory-integration.js
+</code></pre>
+<hr>
+<h2>PHASE 6: Sample Programs Library and User Interface</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, copy the test file:</strong></p>
+<ol>
+<li><p><strong>Copy Test File:</strong></p>
+<ul>
+<li>Source: <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> - Section &quot;PHASE 6: Program Loader Tests&quot; (starts at line 1837)</li>
+<li>Destination: <code>tests/unit/program-loader-tests.js</code></li>
+<li>Copy the complete test file content</li>
+</ul>
+</li>
+<li><p><strong>Verify Test File:</strong></p>
+<pre><code class="language-bash"># Check file exists
+ls -lh tests/unit/program-loader-tests.js
+
+# Verify imports (should use @ui, @data aliases)
+head -5 tests/unit/program-loader-tests.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Count:</strong> 18 tests</p>
+</li>
+</ol>
+<p><strong>DO NOT proceed with implementation until test file is copied and verified.</strong></p>
+<h3>Objectives</h3>
+<p>Implement the user interface with program loader, BASIC program editor, and sample program library. Convert assembly routines to source code format.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Tests define expected program loader behavior</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>File: src/data/sample-assembly.js (Updated)</h3>
+<pre><code class="language-javascript">/**
+ * Sample Z80 Assembly Routines
+ * Now stored as SOURCE CODE (not pre-assembled bytes)
+ * Can be edited and assembled using integrated Z80 assembler
+ */
+
+export const assemblySamples = {
+  return42: {
+    name: &quot;Return 42&quot;,
+    description: &quot;Returns the value 42 to BASIC&quot;,
+    source: `.ORG $5000
+START:  LD A, 42
+        RET
+.END`,
+    address: 0x5000,
+    // bytes generated on-demand via assembler
+  },
+
+  &quot;add-numbers&quot;: {
+    name: &quot;Add Two Numbers&quot;,
+    description: &quot;Adds values at 0x5100 and 0x5101, returns result&quot;,
+    source: `.ORG $5000
+        LD A, (0x5100)  ; Load first number
+        LD B, A         ; Save in B
+        LD A, (0x5101)  ; Load second number
+        LD C, A         ; Save in C
+        LD A, B         ; Get first number
+        ADD A, C        ; Add second number
+        LD (0x5102), A  ; Store result
+        RET             ; Return
+.END`,
+    address: 0x5000,
+  },
+
+  // Additional assembly routines should follow the same format:
+  // - name: Unique identifier
+  // - source: Z80 assembly source code with .ORG directive
+  // - address: Starting address for the routine
+  // See TRS80-COMPLETE-BUILD-PROMPT.md lines 2099-2220 for more examples
+};
+</code></pre>
+<h3>File: src/ui/program-loader.js (Enhanced)</h3>
+<p><strong>Base Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 2223-2497 for the base ProgramLoader implementation.</p>
+<p><strong>Assembler Integration Enhancements:</strong></p>
+<ul>
+<li>Import Z80Assembler and AssemblyEditor (see Phase 7)</li>
+<li>Add <code>assembleAndLoad()</code> method for compiling assembly code</li>
+<li>Update <code>loadAssemblySample()</code> to assemble from source code</li>
+<li>Add <code>editAssemblyProgram()</code> method for opening assembly editor</li>
+</ul>
+<h3>File: index.html (Enhanced)</h3>
+<p><strong>Base Implementation Reference:</strong> See <code>docs/TRS80-COMPLETE-BUILD-PROMPT.md</code> lines 2549-2660 for the base HTML structure.</p>
+<p><strong>Assembly Editor UI Elements:</strong></p>
+<ul>
+<li>Add assembly editor panel (see Phase 7 section for complete HTML)</li>
+<li>Include textarea for source code editing</li>
+<li>Add assemble and load buttons</li>
+<li>Include panels for errors, warnings, symbol table, and bytecode display</li>
+</ul>
+<h3>Testing</h3>
+<p><strong>Test File:</strong> <code>tests/unit/program-loader-tests.js</code><br><strong>Source:</strong> Copy from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code> (Phase 6 section)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/program-loader-tests.js
+</code></pre>
+<p><strong>Expected Result:</strong> All 18 tests pass</p>
+<h3>⚠️ PHASE 6 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 6 tests with workflow script (waits for user confirmation)
+yarn phase:6
+
+# OR manually:
+node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<ul>
+<li>All 18 tests pass</li>
+<li>Script displays success message</li>
+<li>Script waits for user confirmation before proceeding</li>
+</ul>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT proceed to Phase 7 until all tests pass</strong></li>
+</ul>
+<h3>Phase 6 Completion Criteria</h3>
+<ul>
+<li>✅ All unit tests pass (100% success rate)</li>
+<li>✅ Complete UI functional</li>
+<li>✅ All 12 BASIC programs available and loadable</li>
+<li>✅ All 5 assembly routines available (as source code)</li>
+<li>✅ Program selection and loading works</li>
+<li>✅ Edit modal functional for BASIC programs</li>
+<li>✅ Graphics programs work correctly</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/program-loader-tests.js
+# Expected: ✓ 18 passed (18)
+</code></pre>
+<hr>
+<h2>PHASE 7: Z80 Assembler Integration</h2>
+<h3>Test File Setup</h3>
+<p><strong>BEFORE starting implementation, create the test file:</strong></p>
+<ol>
+<li><p><strong>Create Test File:</strong></p>
+<ul>
+<li>Create <code>tests/unit/assembler-tests.js</code></li>
+<li>Test assembler modules: lexer, parser, codegen, evaluator</li>
+<li>Test assembly editor integration</li>
+<li>Test compilation and loading workflow</li>
+</ul>
+</li>
+<li><p><strong>Verify Test File:</strong></p>
+<pre><code class="language-bash"># Check file exists
+ls -lh tests/unit/assembler-tests.js
+
+# Verify imports (should use @assembler alias)
+head -5 tests/unit/assembler-tests.js
+</code></pre>
+</li>
+<li><p><strong>Expected Test Coverage:</strong></p>
+<ul>
+<li>Lexer tokenization (5+ tests)</li>
+<li>Parser two-pass assembly (5+ tests)</li>
+<li>Code generation (5+ tests)</li>
+<li>Expression evaluation (5+ tests)</li>
+<li>Error reporting (3+ tests)</li>
+<li>Symbol table generation (3+ tests)</li>
+</ul>
+</li>
+</ol>
+<p><strong>Note:</strong> Assembler tests may need to be created based on assembler implementation. Test as you implement each assembler module.</p>
+<p><strong>DO NOT proceed with implementation until test file structure is created.</strong></p>
+<h3>Objectives</h3>
+<p>Integrate the complete Z80 assembler into the emulator, enabling in-browser assembly code editing, compilation, and execution.</p>
+<p><strong>Test-First Approach:</strong></p>
+<ul>
+<li>Create tests for each assembler module as you implement it</li>
+<li>Implement code to make tests pass</li>
+<li>Run tests frequently during implementation</li>
+<li>Fix any failing tests before proceeding</li>
+</ul>
+<h3>Assembler Module Structure</h3>
+<p><strong>Source Document:</strong> <code>docs/cschweda-z80-assembler-8a5edab282632443.txt</code></p>
+<p><strong>Step-by-Step Integration:</strong></p>
+<ol>
+<li><p><strong>Copy Assembler Modules</strong></p>
+<ul>
+<li>Copy all assembler files from the source document to <code>src/assembler/</code></li>
+<li>Maintain the exact file structure and naming</li>
+</ul>
+</li>
+<li><p><strong>Module Files to Copy:</strong></p>
+<ul>
+<li><code>src/assembler/assembler.js</code> - Main Z80Assembler class (lines 1689-1921 in source)</li>
+<li><code>src/assembler/lexer.js</code> - Tokenizer (lines 2906-3171 in source)</li>
+<li><code>src/assembler/parser.js</code> - Two-pass parser (from source)</li>
+<li><code>src/assembler/codegen.js</code> - Code generator (lines 1926-2088 in source)</li>
+<li><code>src/assembler/evaluator.js</code> - Expression evaluator (lines 2562-3808 in source)</li>
+<li><code>src/assembler/opcodes.js</code> - Instruction encoding tables (lines 3429-6607 in source)</li>
+<li><code>src/assembler/constants.js</code> - Z80 constants (lines 2239-2557 in source)</li>
+</ul>
+</li>
+<li><p><strong>Update Import Paths</strong></p>
+<ul>
+<li>Change relative imports to use <code>@assembler</code> alias</li>
+<li>Example: <code>import { Lexer } from &#39;./lexer.js&#39;</code> → <code>import { Lexer } from &#39;@assembler/lexer.js&#39;</code></li>
+<li>Update all cross-module imports within assembler directory</li>
+</ul>
+</li>
+<li><p><strong>Update Memory Map Constants</strong></p>
+<ul>
+<li>Edit <code>src/assembler/constants.js</code></li>
+<li>Update MEMORY constants for TRS-80 memory map (see below)</li>
+</ul>
+</li>
+<li><p><strong>Test Each Module</strong></p>
+<ul>
+<li>Import and test each module individually</li>
+<li>Verify exports are correct</li>
+<li>Check for any syntax errors</li>
+</ul>
+</li>
+</ol>
+<h3>Update Constants for TRS-80 Memory Map</h3>
+<p>In <code>src/assembler/constants.js</code>, update MEMORY constants:</p>
+<pre><code class="language-javascript">export const MEMORY = {
+  ROM_START: 0x0000,
+  ROM_END: 0x3fff, // 16K ROM (or 0x37FF for 14KB)
+  RAM_START: 0x4000,
+  RAM_END: 0xffff, // 48K RAM
+  VIDEO_START: 0x3c00, // Video RAM
+  VIDEO_END: 0x3fff,
+  BASIC_START: 0x4200, // BASIC program area
+  DEFAULT_ORG: 0x5000, // Default assembly address
+};
+</code></pre>
+<h3>File: src/ui/assembly-editor.js (NEW)</h3>
+<pre><code class="language-javascript">/**
+ * Assembly Code Editor UI Component
+ * Provides in-browser Z80 assembly code editing and compilation
+ */
+
+import { Z80Assembler } from &quot;@assembler/assembler.js&quot;;
+import {
+  formatMemoryDump,
+  formatSymbolTable,
+  formatErrors,
+  formatWarnings,
+} from &quot;@utils/formatter.js&quot;;
+
+export class AssemblyEditor {
+  constructor(emulator) {
+    this.emulator = emulator;
+    this.assembler = new Z80Assembler();
+    this.currentSource = &quot;&quot;;
+    this.lastResult = null;
+
+    this.setupUI();
+  }
+
+  setupUI() {
+    // Assembly editor elements (add to index.html)
+    this.editor = document.getElementById(&quot;assembly-editor&quot;);
+    this.assembleBtn = document.getElementById(&quot;assemble-btn&quot;);
+    this.loadBtn = document.getElementById(&quot;load-assembly-btn&quot;);
+    this.errorsPanel = document.getElementById(&quot;assembly-errors&quot;);
+    this.warningsPanel = document.getElementById(&quot;assembly-warnings&quot;);
+    this.symbolTablePanel = document.getElementById(&quot;assembly-symbols&quot;);
+    this.bytecodePanel = document.getElementById(&quot;assembly-bytecode&quot;);
+
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    this.assembleBtn?.addEventListener(&quot;click&quot;, () =&gt; this.assemble());
+    this.loadBtn?.addEventListener(&quot;click&quot;, () =&gt; this.loadIntoEmulator());
+
+    // Auto-assemble on Ctrl+Enter
+    this.editor?.addEventListener(&quot;keydown&quot;, (e) =&gt; {
+      if (e.ctrlKey &amp;&amp; e.key === &quot;Enter&quot;) {
+        e.preventDefault();
+        this.assemble();
+      }
+    });
+  }
+
+  /**
+   * Assemble the current source code
+   */
+  assemble() {
+    const source = this.editor?.value || &quot;&quot;;
+
+    if (!source.trim()) {
+      this.showError(&quot;No source code to assemble&quot;);
+      return;
+    }
+
+    this.currentSource = source;
+    const result = this.assembler.assemble(source);
+    this.lastResult = result;
+
+    if (result.success) {
+      this.displaySuccess(result);
+    } else {
+      this.displayErrors(result);
+    }
+  }
+
+  /**
+   * Display successful assembly result
+   */
+  displaySuccess(result) {
+    // Display bytecode
+    if (this.bytecodePanel) {
+      this.bytecodePanel.textContent = formatMemoryDump(
+        result.bytes,
+        result.startAddress
+      );
+    }
+
+    // Display symbol table
+    if (this.symbolTablePanel) {
+      this.symbolTablePanel.textContent = formatSymbolTable(result.symbolTable);
+    }
+
+    // Display warnings (if any)
+    if (this.warningsPanel) {
+      this.warningsPanel.textContent = formatWarnings(result.warnings);
+    }
+
+    // Clear errors
+    if (this.errorsPanel) {
+      this.errorsPanel.textContent = &quot;No errors&quot;;
+    }
+
+    // Enable load button
+    if (this.loadBtn) {
+      this.loadBtn.disabled = false;
+    }
+  }
+
+  /**
+   * Display assembly errors
+   */
+  displayErrors(result) {
+    if (this.errorsPanel) {
+      this.errorsPanel.textContent = formatErrors(result.errors);
+    }
+
+    // Disable load button
+    if (this.loadBtn) {
+      this.loadBtn.disabled = true;
+    }
+  }
+
+  /**
+   * Load assembled code into emulator memory
+   */
+  loadIntoEmulator() {
+    if (!this.lastResult || !this.lastResult.success) {
+      this.showError(&quot;No successfully assembled code to load&quot;);
+      return;
+    }
+
+    if (!this.emulator.running) {
+      this.showError(&quot;Please power on the emulator first&quot;);
+      return;
+    }
+
+    const address = this.lastResult.startAddress;
+    this.emulator.memory.loadProgram(this.lastResult.bytes, address);
+
+    this.showSuccess(`Assembly loaded at 0x${address.toString(16)}`);
+  }
+
+  /**
+   * Load assembly source code into editor
+   */
+  loadSource(source) {
+    if (this.editor) {
+      this.editor.value = source;
+      this.currentSource = source;
+    }
+  }
+
+  showError(message) {
+    console.error(message);
+    // Update UI with error message
+  }
+
+  showSuccess(message) {
+    console.log(message);
+    // Update UI with success message
+  }
+}
+</code></pre>
+<h3>Update ProgramLoader for Assembler Integration</h3>
+<p>In <code>src/ui/program-loader.js</code>, add:</p>
+<pre><code class="language-javascript">import { Z80Assembler } from &quot;@assembler/assembler.js&quot;;
+import { AssemblyEditor } from &quot;@ui/assembly-editor.js&quot;;
+
+export class ProgramLoader {
+  constructor(emulator) {
+    this.emulator = emulator;
+    this.assembler = new Z80Assembler(); // NEW
+    this.assemblyEditor = new AssemblyEditor(emulator); // NEW
+    // ... rest of constructor
+  }
+
+  /**
+   * Load assembly routine - now assembles from source code
+   */
+  loadAssemblySample(key) {
+    const routine = assemblySamples[key];
+    if (!routine) return;
+
+    this.currentProgram = routine;
+    this.currentProgramType = &quot;assembly&quot;;
+
+    // Display assembly source code
+    document.getElementById(&quot;program-viewer&quot;).textContent = routine.source;
+    // ... rest of method
+
+    // Enable edit button - assembly can now be edited!
+    document.getElementById(&quot;edit-btn&quot;).disabled = false;
+  }
+
+  /**
+   * Assemble and load assembly program
+   */
+  assembleAndLoad(source, address = 0x5000) {
+    const result = this.assembler.assemble(source);
+
+    if (!result.success) {
+      // Display errors
+      this.showAssemblyErrors(result.errors);
+      return null;
+    }
+
+    // Load assembled bytes into memory
+    this.emulator.memory.loadProgram(result.bytes, address);
+
+    return result;
+  }
+
+  /**
+   * Edit assembly program (NEW)
+   */
+  editAssemblyProgram() {
+    if (this.currentProgramType !== &quot;assembly&quot;) return;
+
+    // Open assembly editor with source code
+    this.assemblyEditor.loadSource(this.currentProgram.source);
+    // Show assembly editor modal/panel
+  }
+}
+</code></pre>
+<h3>File: src/utils/formatter.js (NEW)</h3>
+<p>Create utility functions for formatting assembly results:</p>
+<pre><code class="language-javascript">/**
+ * Formatter utilities for assembly editor display
+ */
+
+/**
+ * Format memory dump as hex bytes
+ * @param {Uint8Array} bytes - Byte array
+ * @param {number} startAddress - Starting address
+ * @returns {string} Formatted hex dump
+ */
+export function formatMemoryDump(bytes, startAddress = 0) {
+  let output = &quot;&quot;;
+  for (let i = 0; i &lt; bytes.length; i += 16) {
+    const addr = startAddress + i;
+    const hex = Array.from(bytes.slice(i, i + 16))
+      .map((b) =&gt; b.toString(16).padStart(2, &quot;0&quot;).toUpperCase())
+      .join(&quot; &quot;);
+    output += `0x${addr.toString(16).padStart(4, &quot;0&quot;)}: ${hex}\n`;
+  }
+  return output;
+}
+
+/**
+ * Format symbol table for display
+ * @param {Object} symbolTable - Symbol table object
+ * @returns {string} Formatted symbol table
+ */
+export function formatSymbolTable(symbolTable) {
+  if (!symbolTable || Object.keys(symbolTable).length === 0) {
+    return &quot;No symbols&quot;;
+  }
+
+  let output = &quot;Symbol Table:\n&quot;;
+  output += &quot;Name&quot;.padEnd(20) + &quot;Address&quot;.padEnd(10) + &quot;Type\n&quot;;
+  output += &quot;-&quot;.repeat(40) + &quot;\n&quot;;
+
+  for (const [name, symbol] of Object.entries(symbolTable)) {
+    const addr = symbol.address.toString(16).padStart(4, &quot;0&quot;).toUpperCase();
+    const type = symbol.type || &quot;LABEL&quot;;
+    output += `${name.padEnd(20)}0x${addr.padEnd(6)}${type}\n`;
+  }
+
+  return output;
+}
+
+/**
+ * Format assembly errors for display
+ * @param {Array} errors - Error array
+ * @returns {string} Formatted errors
+ */
+export function formatErrors(errors) {
+  if (!errors || errors.length === 0) {
+    return &quot;No errors&quot;;
+  }
+
+  return errors
+    .map((err) =&gt; `Line ${err.line}:${err.column} - ${err.message}`)
+    .join(&quot;\n&quot;);
+}
+
+/**
+ * Format assembly warnings for display
+ * @param {Array} warnings - Warning array
+ * @returns {string} Formatted warnings
+ */
+export function formatWarnings(warnings) {
+  if (!warnings || warnings.length === 0) {
+    return &quot;No warnings&quot;;
+  }
+
+  return warnings
+    .map((warn) =&gt; `Line ${warn.line}:${warn.column} - ${warn.message}`)
+    .join(&quot;\n&quot;);
+}
+</code></pre>
+<h3>Update index.html for Assembly Editor</h3>
+<p>Add assembly editor UI elements:</p>
+<pre><code class="language-html">&lt;!-- Add to index.html --&gt;
+&lt;div id=&quot;assembly-editor-panel&quot; class=&quot;panel&quot; style=&quot;display: none;&quot;&gt;
+  &lt;h3&gt;📝 Assembly Code Editor&lt;/h3&gt;
+  &lt;textarea
+    id=&quot;assembly-editor&quot;
+    placeholder=&quot;Enter Z80 assembly source code...&quot;
+    rows=&quot;15&quot;
+  &gt;&lt;/textarea&gt;
+  &lt;div class=&quot;editor-actions&quot;&gt;
+    &lt;button id=&quot;assemble-btn&quot; class=&quot;btn-primary&quot;&gt;Assemble&lt;/button&gt;
+    &lt;button id=&quot;load-assembly-btn&quot; class=&quot;btn-secondary&quot; disabled&gt;
+      Load into Emulator
+    &lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;assembly-results&quot;&gt;
+    &lt;div class=&quot;result-panel&quot;&gt;
+      &lt;h4&gt;Errors&lt;/h4&gt;
+      &lt;pre id=&quot;assembly-errors&quot;&gt;No errors&lt;/pre&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;result-panel&quot;&gt;
+      &lt;h4&gt;Warnings&lt;/h4&gt;
+      &lt;pre id=&quot;assembly-warnings&quot;&gt;No warnings&lt;/pre&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;result-panel&quot;&gt;
+      &lt;h4&gt;Symbol Table&lt;/h4&gt;
+      &lt;pre id=&quot;assembly-symbols&quot;&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;result-panel&quot;&gt;
+      &lt;h4&gt;Bytecode&lt;/h4&gt;
+      &lt;pre id=&quot;assembly-bytecode&quot;&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<h3>Testing</h3>
+<p><strong>Test File:</strong> <code>tests/unit/assembler-tests.js</code> (Create based on assembler functionality)</p>
+<p><strong>Run Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/assembler-tests.js
+</code></pre>
+<p><strong>Expected Result:</strong> All assembler tests pass</p>
+<p><strong>Test Coverage:</strong></p>
+<ul>
+<li>Lexer tokenization (5+ tests)</li>
+<li>Parser two-pass assembly (5+ tests)</li>
+<li>Code generation (5+ tests)</li>
+<li>Expression evaluation (5+ tests)</li>
+<li>Error reporting (3+ tests)</li>
+<li>Symbol table generation (3+ tests)</li>
+</ul>
+<h3>⚠️ PHASE 7 TEST GATE</h3>
+<p><strong>CRITICAL:</strong> Use the phase workflow script to enforce the test gate:</p>
+<pre><code class="language-bash"># Run Phase 7 tests with workflow script (waits for user confirmation)
+yarn phase:7
+
+# OR manually:
+node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js
+</code></pre>
+<p><strong>Expected Output (if tests pass):</strong></p>
+<ul>
+<li>All assembler tests pass</li>
+<li>Script displays success message</li>
+<li>Script waits for user confirmation</li>
+</ul>
+<p><strong>If tests fail:</strong></p>
+<ul>
+<li>Script will exit with error code 1</li>
+<li>Review test failures</li>
+<li>Fix implementation issues</li>
+<li>Re-run tests until all pass</li>
+<li><strong>DO NOT consider project complete until all tests pass</strong></li>
+</ul>
+<p><strong>Final Verification:</strong></p>
+<pre><code class="language-bash"># Run all tests to ensure complete system works
+yarn test:run
+# Expected: All 172+ tests pass
+</code></pre>
+<h3>Phase 7 Completion Criteria</h3>
+<ul>
+<li>✅ All assembler modules integrated</li>
+<li>✅ Assembly editor UI functional</li>
+<li>✅ Assembly compilation works correctly</li>
+<li>✅ Programs load and execute after assembly</li>
+<li>✅ Error handling displays properly</li>
+<li>✅ Symbol table accessible</li>
+<li>✅ Assembly routines converted to source code format</li>
+<li>✅ All unit tests pass (if test file created)</li>
+</ul>
+<p><strong>Verification:</strong></p>
+<ul>
+<li>Test assembly editor with sample programs</li>
+<li>Verify compilation and loading workflow</li>
+<li>Test error handling with invalid syntax</li>
+<li>Run full test suite to ensure no regressions</li>
+</ul>
+<p><strong>Verification Command:</strong></p>
+<pre><code class="language-bash"># Run all tests to ensure complete system works
+yarn test:run
+# Expected: All 172+ tests pass
+</code></pre>
+<hr>
+<h2>TESTING REQUIREMENTS</h2>
+<h3>Complete Test Suite</h3>
+<p>All test files are provided in <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code>. Copy each test file to your <code>tests/</code> directory as you implement the corresponding phase.</p>
+<h3>Test Execution by Phase</h3>
+<p><strong>Phase 1 - CPU:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cpu-tests.js
+# Expected: 45 tests pass
+</code></pre>
+<p><strong>Phase 2 - Memory:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/memory-tests.js
+# Expected: 28 tests pass
+</code></pre>
+<p><strong>Phase 3 - Cassette &amp; I/O:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
+# Expected: 37 tests pass
+</code></pre>
+<p><strong>Phase 4 - Video:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/video-tests.js
+# Expected: 32 tests pass
+</code></pre>
+<p><strong>Phase 5 - Integration:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/integration/cpu-memory-integration.js
+# Expected: Integration tests pass
+</code></pre>
+<p><strong>Phase 6 - Program Loader:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/program-loader-tests.js
+# Expected: 18 tests pass
+</code></pre>
+<p><strong>All Tests:</strong></p>
+<pre><code class="language-bash">yarn test:run
+# Expected: 172+ tests pass
+</code></pre>
+<h3>Test Coverage Goals</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Target Coverage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU Core</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Memory System</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Cassette I/O</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Video System</td>
+<td>95%+</td>
+</tr>
+<tr>
+<td>Program Loader</td>
+<td>90%+</td>
+</tr>
+<tr>
+<td>Assembler</td>
+<td>85%+</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td>85%+</td>
+</tr>
+</tbody></table>
+<h3>Running Tests</h3>
+<p><strong>Development (Watch Mode):</strong></p>
+<pre><code class="language-bash">yarn test
+# Runs tests in watch mode, re-runs on file changes
+</code></pre>
+<p><strong>Single Run (CI Mode):</strong></p>
+<pre><code class="language-bash">yarn test:run
+# Runs all tests once, exits with code 0 if all pass
+</code></pre>
+<p><strong>With Coverage:</strong></p>
+<pre><code class="language-bash">yarn test:coverage
+# Generates coverage report in coverage/ directory
+# Requires @vitest/coverage-v8 package (included in dependencies)
+</code></pre>
+<p><strong>Specific Test File:</strong></p>
+<pre><code class="language-bash">yarn test:run tests/unit/cpu-tests.js
+# Run specific test file only
+</code></pre>
+<p><strong>Test Environment:</strong></p>
+<ul>
+<li>Uses jsdom for browser-like environment</li>
+<li>Path aliases (<code>@core</code>, <code>@peripherals</code>, etc.) work in tests</li>
+<li>Test files should use same import paths as source files</li>
+</ul>
+<hr>
+<h2>BUILD SYSTEM</h2>
+<h3>Vite Configuration</h3>
+<p>Complete Vite configuration is provided in <code>vite.config.js</code> above. Key features:</p>
+<ul>
+<li><strong>Path Aliases:</strong> <code>@core</code>, <code>@peripherals</code>, <code>@assembler</code>, etc.</li>
+<li><strong>Code Splitting:</strong> Separate chunks for core, peripherals, and assembler</li>
+<li><strong>Minification:</strong> Terser with console.log removal (requires <code>terser</code> package)</li>
+<li><strong>Source Maps:</strong> Generated for debugging</li>
+<li><strong>Test Configuration:</strong> Vitest with jsdom environment</li>
+<li><strong>Base Path:</strong> <code>./</code> for relative paths (works with Netlify)</li>
+<li><strong>Build Target:</strong> ES2020 (compatible with modern browsers)</li>
+</ul>
+<p><strong>Important Notes:</strong></p>
+<ul>
+<li>Terser is specified for minification - ensure <code>terser</code> package is installed</li>
+<li>Path aliases work in both source code and test files</li>
+<li>Code splitting reduces initial bundle size</li>
+<li>Source maps are included for production debugging</li>
+</ul>
+<h3>Development Commands</h3>
+<pre><code class="language-bash"># Start development server with HMR
+yarn dev
+# Opens at http://localhost:3000
+
+# Run tests in watch mode
+yarn test
+
+# Run tests once (for phase verification)
+yarn test:run
+
+# Run tests with coverage
+yarn test:coverage
+
+# Generate embedded ROM
+yarn rom:embed
+</code></pre>
+<h3>Production Build</h3>
+<p><strong>Important:</strong> Before building, ensure ROM is embedded:</p>
+<pre><code class="language-bash"># Step 1: Generate embedded ROM (required before first build)
+yarn rom:embed
+
+# Step 2: Build for production
+yarn build
+
+# Step 3: Preview production build locally
+yarn preview
+# Opens at http://localhost:4173
+
+# Step 4: Verify build output
+ls -la dist/
+# Should show: index.html, assets/ directory, etc.
+</code></pre>
+<p><strong>Build with Test Verification:</strong></p>
+<pre><code class="language-bash"># Run tests, then build (fails if tests don&#39;t pass)
+yarn test:run &amp;&amp; yarn build
+</code></pre>
+<p><strong>Build Output:</strong></p>
+<ul>
+<li><code>dist/index.html</code> - Main HTML file</li>
+<li><code>dist/assets/*.js</code> - Bundled JavaScript (minified)</li>
+<li><code>dist/assets/*.css</code> - Bundled CSS (minified)</li>
+<li><code>dist/assets/*.map</code> - Source maps for debugging</li>
+<li>ROM is embedded in JavaScript bundle (no external ROM file)</li>
+</ul>
+<h3>Build Verification</h3>
+<p>After building, verify:</p>
+<pre><code class="language-bash"># Check dist folder exists
+ls -la dist/
+
+# Check bundle size
+du -sh dist/
+# Should be &lt; 1MB
+
+# Verify minification
+head -20 dist/assets/*.js
+# Should show minified code (no whitespace/comments)
+
+# Verify source maps
+ls dist/assets/*.map
+# Should show .map files
+
+# Check for console.log (should be none)
+grep -r &quot;console.log&quot; dist/ || echo &quot;No console.log found ✓&quot;
+</code></pre>
+<hr>
+<h2>DEPLOYMENT</h2>
+<h3>Netlify Configuration</h3>
+<p>Complete Netlify configuration is provided in <code>netlify.toml</code> above.</p>
+<h3>Pre-Deployment Checklist</h3>
+<p><strong>Before deploying, ensure:</strong></p>
+<ol>
+<li>✅ <strong>ROM Embedded:</strong> Run <code>yarn rom:embed</code> to generate <code>src/data/model3-rom.js</code></li>
+<li>✅ <strong>All tests pass:</strong> <code>yarn test:run</code> (exit code 0)</li>
+<li>✅ <strong>Production build succeeds:</strong> <code>yarn build</code> (no errors)</li>
+<li>✅ <strong>Bundle size &lt; 1MB:</strong> Check <code>du -sh dist/</code></li>
+<li>✅ <strong>No console.log statements:</strong> <code>grep -r &quot;console.log&quot; dist/</code> returns nothing</li>
+<li>✅ <strong>ROM embedded:</strong> No external <code>model3.rom</code> file in <code>dist/</code></li>
+<li>✅ <strong>Source maps generated:</strong> <code>ls dist/assets/*.map</code> shows .map files</li>
+<li>✅ <strong>Preview works:</strong> <code>yarn preview</code> opens without errors</li>
+<li>✅ <strong>Node version:</strong> Netlify will use Node 20 (specified in netlify.toml)</li>
+<li>✅ <strong>Dependencies installed:</strong> <code>yarn install</code> completed successfully</li>
+</ol>
+<h3>Deployment Commands</h3>
+<p><strong>Automated Deployment:</strong></p>
+<pre><code class="language-bash"># Full deployment pipeline (tests + build + deploy)
+yarn deploy
+</code></pre>
+<p><strong>Manual Deployment:</strong></p>
+<pre><code class="language-bash"># Step 1: Ensure ROM is embedded
+yarn rom:embed
+
+# Step 2: Run all tests
+yarn test:run
+
+# Step 3: Build for production
+yarn build
+
+# Step 4: Preview locally (optional)
+yarn preview
+
+# Step 5: Deploy to Netlify
+netlify deploy --prod
+</code></pre>
+<p><strong>Netlify Build Configuration:</strong></p>
+<ul>
+<li>Netlify will automatically run <code>yarn test:run &amp;&amp; yarn build</code> (from netlify.toml)</li>
+<li>Uses Node 20 (specified in netlify.toml)</li>
+<li>Publishes <code>dist/</code> directory</li>
+<li>SPA routing configured (all routes → index.html)</li>
+</ul>
+<h3>Post-Deployment Verification</h3>
+<ol>
+<li>✅ Site loads without errors</li>
+<li>✅ Console has no errors</li>
+<li>✅ Emulator boots to BASIC prompt</li>
+<li>✅ Sample programs load and run</li>
+<li>✅ Graphics commands work</li>
+<li>✅ Assembly editor works</li>
+<li>✅ All UI features functional</li>
+</ol>
+<hr>
+<h2>ERROR HANDLING STRATEGY</h2>
+<h3>Error Types and Handling</h3>
+<p><strong>1. Invalid ROM File</strong></p>
+<ul>
+<li><strong>Error:</strong> ROM size mismatch or corruption</li>
+<li><strong>Handling:</strong> Clear error message, prevent emulator start</li>
+<li><strong>User Message:</strong> &quot;Invalid ROM file. Expected 14KB or 16KB ROM.&quot;</li>
+</ul>
+<p><strong>2. Unimplemented Opcode</strong></p>
+<ul>
+<li><strong>Error:</strong> CPU encounters unknown opcode</li>
+<li><strong>Handling:</strong> Log warning, execute NOP-equivalent (4 cycles)</li>
+<li><strong>User Message:</strong> Console warning (development only, removed in production)</li>
+</ul>
+<p><strong>3. Memory Access Violation</strong></p>
+<ul>
+<li><strong>Error:</strong> Attempt to write to protected ROM</li>
+<li><strong>Handling:</strong> Silently ignore (ROM protection)</li>
+<li><strong>User Message:</strong> None (expected behavior)</li>
+</ul>
+<p><strong>4. Assembly Compilation Errors</strong></p>
+<ul>
+<li><strong>Error:</strong> Invalid assembly syntax, undefined labels</li>
+<li><strong>Handling:</strong> Display errors with line numbers in UI</li>
+<li><strong>User Message:</strong> &quot;Assembly Error: [message] at line [line]&quot;</li>
+</ul>
+<p><strong>5. BASIC Program Errors</strong></p>
+<ul>
+<li><strong>Error:</strong> Syntax errors, runtime errors</li>
+<li><strong>Handling:</strong> Pass through from ROM interpreter</li>
+<li><strong>User Message:</strong> Displayed in emulator screen</li>
+</ul>
+<p><strong>6. File Loading Errors</strong></p>
+<ul>
+<li><strong>Error:</strong> Invalid file format, file too large</li>
+<li><strong>Handling:</strong> Clear error message, prevent loading</li>
+<li><strong>User Message:</strong> &quot;Error loading file: [reason]&quot;</li>
+</ul>
+<h3>Error Recovery</h3>
+<ul>
+<li><strong>ROM Errors:</strong> Prevent emulator start, require valid ROM</li>
+<li><strong>Assembly Errors:</strong> Allow editing and re-assembly</li>
+<li><strong>Runtime Errors:</strong> Reset emulator, clear error state</li>
+<li><strong>Build Errors:</strong> Display in console, prevent deployment</li>
+</ul>
+<hr>
+<h2>PERFORMANCE SPECIFICATIONS</h2>
+<h3>Timing Requirements</h3>
+<p><strong>CPU Execution:</strong></p>
+<ul>
+<li>Target: 2MHz CPU speed</li>
+<li>Frame Rate: 60 FPS</li>
+<li>Cycles per Frame: ~33,333 cycles (2MHz / 60)</li>
+<li>Cycle Budget: Must execute ~33K cycles per frame</li>
+</ul>
+<p><strong>Frame Timing:</strong></p>
+<ul>
+<li>Render once per frame using <code>requestAnimationFrame</code></li>
+<li>CPU execution loop runs until cycle budget exhausted</li>
+<li>Video refresh: 60Hz</li>
+</ul>
+<h3>Performance Targets</h3>
+<ul>
+<li><strong>Lighthouse Performance:</strong> ≥ 85</li>
+<li><strong>First Contentful Paint:</strong> &lt; 2s</li>
+<li><strong>Time to Interactive:</strong> &lt; 3s</li>
+<li><strong>Frame Rate:</strong> Stable 60 FPS</li>
+<li><strong>Bundle Size:</strong> &lt; 1MB</li>
+<li><strong>No Layout Shifts</strong></li>
+</ul>
+<h3>Optimization Guidelines</h3>
+<ol>
+<li><p><strong>CPU Execution Loop:</strong></p>
+<ul>
+<li>Batch instruction execution</li>
+<li>Avoid function call overhead in hot paths</li>
+<li>Use direct property access where possible</li>
+</ul>
+</li>
+<li><p><strong>Video Rendering:</strong></p>
+<ul>
+<li>Render only changed regions</li>
+<li>Use efficient canvas operations</li>
+<li>Cache character bitmaps</li>
+</ul>
+</li>
+<li><p><strong>Memory Access:</strong></p>
+<ul>
+<li>Minimize bounds checking overhead</li>
+<li>Use typed arrays (Uint8Array)</li>
+<li>Avoid unnecessary allocations</li>
+</ul>
+</li>
+<li><p><strong>Build Optimization:</strong></p>
+<ul>
+<li>Code splitting for lazy loading</li>
+<li>Tree-shaking unused code</li>
+<li>Minification and compression</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>ROM ANALYSIS AND REQUIREMENTS</h2>
+<h3>ROM Format Specification</h3>
+<p><strong>Supported Sizes:</strong></p>
+<ul>
+<li>14KB (14336 bytes) - Common TRS-80 Model III ROM</li>
+<li>16KB (16384 bytes) - Extended ROM</li>
+</ul>
+<p><strong>ROM Validation:</strong></p>
+<ul>
+<li>Check file size matches expected values</li>
+<li>Verify non-zero content (not empty)</li>
+<li>Validate ROM structure (optional checksum)</li>
+</ul>
+<h3>ROM Entry Points</h3>
+<p><strong>BASIC Interpreter:</strong></p>
+<ul>
+<li>Entry point: Typically at 0x0000 (ROM start)</li>
+<li>BASIC ready check: Monitor PC &gt; 0x1000</li>
+<li>SET/RESET/POINT hooks: To be determined via ROM analysis</li>
+</ul>
+<h3>Required Instruction Analysis</h3>
+<p><strong>Priority 1 (ROM Boot):</strong></p>
+<ul>
+<li>LD, JP, CALL, RET, NOP, HALT</li>
+</ul>
+<p><strong>Priority 2 (BASIC Execution):</strong></p>
+<ul>
+<li>ADD, SUB, INC, DEC, CP, PUSH, POP</li>
+</ul>
+<p><strong>Priority 3 (Extended):</strong></p>
+<ul>
+<li>JR, DJNZ, I/O instructions</li>
+<li>CB, ED, DD, FD prefixes (ALL must be implemented - complete Z80 instruction set)</li>
+</ul>
+<h3>ROM Loading Process</h3>
+<ol>
+<li>Read ROM file from <code>public/assets/model3.rom</code></li>
+<li>Validate size (14336 or 16384 bytes)</li>
+<li>Load into memory system</li>
+<li>Pad 14KB ROMs to 16KB if needed</li>
+<li>Verify ROM loaded successfully</li>
+</ol>
+<hr>
+<h2>SUCCESS CRITERIA</h2>
+<p>The emulator is complete when all of the following are verified:</p>
+<h3>Core Functionality (5 items)</h3>
+<ul>
+<li>✅ Boots to TRS-80 BASIC prompt within 5 seconds</li>
+<li>✅ Runs BASIC programs correctly (all language features work)</li>
+<li>✅ Loads programs via cassette interface simulation</li>
+<li>✅ Keyboard input works properly (all mapped keys respond)</li>
+<li>✅ Display renders correctly in both text mode and graphics mode</li>
+</ul>
+<h3>Sample Programs (8 items)</h3>
+<ul>
+<li>✅ All 12 BASIC programs load successfully from dropdown</li>
+<li>✅ All 12 BASIC programs execute without errors</li>
+<li>✅ All 5+ assembly routines load successfully (as source code)</li>
+<li>✅ All 5+ assembly routines assemble and execute correctly</li>
+<li>✅ <strong>BASIC programs can be edited in-browser</strong> (Edit BASIC button works)</li>
+<li>✅ <strong>Assembly programs can be edited in-browser</strong> (Edit Assembly button works)</li>
+<li>✅ Edited BASIC programs can be saved and reloaded</li>
+<li>✅ Edited assembly programs can be assembled and executed</li>
+</ul>
+<h3>Graphics Mode (6 items)</h3>
+<ul>
+<li>✅ SET(x, y) turns pixels on at correct coordinates (x: 0-127, y: 0-47)</li>
+<li>✅ RESET(x, y) turns pixels off correctly</li>
+<li>✅ POINT(x, y) returns correct pixel state (-1 or 0)</li>
+<li>✅ Graphics characters (128-191) render as 2×3 pixel blocks</li>
+<li>✅ Line test program draws diagonal, horizontal, and vertical lines</li>
+<li>✅ Box pattern program creates nested boxes and patterns</li>
+</ul>
+<h3>Z80 Assembler Integration (6 items)</h3>
+<ul>
+<li>✅ Assembly editor UI functional</li>
+<li>✅ Assembly source code compiles correctly</li>
+<li>✅ Assembly errors display with line numbers</li>
+<li>✅ Symbol table displays after assembly</li>
+<li>✅ Assembled code loads into emulator memory</li>
+<li>✅ Assembled programs execute correctly</li>
+</ul>
+<h3>Testing &amp; Quality (5 items)</h3>
+<ul>
+<li>✅ All unit tests pass (100% success rate, 0 failures)</li>
+<li>✅ All integration tests pass</li>
+<li>✅ No console errors during normal operation</li>
+<li>✅ No memory leaks during extended use</li>
+<li>✅ Runs at stable 60 FPS (no dropped frames)</li>
+</ul>
+<h3>Production Build Requirements (9 items)</h3>
+<ul>
+<li>✅ Build completes with <code>yarn build</code> without errors</li>
+<li>✅ Exit code is 0</li>
+<li>✅ No warnings in build output</li>
+<li>✅ <code>dist/</code> directory is created</li>
+<li>✅ All JavaScript is minified (Terser applied)</li>
+<li>✅ No <code>console.log</code> or <code>debugger</code> statements remain</li>
+<li>✅ Total bundle size &lt; 1MB</li>
+<li>✅ ROM embedded as base64 (no external model3.rom in dist/)</li>
+<li>✅ Source maps generated (*.map files)</li>
+</ul>
+<h3>Performance Benchmarks (5 items)</h3>
+<ul>
+<li>✅ Lighthouse Performance ≥ 85</li>
+<li>✅ Lighthouse Accessibility ≥ 90</li>
+<li>✅ Lighthouse Best Practices ≥ 90</li>
+<li>✅ First Contentful Paint &lt; 2s</li>
+<li>✅ Time to Interactive &lt; 3s</li>
+</ul>
+<h3>Browser Compatibility (5 items)</h3>
+<ul>
+<li>✅ Works in Chrome 100+ (latest)</li>
+<li>✅ Works in Firefox 100+ (latest)</li>
+<li>✅ Works in Safari 15+ (latest)</li>
+<li>✅ Works in Edge 100+ (latest)</li>
+<li>✅ No browser-specific errors</li>
+</ul>
+<p><strong>ES2020 Target:</strong></p>
+<ul>
+<li>Vite builds with <code>target: &quot;es2020&quot;</code> for modern browser support</li>
+<li>Uses native ES modules (<code>type: &quot;module&quot;</code> in package.json)</li>
+<li>No polyfills required for modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)</li>
+</ul>
+<h3>Deployment (4 items)</h3>
+<ul>
+<li>✅ Deploys to Netlify without errors</li>
+<li>✅ All routes work (SPA redirects configured)</li>
+<li>✅ HTTPS enabled</li>
+<li>✅ Loads in under 3 seconds on fast connection</li>
+</ul>
+<p><strong>Total: 53 specific, verifiable criteria</strong></p>
+<hr>
+<h2>QUICK START GUIDE</h2>
+<h3>Initial Setup</h3>
+<p><strong>Prerequisites:</strong></p>
+<ul>
+<li>Node.js 20.x LTS or later (check with <code>node --version</code>)</li>
+<li>Yarn 1.22.22 or later (check with <code>yarn --version</code>)</li>
+</ul>
+<p><strong>Setup Steps:</strong></p>
+<pre><code class="language-bash"># Clone or create project
+mkdir trs80-emulator
+cd trs80-emulator
+
+# Initialize package.json (if creating new project)
+# Copy package.json from this document
+
+# Install dependencies
+yarn install
+
+# Place ROM file
+cp /path/to/model3.rom public/assets/
+
+# Validate ROM
+node scripts/validate-rom.js
+
+# Generate embedded ROM (required before first build)
+yarn rom:embed
+
+# Start development server
+yarn dev
+# Opens at http://localhost:3000
+</code></pre>
+<p><strong>Verification:</strong></p>
+<ul>
+<li>Check Node version: <code>node --version</code> (should be 20.x or later)</li>
+<li>Check Yarn version: <code>yarn --version</code> (should be 1.22.22 or later)</li>
+<li>Verify ROM file exists: <code>ls -lh public/assets/model3.rom</code></li>
+<li>Verify ROM embedded: <code>ls -lh src/data/model3-rom.js</code></li>
+</ul>
+<h3>Phase-by-Phase Development</h3>
+<ol>
+<li><strong>Phase 0:</strong> Analyze ROM, identify requirements</li>
+<li><strong>Phase 1:</strong> Implement CPU core, run tests, verify</li>
+<li><strong>Phase 2:</strong> Implement memory system, run tests, verify</li>
+<li><strong>Phase 3:</strong> Implement cassette &amp; I/O, run tests, verify</li>
+<li><strong>Phase 4:</strong> Implement video system, run tests, verify</li>
+<li><strong>Phase 5:</strong> System integration, run tests, verify</li>
+<li><strong>Phase 6:</strong> UI and sample programs, run tests, verify</li>
+<li><strong>Phase 7:</strong> Assembler integration, verify</li>
+</ol>
+<p><strong>After each phase:</strong></p>
+<pre><code class="language-bash"># Use workflow script (recommended - enforces test gate and waits for confirmation)
+yarn phase:N  # Replace N with phase number (1-7)
+
+# OR manually verify:
+yarn test:run tests/unit/[phase]-tests.js
+# Check exit code (must be 0)
+echo $?
+# If exit code is 0: All tests passed
+# If exit code is non-zero: Tests failed - fix issues before proceeding
+</code></pre>
+<p><strong>Workflow Script Usage:</strong></p>
+<ul>
+<li>Phase 1: <code>yarn phase:1</code></li>
+<li>Phase 2: <code>yarn phase:2</code></li>
+<li>Phase 3: <code>yarn phase:3</code></li>
+<li>Phase 4: <code>yarn phase:4</code></li>
+<li>Phase 5: <code>yarn phase:5</code></li>
+<li>Phase 6: <code>yarn phase:6</code></li>
+<li>Phase 7: <code>yarn phase:7</code></li>
+</ul>
+<p><strong>The workflow script will:</strong></p>
+<ul>
+<li>Run tests for the phase</li>
+<li>Display results</li>
+<li>Wait for user confirmation if tests pass</li>
+<li>Exit with error code 1 if tests fail (prevents proceeding)</li>
+</ul>
+<h3>Running Your First Program</h3>
+<ol>
+<li><strong>Power On</strong> the emulator</li>
+<li><strong>Select &quot;Hello World&quot;</strong> from BASIC Programs</li>
+<li><strong>Click &quot;Load Selected&quot;</strong></li>
+<li><strong>Click &quot;RUN&quot;</strong></li>
+</ol>
+<p>Output: <code>HELLO FROM TRS-80!</code></p>
+<h3>Testing Graphics</h3>
+<ol>
+<li><strong>Select &quot;Graphics Mode - Line Test&quot;</strong></li>
+<li><strong>Click &quot;Load Selected&quot;</strong></li>
+<li><strong>Click &quot;RUN&quot;</strong></li>
+</ol>
+<p>See: Diagonal X pattern with horizontal and vertical lines</p>
+<h3>Editing a BASIC Program</h3>
+<ol>
+<li><strong>Select any BASIC program</strong></li>
+<li><strong>Click &quot;Edit BASIC&quot;</strong></li>
+<li><strong>Modify in modal</strong></li>
+<li><strong>Click &quot;Save Changes&quot;</strong></li>
+<li><strong>Click &quot;Load Selected&quot;</strong> to reload</li>
+<li><strong>Click &quot;RUN&quot;</strong> to test</li>
+</ol>
+<h3>Editing and Assembling Assembly Code</h3>
+<ol>
+<li><strong>Select any assembly routine</strong></li>
+<li><strong>Click &quot;Edit Assembly&quot;</strong></li>
+<li><strong>Modify source code in editor</strong></li>
+<li><strong>Click &quot;Assemble&quot;</strong></li>
+<li><strong>Review errors/warnings if any</strong></li>
+<li><strong>Click &quot;Load into Emulator&quot;</strong></li>
+<li><strong>Call from BASIC:</strong> <code>A = USR(0x5000)</code></li>
+</ol>
+<hr>
+<h2>TROUBLESHOOTING</h2>
+<h3>Common Issues and Solutions</h3>
+<h4>Tests Failing After Phase Completion</h4>
+<p><strong>Problem:</strong> Tests pass during development but fail when running full test suite.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>Test isolation issues (shared state between tests)</li>
+<li>Missing test cleanup in beforeEach/afterEach</li>
+<li>Incorrect test file paths or imports</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Ensure each test file has proper <code>beforeEach</code> cleanup</li>
+<li>Use <code>describe</code> blocks to isolate test groups</li>
+<li>Verify all imports use correct path aliases (<code>@core</code>, <code>@peripherals</code>, etc.)</li>
+<li>Run tests individually: <code>yarn test:run tests/unit/[specific-test].js</code></li>
+</ul>
+<h4>ROM Loading Errors</h4>
+<p><strong>Problem:</strong> ROM fails to load or emulator won&#39;t start.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>ROM file not found at <code>public/assets/model3.rom</code></li>
+<li>Invalid ROM size (not 14KB or 16KB)</li>
+<li>ROM file corrupted or empty</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Verify ROM file exists: <code>ls -lh public/assets/model3.rom</code></li>
+<li>Check ROM size: <code>wc -c public/assets/model3.rom</code> (should be 14336 or 16384)</li>
+<li>Run ROM validation: <code>node scripts/validate-rom.js</code></li>
+<li>Ensure ROM file is not empty (check first few bytes are non-zero)</li>
+</ul>
+<h4>Build Failures</h4>
+<p><strong>Problem:</strong> <code>yarn build</code> fails with errors.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>Missing dependencies</li>
+<li>Syntax errors in code</li>
+<li>Import path issues</li>
+<li>Type errors (if using TypeScript)</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Install dependencies: <code>yarn install</code></li>
+<li>Check for syntax errors: <code>yarn build 2&gt;&amp;1 | grep -i error</code></li>
+<li>Verify all imports use correct path aliases</li>
+<li>Check Vite config for correct alias definitions</li>
+<li>Ensure all referenced files exist</li>
+</ul>
+<h4>Assembler Integration Issues</h4>
+<p><strong>Problem:</strong> Assembler modules fail to import or compile.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>Missing assembler module files</li>
+<li>Incorrect import paths</li>
+<li>Memory map constants not updated for TRS-80</li>
+<li>Module export/import mismatches</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Verify all assembler files copied to <code>src/assembler/</code></li>
+<li>Check import paths match file structure</li>
+<li>Update <code>src/assembler/constants.js</code> with TRS-80 memory map (see Phase 7)</li>
+<li>Verify all modules use ES6 export syntax (<code>export class</code>, <code>export function</code>)</li>
+<li>Test each module individually before integration</li>
+</ul>
+<h4>Performance Problems</h4>
+<p><strong>Problem:</strong> Emulator runs slowly or drops frames.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>CPU execution loop inefficient</li>
+<li>Video rendering too frequent</li>
+<li>Memory access overhead</li>
+<li>Too many console.log statements</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Profile with browser DevTools Performance tab</li>
+<li>Ensure video renders once per frame only</li>
+<li>Remove or comment out console.log statements</li>
+<li>Use direct property access instead of getters in hot paths</li>
+<li>Batch instruction execution in CPU loop</li>
+<li>Check for memory leaks (growing memory usage over time)</li>
+</ul>
+<h4>Browser Compatibility Issues</h4>
+<p><strong>Problem:</strong> Works in one browser but not another.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>Browser-specific API differences</li>
+<li>Missing polyfills</li>
+<li>CSS compatibility issues</li>
+<li>JavaScript feature support differences</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Check browser console for specific errors</li>
+<li>Verify ES2020 target in vite.config.js is supported</li>
+<li>Test in Chrome, Firefox, Safari, Edge</li>
+<li>Use browser DevTools to identify unsupported features</li>
+<li>Add polyfills if needed for older browsers</li>
+</ul>
+<h4>Test Environment Setup Issues</h4>
+<p><strong>Problem:</strong> Tests fail with &quot;module not found&quot; or &quot;import error&quot;.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>Path aliases not configured in Vitest</li>
+<li>Missing jsdom environment</li>
+<li>Incorrect test file structure</li>
+<li>Import paths don&#39;t match source structure</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Verify <code>vite.config.js</code> test section includes path aliases</li>
+<li>Ensure <code>environment: &#39;jsdom&#39;</code> is set in test config</li>
+<li>Check test files use same import paths as source files</li>
+<li>Verify <code>tests/</code> directory structure matches <code>src/</code> structure</li>
+<li>Run: <code>yarn test:run --reporter=verbose</code> for detailed errors</li>
+</ul>
+<h4>Phase Gate Failures</h4>
+<p><strong>Problem:</strong> Can&#39;t proceed to next phase because tests fail.</p>
+<p><strong>Causes:</strong></p>
+<ul>
+<li>Implementation incomplete</li>
+<li>Test expectations incorrect</li>
+<li>Test file copied incorrectly</li>
+<li>Missing dependencies</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ul>
+<li>Review phase completion criteria checklist</li>
+<li>Compare implementation with reference code</li>
+<li>Verify test file copied correctly from test suite document</li>
+<li>Run tests with verbose output to see specific failures</li>
+<li>Check that all required methods/functions are implemented</li>
+<li>Ensure test setup matches phase requirements</li>
+</ul>
+<hr>
+<h2>QUICK REFERENCE</h2>
+<h3>Common Commands</h3>
+<pre><code class="language-bash"># Development
+yarn dev                    # Start dev server
+yarn test                   # Run tests in watch mode
+yarn test:run              # Run tests once
+yarn test:coverage         # Run tests with coverage
+
+# Building
+yarn build                 # Production build
+yarn preview               # Preview production build
+yarn rom:embed             # Generate embedded ROM
+
+# Deployment
+yarn deploy                # Deploy to Netlify (runs tests + build)
+</code></pre>
+<h3>Test Commands by Phase</h3>
+<pre><code class="language-bash"># Phase 1: CPU
+yarn test:run tests/unit/cpu-tests.js
+
+# Phase 2: Memory
+yarn test:run tests/unit/memory-tests.js
+
+# Phase 3: Cassette &amp; I/O
+yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
+
+# Phase 4: Video
+yarn test:run tests/unit/video-tests.js
+
+# Phase 5: Integration
+yarn test:run tests/integration/cpu-memory-integration.js
+
+# Phase 6: Program Loader
+yarn test:run tests/unit/program-loader-tests.js
+
+# Phase 7: Assembler
+yarn test:run tests/unit/assembler-tests.js
+
+# All Tests
+yarn test:run
+</code></pre>
+<h3>File Locations Quick Lookup</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>File Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU Core</td>
+<td><code>src/core/z80cpu.js</code></td>
+</tr>
+<tr>
+<td>Memory System</td>
+<td><code>src/core/memory.js</code></td>
+</tr>
+<tr>
+<td>I/O System</td>
+<td><code>src/core/io.js</code></td>
+</tr>
+<tr>
+<td>Cassette</td>
+<td><code>src/peripherals/cassette.js</code></td>
+</tr>
+<tr>
+<td>Video</td>
+<td><code>src/peripherals/video.js</code></td>
+</tr>
+<tr>
+<td>Keyboard</td>
+<td><code>src/peripherals/keyboard.js</code></td>
+</tr>
+<tr>
+<td>Main System</td>
+<td><code>src/system/trs80.js</code></td>
+</tr>
+<tr>
+<td>ROM Loader</td>
+<td><code>src/system/rom-loader.js</code></td>
+</tr>
+<tr>
+<td>Program Loader</td>
+<td><code>src/ui/program-loader.js</code></td>
+</tr>
+<tr>
+<td>Assembly Editor</td>
+<td><code>src/ui/assembly-editor.js</code></td>
+</tr>
+<tr>
+<td>Assembler</td>
+<td><code>src/assembler/assembler.js</code></td>
+</tr>
+<tr>
+<td>Sample Programs</td>
+<td><code>src/data/sample-programs.js</code></td>
+</tr>
+<tr>
+<td>Sample Assembly</td>
+<td><code>src/data/sample-assembly.js</code></td>
+</tr>
+</tbody></table>
+<h3>Memory Map Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Address Range</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x0000-0x37FF</td>
+<td>14KB</td>
+<td>ROM (14KB ROM)</td>
+</tr>
+<tr>
+<td>0x0000-0x3FFF</td>
+<td>16KB</td>
+<td>ROM (16KB ROM)</td>
+</tr>
+<tr>
+<td>0x3C00-0x3FFF</td>
+<td>1KB</td>
+<td>Video RAM (writable in ROM space)</td>
+</tr>
+<tr>
+<td>0x4000-0xFFFF</td>
+<td>48KB</td>
+<td>RAM</td>
+</tr>
+<tr>
+<td>0x4200+</td>
+<td>-</td>
+<td>BASIC program area</td>
+</tr>
+<tr>
+<td>0x5000+</td>
+<td>-</td>
+<td>Assembly routine area</td>
+</tr>
+</tbody></table>
+<h3>Port I/O Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0xFF</td>
+<td>Keyboard input</td>
+</tr>
+<tr>
+<td>0xFE</td>
+<td>Cassette control/status</td>
+</tr>
+<tr>
+<td>0xEC</td>
+<td>System control</td>
+</tr>
+</tbody></table>
+<h3>Build Verification Checklist</h3>
+<pre><code class="language-bash"># After building, verify:
+ls -la dist/                    # dist/ exists
+du -sh dist/                    # Size &lt; 1MB
+ls dist/assets/*.map            # Source maps exist
+grep -r &quot;console.log&quot; dist/     # No console.log (should return nothing)
+</code></pre>
+<hr>
+<h2>NOTES FOR LLM IMPLEMENTATION</h2>
+<h3>Key Implementation Points</h3>
+<ol>
+<li><strong>Z80 CPU:</strong> Implement COMPLETE Z80 instruction set (all 252+ opcodes including CB, ED, DD, FD prefixes)</li>
+<li><strong>Memory System:</strong> ROM protection is critical, support both ROM sizes</li>
+<li><strong>Graphics:</strong> Character-based implementation is authentic to TRS-80</li>
+<li><strong>Sample Programs:</strong> Pre-loaded, no file system needed</li>
+<li><strong>BASIC Tokenization:</strong> Simple ASCII conversion works initially</li>
+<li><strong>Z80 Assembler:</strong> Complete assembler provided, integrate fully</li>
+<li><strong>Test-Driven:</strong> Run tests after each phase, don&#39;t proceed until passing</li>
+</ol>
+<h3>Testing Strategy</h3>
+<ul>
+<li>Unit test each component in isolation</li>
+<li>Integration test component interactions</li>
+<li>Validate with sample programs</li>
+<li>Graphics programs verify pixel operations</li>
+<li><strong>Phase gates ensure quality at each step</strong></li>
+</ul>
+<h3>Performance Optimization</h3>
+<ul>
+<li>CPU instruction handlers should be fast</li>
+<li>Video rendering once per frame only</li>
+<li>Batch memory writes when possible</li>
+<li>Profile if performance issues arise</li>
+</ul>
+<h3>Common Pitfalls to Avoid</h3>
+<ul>
+<li>Don&#39;t skip ROM protection</li>
+<li>Don&#39;t forget graphics character set</li>
+<li>Don&#39;t make BASIC tokenization too complex initially</li>
+<li>Don&#39;t optimize prematurely</li>
+<li>Don&#39;t forget keyboard mapping</li>
+<li><strong>Don&#39;t skip test gates between phases</strong></li>
+<li><strong>Don&#39;t proceed to next phase until tests pass</strong></li>
+</ul>
+<hr>
+<h2>DOCUMENT IMPROVEMENTS SUMMARY</h2>
+<p>This enhanced build prompt incorporates:</p>
+<h3>1. ✅ Complete Z80 Assembler Integration</h3>
+<ul>
+<li>Full assembler module structure</li>
+<li>Assembly editor UI component</li>
+<li>Source code storage format</li>
+<li>Compilation and loading workflow</li>
+</ul>
+<h3>2. ✅ Enhanced Test Integration</h3>
+<ul>
+<li>Complete test suite reference (172+ tests)</li>
+<li>Phase-by-phase test execution</li>
+<li>Test gates between phases</li>
+<li>Coverage requirements</li>
+</ul>
+<h3>3. ✅ Sequential Development Workflow</h3>
+<ul>
+<li>Phase-by-phase development process</li>
+<li>Test-driven approach</li>
+<li>Clear phase gates</li>
+<li>Verification commands</li>
+</ul>
+<h3>4. ✅ Enhanced Build System</h3>
+<ul>
+<li>Complete Vite configuration</li>
+<li>Path aliases including @assembler</li>
+<li>Build optimization</li>
+<li>Test configuration</li>
+</ul>
+<h3>5. ✅ Enhanced Deployment</h3>
+<ul>
+<li>Complete Netlify configuration</li>
+<li>Pre-deployment verification</li>
+<li>Post-deployment checklist</li>
+</ul>
+<h3>6. ✅ Critical Issue Resolutions</h3>
+<ul>
+<li>ROM size flexibility (14KB/16KB support)</li>
+<li>Instruction prioritization</li>
+<li>Error handling strategy</li>
+<li>Performance specifications</li>
+</ul>
+<h3>7. ✅ Complete Specifications</h3>
+<ul>
+<li>Error handling strategy</li>
+<li>Performance requirements</li>
+<li>ROM analysis requirements</li>
+<li>Browser compatibility matrix</li>
+</ul>
+<h3>8. ✅ Vite &amp; Netlify Integration</h3>
+<ul>
+<li>Complete Vite configuration with all path aliases</li>
+<li>Terser minification setup (with dependency)</li>
+<li>Test coverage setup (@vitest/coverage-v8)</li>
+<li>Node 20 LTS compatibility (updated from Node 18)</li>
+<li>Netlify deployment configuration</li>
+<li>Build workflow documentation (<code>yarn dev</code>, <code>yarn build</code>)</li>
+<li>ROM embedding process (<code>yarn rom:embed</code>)</li>
+</ul>
+<h3>9. ✅ Entry Point &amp; Application Structure</h3>
+<ul>
+<li>HTML structure with main.js entry point</li>
+<li>Application initialization flow documented</li>
+<li>Module import structure clarified</li>
+<li>Build output verification steps</li>
+</ul>
+<h3>10. ✅ Phase-by-Phase Test-Driven Workflow</h3>
+<ul>
+<li>Test file setup instructions for each phase</li>
+<li>Phase workflow script (<code>scripts/phase-workflow.js</code>) for test gates</li>
+<li>User confirmation required between phases</li>
+<li>Test-first approach enforced</li>
+<li>Clear instructions to fix failing tests before proceeding</li>
+<li>Package.json scripts for each phase (<code>yarn phase:1</code> through <code>yarn phase:7</code>)</li>
+</ul>
+<hr>
+<p><strong>This prompt is production-ready for LLM consumption with:</strong></p>
+<ul>
+<li>✅ Maximum clarity - No ambiguous requirements</li>
+<li>✅ Complete test suite - 172+ tests provided</li>
+<li>✅ Sequential workflow - Phase-by-phase with gates</li>
+<li>✅ Complete specifications - Every requirement detailed</li>
+<li>✅ Verifiable success - 53 specific checkpoints</li>
+<li>✅ Z80 assembler integration - Full editing capability</li>
+<li>✅ <strong>Vite build system</strong> - Complete configuration for <code>yarn dev</code> and <code>yarn build</code></li>
+<li>✅ <strong>Netlify deployment</strong> - Ready for production deployment with Node 20</li>
+<li>✅ <strong>Web-based JavaScript</strong> - Pure browser implementation, no server required</li>
+</ul>
+<p><strong>Build System Verification:</strong></p>
+<ul>
+<li>✅ <strong>Vite Configuration:</strong> Complete with path aliases, code splitting, Terser minification</li>
+<li>✅ <strong>Package Dependencies:</strong> All required packages specified (vite, vitest, terser, @vitest/coverage-v8)</li>
+<li>✅ <strong>Node Version:</strong> Node 20 LTS (latest stable, compatible with Vite 5.4+)</li>
+<li>✅ <strong>Build Commands:</strong> <code>yarn dev</code> and <code>yarn build</code> fully configured and tested</li>
+<li>✅ <strong>Netlify Config:</strong> Complete with Node 20, build commands, SPA routing, security headers</li>
+<li>✅ <strong>ROM Embedding:</strong> Process documented and required before build (<code>yarn rom:embed</code>)</li>
+<li>✅ <strong>Entry Point:</strong> Clear HTML → main.js → system initialization flow</li>
+<li>✅ <strong>Browser Target:</strong> ES2020 (modern browsers, no polyfills needed)</li>
+</ul>
+<p><strong>Document Stats:</strong></p>
+<ul>
+<li><strong>Enhanced specifications</strong> with assembler integration</li>
+<li><strong>172+ comprehensive tests</strong> organized by phase</li>
+<li><strong>53 verifiable</strong> success criteria</li>
+<li><strong>7 development phases</strong> with test gates</li>
+<li><strong>Complete build and deployment</strong> specifications</li>
+<li><strong>Node 20 LTS</strong> compatibility</li>
+<li><strong>Vite 5.4+</strong> build system</li>
+<li><strong>Netlify-ready</strong> deployment configuration</li>
+</ul>
+<p><strong>Ready for Implementation:</strong></p>
+<p>This document provides everything needed to build a complete, production-ready TRS-80 Model III emulator that:</p>
+<ul>
+<li>Runs entirely in modern web browsers (JavaScript/ES2020)</li>
+<li>Builds with Vite (<code>yarn dev</code> for development, <code>yarn build</code> for production)</li>
+<li>Deploys to Netlify using Node 20 LTS</li>
+<li>Follows a test-driven, phase-by-phase development approach</li>
+</ul>
+<p><strong>Give this to any capable LLM and say: &quot;Build this TRS-80 Model III emulator phase by phase, running tests after each phase. Copy test files BEFORE implementing each phase from <code>docs/TRS80-COMPLETE-TEST-SUITE.md</code>. Use <code>yarn phase:N</code> to run tests - the script will wait for your confirmation before proceeding to the next phase. Fix any failing tests before continuing. Use Vite for building (<code>yarn dev</code> and <code>yarn build</code>) and ensure it deploys to Netlify with Node 20.&quot;</strong> ✨</p>
+<p><strong>Key Workflow Points:</strong></p>
+<ul>
+<li>✅ Copy test files BEFORE starting each phase implementation</li>
+<li>✅ Use <code>yarn phase:N</code> to run tests and wait for confirmation</li>
+<li>✅ Fix all failing tests before proceeding (script blocks advancement)</li>
+<li>✅ User confirmation required between phases</li>
+<li>✅ Build with <code>yarn dev</code> (development) or <code>yarn build</code> (production)</li>
+<li>✅ Deploy to Netlify with Node 20</li>
+</ul>
+
+  <hr>
+  <p style="text-align: center; color: #666;">
+    <a href="/">TRS-80 Model III Emulator</a> | 
+    <a href="https://github.com/cschweda/trs80-emulator">GitHub</a>
+  </p>
+</body>
+</html>

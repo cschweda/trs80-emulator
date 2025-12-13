@@ -28,14 +28,63 @@ function log(message, type = "info") {
 // Make log function available globally for button clicks
 window.log = log;
 
+// Tab management - ensure only one tab is visible at a time
+function showTab(tabName) {
+  const console = document.getElementById("console");
+  const designDocContainer = document.getElementById("design-doc-container");
+
+  // Hide all tabs first
+  if (console) console.style.display = "none";
+  if (designDocContainer) designDocContainer.style.display = "none";
+
+  // Show the requested tab
+  if (tabName === "console") {
+    if (console) {
+      console.style.display = "block";
+      // Focus the console so scroll/keyboard navigation works
+      console.focus();
+    }
+  } else if (tabName === "design-doc") {
+    if (designDocContainer) designDocContainer.style.display = "block";
+  }
+}
+
 // Clear console function
 window.clearConsole = function () {
+  // Ensure console is visible
+  showTab("console");
   consoleDiv.innerHTML = "";
   console.clear();
+  log("Console cleared", "info");
+};
+
+// Show design document function
+window.showDesignDoc = function () {
+  showTab("design-doc");
+  // Log to console (temporarily show it)
+  const console = document.getElementById("console");
+  if (console) {
+    console.style.display = "block";
+    log("📋 Displaying Complete Design Document", "info");
+    console.style.display = "none";
+  }
+};
+
+// Hide design document function (shows console)
+window.hideDesignDoc = function () {
+  showTab("console");
+  // Remove class from body to show header/buttons/footer
+  document.body.classList.remove("show-design-doc");
 };
 
 // Z80 CPU Test function - Runs all Phase 1 tests via dynamic import
 window.runCPUTest = async function () {
+  // Always show console first when running tests
+  showTab("console");
+
+  // Clear any previous test output
+  consoleDiv.innerHTML = "";
+
   log("═══════════════════════════════════════════════════════════", "info");
   log("Z80 CPU Comprehensive Test Suite - Phase 1", "info");
   log("═══════════════════════════════════════════════════════════", "info");

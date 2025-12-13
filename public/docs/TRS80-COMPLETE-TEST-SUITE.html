@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRS80 COMPLETE TEST SUITE - TRS-80 Emulator</title>
+  <style>
+    html {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #4CAF50;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+    h1 {
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 0.3em;
+    }
+    h2 {
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.3em;
+    }
+    code {
+      background: #2a2a2a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      color: #ff6b6b;
+    }
+    pre {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      border-left: 4px solid #4CAF50;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: #e0e0e0;
+    }
+    a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    blockquote {
+      border-left: 4px solid #4CAF50;
+      margin: 0;
+      padding-left: 20px;
+      color: #b0b0b0;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #2a2a2a;
+      color: #4CAF50;
+    }
+    tr:nth-child(even) {
+      background: #222;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: #000;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .back-link:hover {
+      background: #45a049;
+      text-decoration: none;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #333;
+      margin: 2em 0;
+    }
+  </style>
+  <script>
+    // Detect if we're in an iframe
+    const isInIframe = window.self !== window.top;
+    
+    // Handle back link based on context
+    function handleBackLink(event) {
+      if (isInIframe) {
+        // If in iframe, try to close the design doc in parent window
+        event.preventDefault();
+        try {
+          if (window.parent && typeof window.parent.hideDesignDoc === 'function') {
+            window.parent.hideDesignDoc();
+          } else {
+            // Fallback: try to navigate parent to root
+            window.parent.location.href = window.parent.location.origin + window.parent.location.pathname.replace(/\/[^\/]*$/, '') + '/';
+          }
+        } catch (e) {
+          // Cross-origin or other error - open in new window
+          window.open('/', '_blank');
+        }
+      }
+      // If not in iframe, normal link behavior (no preventDefault)
+    }
+    
+    // Hide back link when in iframe (since parent has close button)
+    window.addEventListener('DOMContentLoaded', function() {
+      const backLink = document.querySelector('.back-link');
+      const footerLinks = document.querySelectorAll('p a[href="/"]');
+      
+      if (isInIframe) {
+        // Hide the back link when in iframe
+        if (backLink) {
+          backLink.style.display = 'none';
+        }
+        // Update footer links to open in new window
+        footerLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.open('/', '_blank');
+          });
+        });
+      } else {
+        // Not in iframe - add click handler to back link
+        if (backLink) {
+          backLink.addEventListener('click', handleBackLink);
+        }
+      }
+    });
+  </script>
+</head>
+<body>
+  <a href="/" class="back-link">← Back to Emulator</a>
+  <h1>TRS-80 Model III Emulator - Complete Test Suite</h1>
+<h2>Comprehensive Unit and Integration Tests for All Phases</h2>
+<p>This document contains all test specifications for the TRS-80 Model III emulator, organized by development phase. Each test file is complete and ready to copy into your project&#39;s <code>tests/</code> directory.</p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#phase-1-cpu-tests">Phase 1: CPU Tests</a></li>
+<li><a href="#phase-2-memory-tests">Phase 2: Memory Tests</a></li>
+<li><a href="#phase-3-cassette--io-tests">Phase 3: Cassette &amp; I/O Tests</a></li>
+<li><a href="#phase-4-video-tests">Phase 4: Video Tests</a></li>
+<li><a href="#phase-5-system-integration-tests">Phase 5: System Integration Tests</a></li>
+<li><a href="#phase-6-program-loader-tests">Phase 6: Program Loader Tests</a></li>
+<li><a href="#integration-tests">Integration Tests</a></li>
+<li><a href="#test-configuration">Test Configuration</a></li>
+</ol>
+<hr>
+<h2>PHASE 1: CPU Tests</h2>
+<h3>File: tests/unit/cpu-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * Z80 CPU Core Unit Tests
+ * Tests all basic CPU operations, registers, flags, and instructions
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { Z80CPU } from &#39;@core/z80cpu.js&#39;;
+
+describe(&#39;Z80CPU - Initialization and Reset&#39;, () =&gt; {
+    let cpu;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+    });
+    
+    it(&#39;should initialize with correct default values&#39;, () =&gt; {
+        expect(cpu.registers.PC).toBe(0x0000);
+        expect(cpu.registers.SP).toBe(0xFFFF);
+        expect(cpu.halted).toBe(false);
+        expect(cpu.IFF1).toBe(false);
+        expect(cpu.IFF2).toBe(false);
+        expect(cpu.interruptMode).toBe(0);
+    });
+    
+    it(&#39;should reset CPU to initial state&#39;, () =&gt; {
+        cpu.registers.PC = 0x1234;
+        cpu.registers.SP = 0x5678;
+        cpu.halted = true;
+        
+        cpu.reset();
+        
+        expect(cpu.registers.PC).toBe(0x0000);
+        expect(cpu.registers.SP).toBe(0xFFFF);
+        expect(cpu.halted).toBe(false);
+    });
+});
+
+describe(&#39;Z80CPU - Register Operations&#39;, () =&gt; {
+    let cpu;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+    });
+    
+    describe(&#39;8-bit Registers&#39;, () =&gt; {
+        it(&#39;should read and write A register&#39;, () =&gt; {
+            cpu.registers.A = 0x42;
+            expect(cpu.registers.A).toBe(0x42);
+        });
+        
+        it(&#39;should read and write B register&#39;, () =&gt; {
+            cpu.registers.B = 0x55;
+            expect(cpu.registers.B).toBe(0x55);
+        });
+        
+        it(&#39;should handle register overflow (wraps to 8 bits)&#39;, () =&gt; {
+            cpu.registers.A = 0x1FF;
+            expect(cpu.registers.A).toBe(0xFF);
+        });
+    });
+    
+    describe(&#39;16-bit Register Pairs&#39;, () =&gt; {
+        it(&#39;should handle BC register pair&#39;, () =&gt; {
+            cpu.BC = 0x1234;
+            expect(cpu.registers.B).toBe(0x12);
+            expect(cpu.registers.C).toBe(0x34);
+            expect(cpu.BC).toBe(0x1234);
+        });
+        
+        it(&#39;should handle DE register pair&#39;, () =&gt; {
+            cpu.DE = 0x5678;
+            expect(cpu.registers.D).toBe(0x56);
+            expect(cpu.registers.E).toBe(0x78);
+            expect(cpu.DE).toBe(0x5678);
+        });
+        
+        it(&#39;should handle HL register pair&#39;, () =&gt; {
+            cpu.HL = 0xABCD;
+            expect(cpu.registers.H).toBe(0xAB);
+            expect(cpu.registers.L).toBe(0xCD);
+            expect(cpu.HL).toBe(0xABCD);
+        });
+        
+        it(&#39;should handle IX register pair&#39;, () =&gt; {
+            cpu.IX = 0x1122;
+            expect(cpu.registers.IXH).toBe(0x11);
+            expect(cpu.registers.IXL).toBe(0x22);
+            expect(cpu.IX).toBe(0x1122);
+        });
+        
+        it(&#39;should handle IY register pair&#39;, () =&gt; {
+            cpu.IY = 0x3344;
+            expect(cpu.registers.IYH).toBe(0x33);
+            expect(cpu.registers.IYL).toBe(0x44);
+            expect(cpu.IY).toBe(0x3344);
+        });
+    });
+});
+
+describe(&#39;Z80CPU - Flag Operations&#39;, () =&gt; {
+    let cpu;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+    });
+    
+    it(&#39;should set and clear Carry flag (C)&#39;, () =&gt; {
+        cpu.flagC = 1;
+        expect(cpu.flagC).toBe(1);
+        cpu.flagC = 0;
+        expect(cpu.flagC).toBe(0);
+    });
+    
+    it(&#39;should set and clear Zero flag (Z)&#39;, () =&gt; {
+        cpu.flagZ = 1;
+        expect(cpu.flagZ).toBe(1);
+        cpu.flagZ = 0;
+        expect(cpu.flagZ).toBe(0);
+    });
+    
+    it(&#39;should set and clear Sign flag (S)&#39;, () =&gt; {
+        cpu.flagS = 1;
+        expect(cpu.flagS).toBe(1);
+        cpu.flagS = 0;
+        expect(cpu.flagS).toBe(0);
+    });
+    
+    it(&#39;should set and clear Half-carry flag (H)&#39;, () =&gt; {
+        cpu.flagH = 1;
+        expect(cpu.flagH).toBe(1);
+        cpu.flagH = 0;
+        expect(cpu.flagH).toBe(0);
+    });
+    
+    it(&#39;should set and clear Parity/Overflow flag (PV)&#39;, () =&gt; {
+        cpu.flagPV = 1;
+        expect(cpu.flagPV).toBe(1);
+        cpu.flagPV = 0;
+        expect(cpu.flagPV).toBe(0);
+    });
+    
+    it(&#39;should set and clear Add/Subtract flag (N)&#39;, () =&gt; {
+        cpu.flagN = 1;
+        expect(cpu.flagN).toBe(1);
+        cpu.flagN = 0;
+        expect(cpu.flagN).toBe(0);
+    });
+    
+    it(&#39;should handle multiple flag operations&#39;, () =&gt; {
+        cpu.registers.F = 0xFF;
+        expect(cpu.flagC).toBe(1);
+        expect(cpu.flagZ).toBe(1);
+        expect(cpu.flagS).toBe(1);
+        
+        cpu.registers.F = 0x00;
+        expect(cpu.flagC).toBe(0);
+        expect(cpu.flagZ).toBe(0);
+        expect(cpu.flagS).toBe(0);
+    });
+});
+
+describe(&#39;Z80CPU - Arithmetic Operations&#39;, () =&gt; {
+    let cpu;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+    });
+    
+    describe(&#39;ADD A, r&#39;, () =&gt; {
+        it(&#39;should add without carry&#39;, () =&gt; {
+            cpu.registers.A = 0x05;
+            cpu.addA(0x03);
+            expect(cpu.registers.A).toBe(0x08);
+            expect(cpu.flagC).toBe(0);
+        });
+        
+        it(&#39;should set carry flag on overflow&#39;, () =&gt; {
+            cpu.registers.A = 0xFF;
+            cpu.addA(0x01);
+            expect(cpu.registers.A).toBe(0x00);
+            expect(cpu.flagC).toBe(1);
+            expect(cpu.flagZ).toBe(1);
+        });
+        
+        it(&#39;should set zero flag when result is zero&#39;, () =&gt; {
+            cpu.registers.A = 0x00;
+            cpu.addA(0x00);
+            expect(cpu.flagZ).toBe(1);
+        });
+        
+        it(&#39;should set sign flag when bit 7 is set&#39;, () =&gt; {
+            cpu.registers.A = 0x80;
+            cpu.addA(0x01);
+            expect(cpu.registers.A).toBe(0x81);
+            expect(cpu.flagS).toBe(1);
+        });
+        
+        it(&#39;should set half-carry flag&#39;, () =&gt; {
+            cpu.registers.A = 0x0F;
+            cpu.addA(0x01);
+            expect(cpu.flagH).toBe(1);
+        });
+        
+        it(&#39;should set overflow flag on signed overflow&#39;, () =&gt; {
+            cpu.registers.A = 0x7F;  // +127
+            cpu.addA(0x01);          // +1
+            expect(cpu.registers.A).toBe(0x80);  // -128 (overflow)
+            expect(cpu.flagPV).toBe(1);
+        });
+    });
+    
+    describe(&#39;SUB A, r&#39;, () =&gt; {
+        it(&#39;should subtract without borrow&#39;, () =&gt; {
+            cpu.registers.A = 0x08;
+            cpu.subA(0x03);
+            expect(cpu.registers.A).toBe(0x05);
+            expect(cpu.flagC).toBe(0);
+        });
+        
+        it(&#39;should set carry flag on underflow&#39;, () =&gt; {
+            cpu.registers.A = 0x00;
+            cpu.subA(0x01);
+            expect(cpu.registers.A).toBe(0xFF);
+            expect(cpu.flagC).toBe(1);
+        });
+        
+        it(&#39;should set N flag for subtraction&#39;, () =&gt; {
+            cpu.registers.A = 0x05;
+            cpu.subA(0x03);
+            expect(cpu.flagN).toBe(1);
+        });
+        
+        it(&#39;should handle compare mode (CP)&#39;, () =&gt; {
+            cpu.registers.A = 0x42;
+            cpu.subA(0x42, true);  // Compare mode
+            expect(cpu.registers.A).toBe(0x42);  // A unchanged
+            expect(cpu.flagZ).toBe(1);           // But flags set
+        });
+    });
+    
+    describe(&#39;INC r&#39;, () =&gt; {
+        it(&#39;should increment register&#39;, () =&gt; {
+            cpu.registers.A = 0x41;
+            cpu.incReg(&#39;A&#39;);
+            expect(cpu.registers.A).toBe(0x42);
+        });
+        
+        it(&#39;should wrap on overflow&#39;, () =&gt; {
+            cpu.registers.A = 0xFF;
+            cpu.incReg(&#39;A&#39;);
+            expect(cpu.registers.A).toBe(0x00);
+            expect(cpu.flagZ).toBe(1);
+        });
+        
+        it(&#39;should set half-carry flag&#39;, () =&gt; {
+            cpu.registers.A = 0x0F;
+            cpu.incReg(&#39;A&#39;);
+            expect(cpu.flagH).toBe(1);
+        });
+        
+        it(&#39;should set overflow flag when incrementing 0x7F&#39;, () =&gt; {
+            cpu.registers.A = 0x7F;
+            cpu.incReg(&#39;A&#39;);
+            expect(cpu.flagPV).toBe(1);
+        });
+        
+        it(&#39;should not affect carry flag&#39;, () =&gt; {
+            cpu.flagC = 1;
+            cpu.registers.A = 0xFF;
+            cpu.incReg(&#39;A&#39;);
+            expect(cpu.flagC).toBe(1);  // Carry unchanged
+        });
+    });
+    
+    describe(&#39;DEC r&#39;, () =&gt; {
+        it(&#39;should decrement register&#39;, () =&gt; {
+            cpu.registers.A = 0x42;
+            cpu.decReg(&#39;A&#39;);
+            expect(cpu.registers.A).toBe(0x41);
+        });
+        
+        it(&#39;should wrap on underflow&#39;, () =&gt; {
+            cpu.registers.A = 0x00;
+            cpu.decReg(&#39;A&#39;);
+            expect(cpu.registers.A).toBe(0xFF);
+        });
+        
+        it(&#39;should set N flag for decrement&#39;, () =&gt; {
+            cpu.registers.A = 0x42;
+            cpu.decReg(&#39;A&#39;);
+            expect(cpu.flagN).toBe(1);
+        });
+    });
+});
+
+describe(&#39;Z80CPU - Load Instructions&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should execute LD A, n&#39;, () =&gt; {
+        memory[0x0000] = 0x3E;  // LD A, n
+        memory[0x0001] = 0x42;
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.A).toBe(0x42);
+        expect(cpu.registers.PC).toBe(0x0002);
+    });
+    
+    it(&#39;should execute LD B, n&#39;, () =&gt; {
+        memory[0x0000] = 0x06;  // LD B, n
+        memory[0x0001] = 0x55;
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.B).toBe(0x55);
+    });
+    
+    it(&#39;should execute LD HL, nn&#39;, () =&gt; {
+        memory[0x0000] = 0x21;  // LD HL, nn
+        memory[0x0001] = 0x34;  // Low byte
+        memory[0x0002] = 0x12;  // High byte
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.HL).toBe(0x1234);
+        expect(cpu.registers.PC).toBe(0x0003);
+    });
+    
+    it(&#39;should execute LD (HL), n&#39;, () =&gt; {
+        cpu.HL = 0x5000;
+        memory[0x0000] = 0x36;  // LD (HL), n
+        memory[0x0001] = 0xAA;
+        
+        cpu.executeInstruction();
+        
+        expect(memory[0x5000]).toBe(0xAA);
+    });
+    
+    it(&#39;should execute LD A, (HL)&#39;, () =&gt; {
+        cpu.HL = 0x5000;
+        memory[0x5000] = 0x42;
+        memory[0x0000] = 0x7E;  // LD A, (HL)
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.A).toBe(0x42);
+    });
+});
+
+describe(&#39;Z80CPU - Control Flow&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should execute JP nn (unconditional jump)&#39;, () =&gt; {
+        memory[0x0000] = 0xC3;  // JP nn
+        memory[0x0001] = 0x00;  // Low byte
+        memory[0x0002] = 0x50;  // High byte
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x5000);
+    });
+    
+    it(&#39;should execute JP Z, nn when zero flag is set&#39;, () =&gt; {
+        cpu.flagZ = 1;
+        memory[0x0000] = 0xCA;  // JP Z, nn
+        memory[0x0001] = 0x00;
+        memory[0x0002] = 0x50;
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x5000);
+    });
+    
+    it(&#39;should not jump JP Z, nn when zero flag is clear&#39;, () =&gt; {
+        cpu.flagZ = 0;
+        memory[0x0000] = 0xCA;  // JP Z, nn
+        memory[0x0001] = 0x00;
+        memory[0x0002] = 0x50;
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x0003);  // Just moved past instruction
+    });
+    
+    it(&#39;should execute CALL nn&#39;, () =&gt; {
+        cpu.registers.SP = 0xFFFF;
+        cpu.registers.PC = 0x1000;
+        
+        memory[0x1000] = 0xCD;  // CALL nn
+        memory[0x1001] = 0x00;
+        memory[0x1002] = 0x50;
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x5000);
+        expect(cpu.registers.SP).toBe(0xFFFD);
+        
+        // Check return address on stack
+        expect(memory[0xFFFD]).toBe(0x03);  // Low byte of return address
+        expect(memory[0xFFFE]).toBe(0x10);  // High byte of return address
+    });
+    
+    it(&#39;should execute RET&#39;, () =&gt; {
+        cpu.registers.SP = 0xFFFD;
+        memory[0xFFFD] = 0x34;  // Return address low
+        memory[0xFFFE] = 0x12;  // Return address high
+        memory[0x0000] = 0xC9;  // RET
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x1234);
+        expect(cpu.registers.SP).toBe(0xFFFF);
+    });
+});
+
+describe(&#39;Z80CPU - Stack Operations&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should execute PUSH BC&#39;, () =&gt; {
+        cpu.BC = 0x1234;
+        cpu.registers.SP = 0xFFFF;
+        memory[0x0000] = 0xC5;  // PUSH BC
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.SP).toBe(0xFFFD);
+        expect(memory[0xFFFD]).toBe(0x34);  // C
+        expect(memory[0xFFFE]).toBe(0x12);  // B
+    });
+    
+    it(&#39;should execute POP BC&#39;, () =&gt; {
+        cpu.registers.SP = 0xFFFD;
+        memory[0xFFFD] = 0x34;
+        memory[0xFFFE] = 0x12;
+        memory[0x0000] = 0xC1;  // POP BC
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.BC).toBe(0x1234);
+        expect(cpu.registers.SP).toBe(0xFFFF);
+    });
+});
+
+describe(&#39;Z80CPU - I/O Operations&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    let ports;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        ports = new Uint8Array(256);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+        cpu.readPort = (port) =&gt; ports[port];
+        cpu.writePort = (port, value) =&gt; {
+            ports[port] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should execute OUT (n), A&#39;, () =&gt; {
+        cpu.registers.A = 0x42;
+        memory[0x0000] = 0xD3;  // OUT (n), A
+        memory[0x0001] = 0xFF;  // Port FF
+        
+        cpu.executeInstruction();
+        
+        expect(ports[0xFF]).toBe(0x42);
+    });
+    
+    it(&#39;should execute IN A, (n)&#39;, () =&gt; {
+        ports[0xFF] = 0x55;
+        memory[0x0000] = 0xDB;  // IN A, (n)
+        memory[0x0001] = 0xFF;  // Port FF
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.A).toBe(0x55);
+    });
+});
+
+describe(&#39;Z80CPU - Special Instructions&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should execute NOP&#39;, () =&gt; {
+        cpu.registers.PC = 0x1000;
+        memory[0x1000] = 0x00;  // NOP
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x1001);
+    });
+    
+    it(&#39;should execute HALT&#39;, () =&gt; {
+        memory[0x0000] = 0x76;  // HALT
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.halted).toBe(true);
+    });
+    
+    it(&#39;should not execute instructions when halted&#39;, () =&gt; {
+        cpu.halted = true;
+        cpu.registers.PC = 0x1000;
+        
+        const cycles = cpu.executeInstruction();
+        
+        expect(cpu.registers.PC).toBe(0x1000);  // PC unchanged
+        expect(cycles).toBe(4);  // Still uses cycles
+    });
+});
+
+describe(&#39;Z80CPU - Test Program 1.1&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should execute complete test program&#39;, () =&gt; {
+        // Program:
+        // LD A, 0x55
+        // LD B, 0xAA
+        // ADD A, B
+        // HALT
+        
+        memory[0x0000] = 0x3E;  // LD A, 0x55
+        memory[0x0001] = 0x55;
+        memory[0x0002] = 0x06;  // LD B, 0xAA
+        memory[0x0003] = 0xAA;
+        memory[0x0004] = 0x80;  // ADD A, B
+        memory[0x0005] = 0x76;  // HALT
+        
+        cpu.executeInstruction();  // LD A, 0x55
+        cpu.executeInstruction();  // LD B, 0xAA
+        cpu.executeInstruction();  // ADD A, B
+        cpu.executeInstruction();  // HALT
+        
+        expect(cpu.registers.A).toBe(0xFF);
+        expect(cpu.registers.B).toBe(0xAA);
+        expect(cpu.flagS).toBe(1);  // Sign flag set (bit 7 = 1)
+        expect(cpu.flagZ).toBe(0);  // Zero flag clear
+        expect(cpu.flagH).toBe(1);  // Half-carry flag set
+        expect(cpu.halted).toBe(true);
+    });
+});
+
+describe(&#39;Z80CPU - Cycle Counting&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new Uint8Array(65536);
+        
+        cpu.readMemory = (address) =&gt; memory[address];
+        cpu.writeMemory = (address, value) =&gt; {
+            memory[address] = value &amp; 0xFF;
+        };
+    });
+    
+    it(&#39;should count cycles for LD A, n (7 cycles)&#39;, () =&gt; {
+        memory[0x0000] = 0x3E;
+        memory[0x0001] = 0x42;
+        
+        const cycles = cpu.executeInstruction();
+        
+        expect(cycles).toBe(7);
+    });
+    
+    it(&#39;should count cycles for ADD A, r (4 cycles)&#39;, () =&gt; {
+        cpu.registers.B = 0x10;
+        memory[0x0000] = 0x80;  // ADD A, B
+        
+        const cycles = cpu.executeInstruction();
+        
+        expect(cycles).toBe(4);
+    });
+    
+    it(&#39;should accumulate total cycles&#39;, () =&gt; {
+        cpu.cycles = 0;
+        memory[0x0000] = 0x3E;  // LD A, n (7 cycles)
+        memory[0x0001] = 0x42;
+        memory[0x0002] = 0x00;  // NOP (4 cycles)
+        
+        cpu.executeInstruction();
+        cpu.executeInstruction();
+        
+        expect(cpu.cycles).toBe(11);
+    });
+});
+</code></pre>
+<hr>
+<h2>PHASE 2: Memory Tests</h2>
+<h3>File: tests/unit/memory-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * Memory System Unit Tests
+ * Tests ROM/RAM management, program loading, and memory protection
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { MemorySystem } from &#39;@core/memory.js&#39;;
+
+describe(&#39;MemorySystem - Initialization&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+    });
+    
+    it(&#39;should initialize with correct memory sizes&#39;, () =&gt; {
+        expect(memory.rom.length).toBe(0x4000);  // 16K ROM
+        expect(memory.ram.length).toBe(0xC000);  // 48K RAM
+    });
+    
+    it(&#39;should start with ROM not loaded&#39;, () =&gt; {
+        expect(memory.romLoaded).toBe(false);
+    });
+    
+    it(&#39;should report correct memory statistics&#39;, () =&gt; {
+        const stats = memory.getStats();
+        
+        expect(stats.romSize).toBe(16384);
+        expect(stats.ramSize).toBe(49152);
+        expect(stats.totalSize).toBe(65536);
+        expect(stats.romLoaded).toBe(false);
+    });
+});
+
+describe(&#39;MemorySystem - ROM Loading&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+    });
+    
+    it(&#39;should load valid 16K ROM&#39;, () =&gt; {
+        const romData = new Uint8Array(0x4000);
+        for (let i = 0; i &lt; romData.length; i++) {
+            romData[i] = i &amp; 0xFF;
+        }
+        
+        const result = memory.loadROM(romData);
+        
+        expect(result).toBe(true);
+        expect(memory.romLoaded).toBe(true);
+    });
+    
+    it(&#39;should reject ROM with incorrect size&#39;, () =&gt; {
+        const invalidRom = new Uint8Array(1024);  // Only 1K
+        
+        expect(() =&gt; memory.loadROM(invalidRom)).toThrow();
+    });
+    
+    it(&#39;should copy ROM data correctly&#39;, () =&gt; {
+        const romData = new Uint8Array(0x4000);
+        romData[0] = 0x3E;
+        romData[1] = 0x42;
+        romData[0x3FFF] = 0xFF;
+        
+        memory.loadROM(romData);
+        
+        expect(memory.rom[0]).toBe(0x3E);
+        expect(memory.rom[1]).toBe(0x42);
+        expect(memory.rom[0x3FFF]).toBe(0xFF);
+    });
+});
+
+describe(&#39;MemorySystem - Memory Reading&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000);
+        for (let i = 0; i &lt; romData.length; i++) {
+            romData[i] = 0x00;
+        }
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should read from ROM (0x0000-0x3FFF)&#39;, () =&gt; {
+        memory.rom[0x1000] = 0x42;
+        
+        const value = memory.readByte(0x1000);
+        
+        expect(value).toBe(0x42);
+    });
+    
+    it(&#39;should read from RAM (0x4000-0xFFFF)&#39;, () =&gt; {
+        memory.ram[0x0000] = 0x55;  // RAM offset 0 = address 0x4000
+        
+        const value = memory.readByte(0x4000);
+        
+        expect(value).toBe(0x55);
+    });
+    
+    it(&#39;should read 16-bit words (little-endian)&#39;, () =&gt; {
+        memory.ram[0x0000] = 0x34;  // Low byte at 0x4000
+        memory.ram[0x0001] = 0x12;  // High byte at 0x4001
+        
+        const value = memory.readWord(0x4000);
+        
+        expect(value).toBe(0x1234);
+    });
+});
+
+describe(&#39;MemorySystem - Memory Writing&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should write to RAM&#39;, () =&gt; {
+        memory.writeByte(0x4000, 0x42);
+        
+        expect(memory.ram[0x0000]).toBe(0x42);
+        expect(memory.readByte(0x4000)).toBe(0x42);
+    });
+    
+    it(&#39;should write to high RAM (0xFFFF)&#39;, () =&gt; {
+        memory.writeByte(0xFFFF, 0xAA);
+        
+        expect(memory.ram[0xBFFF]).toBe(0xAA);
+        expect(memory.readByte(0xFFFF)).toBe(0xAA);
+    });
+    
+    it(&#39;should write 16-bit words (little-endian)&#39;, () =&gt; {
+        memory.writeWord(0x4000, 0x1234);
+        
+        expect(memory.ram[0x0000]).toBe(0x34);  // Low byte
+        expect(memory.ram[0x0001]).toBe(0x12);  // High byte
+    });
+});
+
+describe(&#39;MemorySystem - ROM Protection&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000);
+        romData[0x1000] = 0x42;
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should ignore writes to ROM area (Test 2.1)&#39;, () =&gt; {
+        const originalValue = memory.readByte(0x1000);
+        
+        memory.writeByte(0x1000, 0xAA);
+        
+        const newValue = memory.readByte(0x1000);
+        expect(newValue).toBe(originalValue);
+        expect(newValue).toBe(0x42);
+    });
+    
+    it(&#39;should allow writes to video RAM area (0x3C00-0x3FFF)&#39;, () =&gt; {
+        memory.writeByte(0x3C00, 0x55);
+        
+        expect(memory.readByte(0x3C00)).toBe(0x55);
+        expect(memory.rom[0x3C00]).toBe(0x55);
+    });
+    
+    it(&#39;should allow writes throughout video RAM range&#39;, () =&gt; {
+        for (let addr = 0x3C00; addr &lt; 0x4000; addr++) {
+            memory.writeByte(addr, 0xFF);
+            expect(memory.readByte(addr)).toBe(0xFF);
+        }
+    });
+});
+
+describe(&#39;MemorySystem - RAM Operations (Test 2.2)&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should read and write at RAM start (0x4000)&#39;, () =&gt; {
+        memory.writeByte(0x4000, 0xAA);
+        expect(memory.readByte(0x4000)).toBe(0xAA);
+    });
+    
+    it(&#39;should read and write at RAM end (0xFFFF)&#39;, () =&gt; {
+        memory.writeByte(0xFFFF, 0x55);
+        expect(memory.readByte(0xFFFF)).toBe(0x55);
+    });
+    
+    it(&#39;should handle sequential writes and reads&#39;, () =&gt; {
+        for (let i = 0; i &lt; 100; i++) {
+            const addr = 0x4000 + i;
+            memory.writeByte(addr, i &amp; 0xFF);
+        }
+        
+        for (let i = 0; i &lt; 100; i++) {
+            const addr = 0x4000 + i;
+            expect(memory.readByte(addr)).toBe(i &amp; 0xFF);
+        }
+    });
+});
+
+describe(&#39;MemorySystem - Program Loading (Test 2.3)&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should load program at default address (0x4200)&#39;, () =&gt; {
+        const program = new Uint8Array([0x3E, 0x42, 0x76]);
+        
+        const address = memory.loadProgram(program);
+        
+        expect(address).toBe(0x4200);
+        expect(memory.readByte(0x4200)).toBe(0x3E);
+        expect(memory.readByte(0x4201)).toBe(0x42);
+        expect(memory.readByte(0x4202)).toBe(0x76);
+    });
+    
+    it(&#39;should load program at custom address&#39;, () =&gt; {
+        const program = new Uint8Array([0xAA, 0xBB, 0xCC]);
+        
+        const address = memory.loadProgram(program, 0x5000);
+        
+        expect(address).toBe(0x5000);
+        expect(memory.readByte(0x5000)).toBe(0xAA);
+        expect(memory.readByte(0x5001)).toBe(0xBB);
+        expect(memory.readByte(0x5002)).toBe(0xCC);
+    });
+    
+    it(&#39;should load program from Array&#39;, () =&gt; {
+        const program = [0x10, 0x20, 0x30];
+        
+        memory.loadProgram(program, 0x6000);
+        
+        expect(memory.readByte(0x6000)).toBe(0x10);
+        expect(memory.readByte(0x6001)).toBe(0x20);
+        expect(memory.readByte(0x6002)).toBe(0x30);
+    });
+    
+    it(&#39;should reject program that exceeds memory&#39;, () =&gt; {
+        const largeProgram = new Uint8Array(0xFFFF);
+        
+        expect(() =&gt; memory.loadProgram(largeProgram, 0x4000)).toThrow();
+    });
+    
+    it(&#39;should handle zero-length program&#39;, () =&gt; {
+        const emptyProgram = new Uint8Array(0);
+        
+        const address = memory.loadProgram(emptyProgram, 0x5000);
+        
+        expect(address).toBe(0x5000);
+    });
+});
+
+describe(&#39;MemorySystem - RAM Management&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should clear RAM&#39;, () =&gt; {
+        // Fill RAM with non-zero values
+        for (let i = 0; i &lt; 100; i++) {
+            memory.writeByte(0x4000 + i, 0xFF);
+        }
+        
+        memory.clearRAM();
+        
+        // Verify RAM is cleared
+        for (let i = 0; i &lt; 100; i++) {
+            expect(memory.readByte(0x4000 + i)).toBe(0x00);
+        }
+    });
+    
+    it(&#39;should not affect ROM when clearing RAM&#39;, () =&gt; {
+        memory.rom[0x1000] = 0x42;
+        
+        memory.clearRAM();
+        
+        expect(memory.readByte(0x1000)).toBe(0x42);
+    });
+});
+
+describe(&#39;MemorySystem - Address Wrapping&#39;, () =&gt; {
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should handle 16-bit address wrap&#39;, () =&gt; {
+        memory.writeByte(0xFFFF, 0xAA);
+        memory.writeByte(0x10000, 0xBB);  // Should wrap to 0x0000
+        
+        // 0x10000 wraps to ROM space, write is ignored
+        expect(memory.readByte(0x0000)).toBe(0x00);
+    });
+    
+    it(&#39;should mask addresses to 16 bits&#39;, () =&gt; {
+        memory.writeByte(0x14000, 0x42);  // 0x14000 &amp; 0xFFFF = 0x4000
+        
+        expect(memory.readByte(0x4000)).toBe(0x42);
+    });
+});
+</code></pre>
+<hr>
+<h2>PHASE 3: Cassette &amp; I/O Tests</h2>
+<h3>File: tests/unit/cassette-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * Cassette System Unit Tests
+ * Tests tape loading, CLOAD/CSAVE operations, and cassette control
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { CassetteSystem } from &#39;@peripherals/cassette.js&#39;;
+import { MemorySystem } from &#39;@core/memory.js&#39;;
+
+describe(&#39;CassetteSystem - Initialization&#39;, () =&gt; {
+    let cassette;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+    });
+    
+    it(&#39;should initialize with correct defaults&#39;, () =&gt; {
+        expect(cassette.motorOn).toBe(false);
+        expect(cassette.playing).toBe(false);
+        expect(cassette.recording).toBe(false);
+        expect(cassette.tapeData).toBe(null);
+        expect(cassette.tapePosition).toBe(0);
+        expect(cassette.tapeLength).toBe(0);
+    });
+});
+
+describe(&#39;CassetteSystem - Tape Loading (Test 3.1)&#39;, () =&gt; {
+    let cassette;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+    });
+    
+    it(&#39;should load Uint8Array tape data&#39;, () =&gt; {
+        const data = new Uint8Array([0x3E, 0x42, 0x76]);
+        
+        const result = cassette.loadTape(data);
+        
+        expect(result).toBe(true);
+        expect(cassette.tapeLength).toBe(3);
+        expect(cassette.tapePosition).toBe(0);
+        expect(cassette.tapeData[0]).toBe(0x3E);
+    });
+    
+    it(&#39;should load Array tape data&#39;, () =&gt; {
+        const data = [0xAA, 0xBB, 0xCC];
+        
+        const result = cassette.loadTape(data);
+        
+        expect(result).toBe(true);
+        expect(cassette.tapeLength).toBe(3);
+        expect(cassette.tapeData[1]).toBe(0xBB);
+    });
+    
+    it(&#39;should reject empty tape&#39;, () =&gt; {
+        const result = cassette.loadTape([]);
+        
+        expect(result).toBe(false);
+    });
+    
+    it(&#39;should reject null tape&#39;, () =&gt; {
+        const result = cassette.loadTape(null);
+        
+        expect(result).toBe(false);
+    });
+    
+    it(&#39;should reset tape position on load&#39;, () =&gt; {
+        cassette.tapePosition = 100;
+        
+        cassette.loadTape([0x10, 0x20]);
+        
+        expect(cassette.tapePosition).toBe(0);
+    });
+});
+
+describe(&#39;CassetteSystem - CLOAD Operation (Test 3.2)&#39;, () =&gt; {
+    let cassette;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should load tape to default address (0x4200)&#39;, () =&gt; {
+        const programData = new Uint8Array([0x3E, 0x42, 0x00, 0x76]);
+        cassette.loadTape(programData);
+        
+        const address = cassette.simulateCLoad(memory);
+        
+        expect(address).toBe(0x4200);
+        expect(memory.readByte(0x4200)).toBe(0x3E);
+        expect(memory.readByte(0x4201)).toBe(0x42);
+        expect(memory.readByte(0x4202)).toBe(0x00);
+        expect(memory.readByte(0x4203)).toBe(0x76);
+    });
+    
+    it(&#39;should load tape to custom address&#39;, () =&gt; {
+        const programData = new Uint8Array([0xAA, 0xBB, 0xCC]);
+        cassette.loadTape(programData);
+        
+        const address = cassette.simulateCLoad(memory, 0x5000);
+        
+        expect(address).toBe(0x5000);
+        expect(memory.readByte(0x5000)).toBe(0xAA);
+        expect(memory.readByte(0x5001)).toBe(0xBB);
+        expect(memory.readByte(0x5002)).toBe(0xCC);
+    });
+    
+    it(&#39;should return false when no tape loaded&#39;, () =&gt; {
+        const result = cassette.simulateCLoad(memory);
+        
+        expect(result).toBe(false);
+    });
+    
+    it(&#39;should call onLoadComplete callback&#39;, () =&gt; {
+        let callbackAddress = null;
+        let callbackLength = null;
+        
+        cassette.onLoadComplete = (addr, len) =&gt; {
+            callbackAddress = addr;
+            callbackLength = len;
+        };
+        
+        cassette.loadTape([0x10, 0x20, 0x30]);
+        cassette.simulateCLoad(memory, 0x5000);
+        
+        expect(callbackAddress).toBe(0x5000);
+        expect(callbackLength).toBe(3);
+    });
+});
+
+describe(&#39;CassetteSystem - CSAVE Operation (Test 3.3)&#39;, () =&gt; {
+    let cassette;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should save memory region to tape&#39;, () =&gt; {
+        memory.writeByte(0x4200, 0x3E);
+        memory.writeByte(0x4201, 0x42);
+        memory.writeByte(0x4202, 0x76);
+        
+        const tapeData = cassette.simulateCSave(memory, 0x4200, 3);
+        
+        expect(tapeData.length).toBe(3);
+        expect(tapeData[0]).toBe(0x3E);
+        expect(tapeData[1]).toBe(0x42);
+        expect(tapeData[2]).toBe(0x76);
+        expect(cassette.tapeLength).toBe(3);
+    });
+    
+    it(&#39;should call onSaveComplete callback&#39;, () =&gt; {
+        let savedData = null;
+        
+        cassette.onSaveComplete = (data) =&gt; {
+            savedData = data;
+        };
+        
+        memory.writeByte(0x5000, 0xAA);
+        cassette.simulateCSave(memory, 0x5000, 1);
+        
+        expect(savedData).not.toBe(null);
+        expect(savedData[0]).toBe(0xAA);
+    });
+});
+
+describe(&#39;CassetteSystem - Cassette Control (Test 3.4)&#39;, () =&gt; {
+    let cassette;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+    });
+    
+    it(&#39;should turn motor on with bit 0&#39;, () =&gt; {
+        cassette.control(0x01);
+        
+        expect(cassette.motorOn).toBe(true);
+    });
+    
+    it(&#39;should start playing with bit 1&#39;, () =&gt; {
+        cassette.control(0x03);  // Motor on + Play
+        
+        expect(cassette.motorOn).toBe(true);
+        expect(cassette.playing).toBe(true);
+    });
+    
+    it(&#39;should start recording with bit 2&#39;, () =&gt; {
+        cassette.control(0x05);  // Motor on + Record
+        
+        expect(cassette.motorOn).toBe(true);
+        expect(cassette.recording).toBe(true);
+    });
+    
+    it(&#39;should stop play/record when motor is off&#39;, () =&gt; {
+        cassette.control(0x03);  // Start playing
+        cassette.control(0x00);  // Motor off
+        
+        expect(cassette.motorOn).toBe(false);
+        expect(cassette.playing).toBe(false);
+    });
+    
+    it(&#39;should generate correct status byte&#39;, () =&gt; {
+        cassette.loadTape([0x10, 0x20]);
+        cassette.control(0x03);  // Motor on + Play
+        
+        const status = cassette.getStatus();
+        
+        expect(status &amp; 0x01).toBe(0x01);  // Motor on
+        expect(status &amp; 0x02).toBe(0x02);  // Playing
+        expect(status &amp; 0x08).toBe(0x08);  // Data available
+    });
+});
+
+describe(&#39;CassetteSystem - Sequential Reading&#39;, () =&gt; {
+    let cassette;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+    });
+    
+    it(&#39;should read bytes sequentially&#39;, () =&gt; {
+        cassette.loadTape([0x10, 0x20, 0x30]);
+        
+        expect(cassette.readByte()).toBe(0x10);
+        expect(cassette.readByte()).toBe(0x20);
+        expect(cassette.readByte()).toBe(0x30);
+    });
+    
+    it(&#39;should return 0 after tape end&#39;, () =&gt; {
+        cassette.loadTape([0x42]);
+        
+        cassette.readByte();  // Read the only byte
+        const afterEnd = cassette.readByte();
+        
+        expect(afterEnd).toBe(0x00);
+    });
+});
+
+describe(&#39;CassetteSystem - Tape Control&#39;, () =&gt; {
+    let cassette;
+    
+    beforeEach(() =&gt; {
+        cassette = new CassetteSystem();
+    });
+    
+    it(&#39;should rewind tape&#39;, () =&gt; {
+        cassette.loadTape([0x10, 0x20, 0x30]);
+        cassette.readByte();
+        cassette.readByte();
+        
+        cassette.rewind();
+        
+        expect(cassette.tapePosition).toBe(0);
+    });
+    
+    it(&#39;should eject tape&#39;, () =&gt; {
+        cassette.loadTape([0x10, 0x20]);
+        cassette.control(0x01);
+        
+        cassette.eject();
+        
+        expect(cassette.tapeData).toBe(null);
+        expect(cassette.tapePosition).toBe(0);
+        expect(cassette.tapeLength).toBe(0);
+        expect(cassette.motorOn).toBe(false);
+    });
+});
+</code></pre>
+<h3>File: tests/unit/io-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * I/O System Unit Tests
+ * Tests port handling and keyboard buffer
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { IOSystem } from &#39;@core/io.js&#39;;
+
+describe(&#39;IOSystem - Initialization&#39;, () =&gt; {
+    let io;
+    
+    beforeEach(() =&gt; {
+        io = new IOSystem();
+    });
+    
+    it(&#39;should initialize cassette system&#39;, () =&gt; {
+        expect(io.cassette).toBeDefined();
+        expect(io.cassette.motorOn).toBe(false);
+    });
+    
+    it(&#39;should initialize keyboard buffer&#39;, () =&gt; {
+        expect(io.keyboardBuffer).toEqual([]);
+    });
+    
+    it(&#39;should initialize port handlers&#39;, () =&gt; {
+        expect(io.portHandlers).toBeDefined();
+        expect(io.portHandlers.size).toBeGreaterThan(0);
+    });
+});
+
+describe(&#39;IOSystem - Port Operations (Test 3.5)&#39;, () =&gt; {
+    let io;
+    
+    beforeEach(() =&gt; {
+        io = new IOSystem();
+    });
+    
+    it(&#39;should write to cassette port (0xFE)&#39;, () =&gt; {
+        io.writePort(0xFE, 0x01);
+        
+        expect(io.cassette.motorOn).toBe(true);
+    });
+    
+    it(&#39;should read cassette status from port 0xFE&#39;, () =&gt; {
+        io.cassette.loadTape([0x10]);
+        io.cassette.control(0x01);
+        
+        const status = io.readPort(0xFE);
+        
+        expect(status &amp; 0x01).toBe(0x01);  // Motor on
+    });
+    
+    it(&#39;should return 0xFF for undefined ports&#39;, () =&gt; {
+        const value = io.readPort(0x99);
+        
+        expect(value).toBe(0xFF);
+    });
+});
+
+describe(&#39;IOSystem - Keyboard Buffer&#39;, () =&gt; {
+    let io;
+    
+    beforeEach(() =&gt; {
+        io = new IOSystem();
+    });
+    
+    it(&#39;should add key to buffer&#39;, () =&gt; {
+        io.addKey(0x41);  // &#39;A&#39;
+        io.addKey(0x42);  // &#39;B&#39;
+        
+        expect(io.keyboardBuffer.length).toBe(2);
+    });
+    
+    it(&#39;should read from keyboard port (0xFF)&#39;, () =&gt; {
+        io.addKey(0x41);
+        
+        const key = io.readPort(0xFF);
+        
+        expect(key).toBe(0x41);
+        expect(io.keyboardBuffer.length).toBe(0);  // Consumed
+    });
+    
+    it(&#39;should return 0 when buffer is empty&#39;, () =&gt; {
+        const key = io.readPort(0xFF);
+        
+        expect(key).toBe(0x00);
+    });
+    
+    it(&#39;should process keys in FIFO order&#39;, () =&gt; {
+        io.addKey(0x41);
+        io.addKey(0x42);
+        io.addKey(0x43);
+        
+        expect(io.readPort(0xFF)).toBe(0x41);
+        expect(io.readPort(0xFF)).toBe(0x42);
+        expect(io.readPort(0xFF)).toBe(0x43);
+    });
+    
+    it(&#39;should clear keyboard buffer&#39;, () =&gt; {
+        io.addKey(0x41);
+        io.addKey(0x42);
+        
+        io.clearKeyboardBuffer();
+        
+        expect(io.keyboardBuffer.length).toBe(0);
+    });
+    
+    it(&#39;should limit buffer size to 256&#39;, () =&gt; {
+        for (let i = 0; i &lt; 300; i++) {
+            io.addKey(i &amp; 0xFF);
+        }
+        
+        expect(io.keyboardBuffer.length).toBeLessThanOrEqual(256);
+    });
+});
+</code></pre>
+<hr>
+<h2>PHASE 4: Video Tests</h2>
+<h3>File: tests/unit/video-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * Video System Unit Tests
+ * Tests text display and graphics mode
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from &#39;vitest&#39;;
+import { VideoSystem } from &#39;@peripherals/video.js&#39;;
+import { MemorySystem } from &#39;@core/memory.js&#39;;
+
+// Mock canvas for testing
+class MockCanvas {
+    constructor() {
+        this.width = 0;
+        this.height = 0;
+    }
+    
+    getContext() {
+        return {
+            fillStyle: &#39;&#39;,
+            fillRect: () =&gt; {},
+            clearRect: () =&gt; {}
+        };
+    }
+}
+
+describe(&#39;VideoSystem - Initialization&#39;, () =&gt; {
+    let video;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        canvas = new MockCanvas();
+        video = new VideoSystem(canvas);
+    });
+    
+    it(&#39;should initialize with correct dimensions&#39;, () =&gt; {
+        expect(video.columns).toBe(64);
+        expect(video.rows).toBe(16);
+        expect(video.charWidth).toBe(8);
+        expect(video.charHeight).toBe(12);
+    });
+    
+    it(&#39;should set canvas size&#39;, () =&gt; {
+        expect(canvas.width).toBe(512);   // 64 * 8
+        expect(canvas.height).toBe(192);  // 16 * 12
+    });
+    
+    it(&#39;should initialize character ROM&#39;, () =&gt; {
+        expect(video.charRom).toBeDefined();
+        expect(video.charRom.length).toBe(256);
+    });
+    
+    it(&#39;should set correct video memory address&#39;, () =&gt; {
+        expect(video.videoMemoryStart).toBe(0x3C00);
+    });
+});
+
+describe(&#39;VideoSystem - Character ROM&#39;, () =&gt; {
+    let video;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        canvas = new MockCanvas();
+        video = new VideoSystem(canvas);
+    });
+    
+    it(&#39;should have character data for basic ASCII&#39;, () =&gt; {
+        const charA = video.charRom[0x41];  // &#39;A&#39;
+        expect(charA).toBeDefined();
+        expect(charA.length).toBe(12);
+    });
+    
+    it(&#39;should have space character&#39;, () =&gt; {
+        const charSpace = video.charRom[0x20];
+        expect(charSpace).toBeDefined();
+        expect(charSpace.every(byte =&gt; byte === 0)).toBe(true);
+    });
+    
+    it(&#39;should have graphics characters (128-191)&#39;, () =&gt; {
+        for (let i = 128; i &lt; 192; i++) {
+            expect(video.charRom[i]).toBeDefined();
+            expect(video.charRom[i].length).toBe(12);
+        }
+    });
+});
+
+describe(&#39;VideoSystem - Graphics Character Generation&#39;, () =&gt; {
+    let video;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        canvas = new MockCanvas();
+        video = new VideoSystem(canvas);
+    });
+    
+    it(&#39;should generate blank graphics character (pattern 0)&#39;, () =&gt; {
+        const charData = video.generateGraphicsChar(0);
+        
+        expect(charData.every(byte =&gt; byte === 0x00)).toBe(true);
+    });
+    
+    it(&#39;should generate full graphics character (pattern 63)&#39;, () =&gt; {
+        const charData = video.generateGraphicsChar(63);
+        
+        // All pixels on = 0xFF in each row
+        expect(charData.every(byte =&gt; byte === 0xFF)).toBe(true);
+    });
+    
+    it(&#39;should generate single pixel patterns&#39;, () =&gt; {
+        // Pattern 1 = bottom-right pixel (bit 0)
+        const char1 = video.generateGraphicsChar(1);
+        expect(char1[8] &amp; 0x0F).not.toBe(0);  // Bottom row, right half
+        
+        // Pattern 32 = top-left pixel (bit 5)
+        const char32 = video.generateGraphicsChar(32);
+        expect(char32[0] &amp; 0xF0).not.toBe(0);  // Top row, left half
+    });
+});
+
+describe(&#39;VideoSystem - Graphics Mode (SET/RESET/POINT)&#39;, () =&gt; {
+    let video;
+    let memory;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        canvas = new MockCanvas();
+        video = new VideoSystem(canvas);
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    describe(&#39;SET command&#39;, () =&gt; {
+        it(&#39;should set pixel at (0, 0)&#39;, () =&gt; {
+            video.setPixel(0, 0, memory);
+            
+            const charCode = memory.readByte(0x3C00);
+            expect(charCode).toBeGreaterThanOrEqual(128);
+            expect(charCode &amp; 0x20).not.toBe(0);  // Bit 5 set (top-left)
+        });
+        
+        it(&#39;should set pixel at (1, 0)&#39;, () =&gt; {
+            video.setPixel(1, 0, memory);
+            
+            const charCode = memory.readByte(0x3C00);
+            expect(charCode &amp; 0x10).not.toBe(0);  // Bit 4 set (top-right)
+        });
+        
+        it(&#39;should set multiple pixels in same character&#39;, () =&gt; {
+            video.setPixel(0, 0, memory);  // Top-left
+            video.setPixel(1, 0, memory);  // Top-right
+            
+            const charCode = memory.readByte(0x3C00);
+            expect(charCode &amp; 0x30).toBe(0x30);  // Both bits set
+        });
+        
+        it(&#39;should set pixel at (127, 47) - bottom-right corner&#39;, () =&gt; {
+            video.setPixel(127, 47, memory);
+            
+            const charX = Math.floor(127 / 2);
+            const charY = Math.floor(47 / 3);
+            const addr = 0x3C00 + (charY * 64) + charX;
+            const charCode = memory.readByte(addr);
+            
+            expect(charCode).toBeGreaterThanOrEqual(128);
+        });
+        
+        it(&#39;should ignore out-of-bounds coordinates&#39;, () =&gt; {
+            video.setPixel(-1, 0, memory);
+            video.setPixel(128, 0, memory);
+            video.setPixel(0, 48, memory);
+            
+            // Should not crash, just ignore
+            expect(true).toBe(true);
+        });
+    });
+    
+    describe(&#39;RESET command&#39;, () =&gt; {
+        it(&#39;should clear a set pixel&#39;, () =&gt; {
+            video.setPixel(0, 0, memory);
+            video.resetPixel(0, 0, memory);
+            
+            const charCode = memory.readByte(0x3C00);
+            expect(charCode &amp; 0x20).toBe(0);  // Bit 5 cleared
+        });
+        
+        it(&#39;should not affect other pixels&#39;, () =&gt; {
+            video.setPixel(0, 0, memory);  // Bit 5
+            video.setPixel(1, 0, memory);  // Bit 4
+            video.resetPixel(0, 0, memory);
+            
+            const charCode = memory.readByte(0x3C00);
+            expect(charCode &amp; 0x10).not.toBe(0);  // Bit 4 still set
+            expect(charCode &amp; 0x20).toBe(0);      // Bit 5 cleared
+        });
+    });
+    
+    describe(&#39;POINT command&#39;, () =&gt; {
+        it(&#39;should return -1 when pixel is on&#39;, () =&gt; {
+            video.setPixel(10, 10, memory);
+            
+            const result = video.pointPixel(10, 10, memory);
+            
+            expect(result).toBe(-1);
+        });
+        
+        it(&#39;should return 0 when pixel is off&#39;, () =&gt; {
+            const result = video.pointPixel(10, 10, memory);
+            
+            expect(result).toBe(0);
+        });
+        
+        it(&#39;should return 0 for out-of-bounds&#39;, () =&gt; {
+            expect(video.pointPixel(-1, 0, memory)).toBe(0);
+            expect(video.pointPixel(128, 0, memory)).toBe(0);
+            expect(video.pointPixel(0, 48, memory)).toBe(0);
+        });
+    });
+});
+
+describe(&#39;VideoSystem - Text Mode&#39;, () =&gt; {
+    let video;
+    let memory;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        canvas = new MockCanvas();
+        video = new VideoSystem(canvas);
+        memory = new MemorySystem();
+        const romData = new Uint8Array(0x4000).fill(0);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should display characters in video memory&#39;, () =&gt; {
+        memory.writeByte(0x3C00, 0x41);  // &#39;A&#39;
+        memory.writeByte(0x3C01, 0x42);  // &#39;B&#39;
+        
+        // Call render (visual verification needed)
+        video.renderScreen(memory);
+        
+        // No assertion - this is visual
+        expect(true).toBe(true);
+    });
+    
+    it(&#39;should show READY prompt&#39;, () =&gt; {
+        video.showReadyPrompt(memory);
+        
+        expect(memory.readByte(0x3C00)).toBe(&#39;R&#39;.charCodeAt(0));
+        expect(memory.readByte(0x3C01)).toBe(&#39;E&#39;.charCodeAt(0));
+        expect(memory.readByte(0x3C02)).toBe(&#39;A&#39;.charCodeAt(0));
+        expect(memory.readByte(0x3C03)).toBe(&#39;D&#39;.charCodeAt(0));
+        expect(memory.readByte(0x3C04)).toBe(&#39;Y&#39;.charCodeAt(0));
+    });
+    
+    it(&#39;should clear screen&#39;, () =&gt; {
+        // Fill screen with &#39;A&#39;
+        for (let i = 0; i &lt; 64 * 16; i++) {
+            memory.writeByte(0x3C00 + i, 0x41);
+        }
+        
+        video.clearScreen(memory);
+        
+        // All should be space (0x20)
+        for (let i = 0; i &lt; 64 * 16; i++) {
+            expect(memory.readByte(0x3C00 + i)).toBe(0x20);
+        }
+    });
+});
+</code></pre>
+<hr>
+<h2>PHASE 5: System Integration Tests</h2>
+<h3>File: tests/integration/cpu-memory-integration.js</h3>
+<pre><code class="language-javascript">/**
+ * CPU-Memory Integration Tests
+ * Tests that CPU can properly read/write memory and execute programs
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { Z80CPU } from &#39;@core/z80cpu.js&#39;;
+import { MemorySystem } from &#39;@core/memory.js&#39;;
+
+describe(&#39;CPU-Memory Integration&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new MemorySystem();
+        
+        // Load dummy ROM
+        const romData = new Uint8Array(0x4000);
+        memory.loadROM(romData);
+        
+        // Connect CPU to memory
+        cpu.readMemory = (addr) =&gt; memory.readByte(addr);
+        cpu.writeMemory = (addr, val) =&gt; memory.writeByte(addr, val);
+    });
+    
+    it(&#39;should execute program from ROM&#39;, () =&gt; {
+        // Load program into ROM
+        memory.rom[0x0000] = 0x3E;  // LD A, n
+        memory.rom[0x0001] = 0x42;
+        memory.rom[0x0002] = 0x76;  // HALT
+        
+        cpu.executeInstruction();  // LD A, 42
+        cpu.executeInstruction();  // HALT
+        
+        expect(cpu.registers.A).toBe(0x42);
+        expect(cpu.halted).toBe(true);
+    });
+    
+    it(&#39;should execute program from RAM&#39;, () =&gt; {
+        // Load program into RAM
+        memory.writeByte(0x4200, 0x3E);  // LD A, n
+        memory.writeByte(0x4201, 0x55);
+        memory.writeByte(0x4202, 0x76);  // HALT
+        
+        cpu.registers.PC = 0x4200;
+        
+        cpu.executeInstruction();
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.A).toBe(0x55);
+        expect(cpu.halted).toBe(true);
+    });
+    
+    it(&#39;should write to RAM but not ROM&#39;, () =&gt; {
+        // Try to write to ROM via LD (HL), n
+        cpu.HL = 0x1000;
+        memory.rom[0x0000] = 0x36;  // LD (HL), n
+        memory.rom[0x0001] = 0xAA;
+        
+        cpu.executeInstruction();
+        
+        // ROM should be unchanged
+        expect(memory.readByte(0x1000)).not.toBe(0xAA);
+        
+        // But writing to RAM should work
+        cpu.HL = 0x4000;
+        cpu.registers.PC = 0x0000;
+        cpu.executeInstruction();
+        
+        expect(memory.readByte(0x4000)).toBe(0xAA);
+    });
+    
+    it(&#39;should allow video RAM writes in ROM space&#39;, () =&gt; {
+        cpu.HL = 0x3C00;
+        memory.rom[0x0000] = 0x36;  // LD (HL), n
+        memory.rom[0x0001] = 0x41;  // &#39;A&#39;
+        
+        cpu.executeInstruction();
+        
+        expect(memory.readByte(0x3C00)).toBe(0x41);
+    });
+});
+
+describe(&#39;CPU-Memory Program Execution&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new MemorySystem();
+        
+        const romData = new Uint8Array(0x4000);
+        memory.loadROM(romData);
+        
+        cpu.readMemory = (addr) =&gt; memory.readByte(addr);
+        cpu.writeMemory = (addr, val) =&gt; memory.writeByte(addr, val);
+    });
+    
+    it(&#39;should execute complete test program&#39;, () =&gt; {
+        // Program: Add two numbers and store result
+        const program = [
+            0x3E, 0x10,  // LD A, 0x10
+            0x06, 0x20,  // LD B, 0x20
+            0x80,        // ADD A, B
+            0x21, 0x00, 0x50,  // LD HL, 0x5000
+            0x77,        // LD (HL), A
+            0x76         // HALT
+        ];
+        
+        for (let i = 0; i &lt; program.length; i++) {
+            memory.rom[i] = program[i];
+        }
+        
+        while (!cpu.halted) {
+            cpu.executeInstruction();
+        }
+        
+        expect(cpu.registers.A).toBe(0x30);
+        expect(memory.readByte(0x5000)).toBe(0x30);
+    });
+    
+    it(&#39;should handle subroutine calls&#39;, () =&gt; {
+        // Main program at 0x0000
+        memory.rom[0x0000] = 0xCD;  // CALL 0x0100
+        memory.rom[0x0001] = 0x00;
+        memory.rom[0x0002] = 0x01;
+        memory.rom[0x0003] = 0x76;  // HALT
+        
+        // Subroutine at 0x0100
+        memory.rom[0x0100] = 0x3E;  // LD A, 42
+        memory.rom[0x0101] = 0x42;
+        memory.rom[0x0102] = 0xC9;  // RET
+        
+        cpu.executeInstruction();  // CALL
+        cpu.executeInstruction();  // LD A, 42
+        cpu.executeInstruction();  // RET
+        cpu.executeInstruction();  // HALT
+        
+        expect(cpu.registers.A).toBe(0x42);
+        expect(cpu.halted).toBe(true);
+        expect(cpu.registers.PC).toBe(0x0004);
+    });
+});
+</code></pre>
+<hr>
+<h2>PHASE 6: Program Loader Tests</h2>
+<h3>File: tests/unit/program-loader-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * Program Loader Unit Tests
+ * Tests sample program loading and management
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { ProgramLoader } from &#39;@ui/program-loader.js&#39;;
+import { TRS80System } from &#39;@system/trs80.js&#39;;
+import { basicSamples } from &#39;@data/sample-programs.js&#39;;
+import { assemblySamples } from &#39;@data/sample-assembly.js&#39;;
+
+// Mock DOM elements
+global.document = {
+    getElementById: (id) =&gt; ({
+        innerHTML: &#39;&#39;,
+        appendChild: () =&gt; {},
+        style: { display: &#39;&#39; },
+        textContent: &#39;&#39;,
+        value: &#39;&#39;,
+        disabled: false,
+        addEventListener: () =&gt; {}
+    })
+};
+
+describe(&#39;ProgramLoader - Initialization&#39;, () =&gt; {
+    let loader;
+    let emulator;
+    
+    beforeEach(() =&gt; {
+        const canvas = { getContext: () =&gt; ({}) };
+        const dummyROM = new Uint8Array(0x4000);
+        emulator = { running: false, memory: {}, io: { cassette: {} } };
+        loader = new ProgramLoader(emulator);
+    });
+    
+    it(&#39;should initialize with null current program&#39;, () =&gt; {
+        expect(loader.currentProgram).toBe(null);
+        expect(loader.currentProgramType).toBe(&#39;basic&#39;);
+    });
+});
+
+describe(&#39;Sample Programs Validation&#39;, () =&gt; {
+    it(&#39;should have all BASIC samples with required properties&#39;, () =&gt; {
+        for (const [key, program] of Object.entries(basicSamples)) {
+            expect(program).toHaveProperty(&#39;name&#39;);
+            expect(program).toHaveProperty(&#39;description&#39;);
+            expect(program).toHaveProperty(&#39;code&#39;);
+            expect(program).toHaveProperty(&#39;filename&#39;);
+            
+            expect(typeof program.name).toBe(&#39;string&#39;);
+            expect(typeof program.description).toBe(&#39;string&#39;);
+            expect(typeof program.code).toBe(&#39;string&#39;);
+            expect(program.code.length).toBeGreaterThan(0);
+        }
+    });
+    
+    it(&#39;should have exactly 12 BASIC programs&#39;, () =&gt; {
+        const count = Object.keys(basicSamples).length;
+        expect(count).toBe(12);
+    });
+    
+    it(&#39;should have all assembly samples with required properties&#39;, () =&gt; {
+        for (const [key, routine] of Object.entries(assemblySamples)) {
+            expect(routine).toHaveProperty(&#39;name&#39;);
+            expect(routine).toHaveProperty(&#39;description&#39;);
+            expect(routine).toHaveProperty(&#39;code&#39;);
+            expect(routine).toHaveProperty(&#39;bytes&#39;);
+            expect(routine).toHaveProperty(&#39;address&#39;);
+            
+            expect(Array.isArray(routine.bytes)).toBe(true);
+            expect(routine.bytes.length).toBeGreaterThan(0);
+            expect(routine.address).toBeGreaterThan(0);
+        }
+    });
+    
+    it(&#39;should have exactly 5 assembly routines&#39;, () =&gt; {
+        const count = Object.keys(assemblySamples).length;
+        expect(count).toBe(5);
+    });
+});
+
+describe(&#39;BASIC Tokenization&#39;, () =&gt; {
+    let loader;
+    let emulator;
+    
+    beforeEach(() =&gt; {
+        emulator = { running: false };
+        loader = new ProgramLoader(emulator);
+    });
+    
+    it(&#39;should tokenize simple BASIC program&#39;, () =&gt; {
+        const code = &#39;10 PRINT &quot;HELLO&quot;\n20 END\n&#39;;
+        
+        const bytes = loader.tokenizeBasic(code);
+        
+        expect(bytes).toBeInstanceOf(Uint8Array);
+        expect(bytes.length).toBeGreaterThan(0);
+        
+        // Should contain line 1 + CR + line 2 + CR
+        const str = String.fromCharCode(...bytes);
+        expect(str).toContain(&#39;10 PRINT&#39;);
+    });
+    
+    it(&#39;should add CR (0x0D) after each line&#39;, () =&gt; {
+        const code = &#39;10 PRINT\n20 END\n&#39;;
+        
+        const bytes = loader.tokenizeBasic(code);
+        
+        // Find CR bytes
+        const crPositions = [];
+        for (let i = 0; i &lt; bytes.length; i++) {
+            if (bytes[i] === 0x0D) crPositions.push(i);
+        }
+        
+        expect(crPositions.length).toBeGreaterThan(0);
+    });
+    
+    it(&#39;should skip empty lines&#39;, () =&gt; {
+        const code = &#39;10 PRINT\n\n\n20 END\n&#39;;
+        
+        const bytes = loader.tokenizeBasic(code);
+        
+        // Should have content from 2 lines + 2 CRs
+        expect(bytes.length).toBeGreaterThan(10);
+    });
+});
+
+describe(&#39;Assembly Routine Loading&#39;, () =&gt; {
+    let loader;
+    let emulator;
+    let memory;
+    
+    beforeEach(() =&gt; {
+        memory = {
+            writeByte: (addr, val) =&gt; {}
+        };
+        emulator = { 
+            running: false,
+            memory: memory
+        };
+        loader = new ProgramLoader(emulator);
+    });
+    
+    it(&#39;should load return42 routine correctly&#39;, () =&gt; {
+        const routine = assemblySamples[&#39;return42&#39;];
+        const writes = [];
+        
+        emulator.memory.writeByte = (addr, val) =&gt; {
+            writes.push({ addr, val });
+        };
+        
+        loader.loadAssemblyRoutine(routine);
+        
+        expect(writes.length).toBe(routine.bytes.length);
+        expect(writes[0].addr).toBe(routine.address);
+        expect(writes[0].val).toBe(routine.bytes[0]);
+    });
+    
+    it(&#39;should load all assembly routines without error&#39;, () =&gt; {
+        emulator.memory.writeByte = () =&gt; {};
+        
+        for (const [key, routine] of Object.entries(assemblySamples)) {
+            expect(() =&gt; {
+                loader.loadAssemblyRoutine(routine);
+            }).not.toThrow();
+        }
+    });
+});
+</code></pre>
+<hr>
+<h2>Integration Tests</h2>
+<h3>File: tests/integration/cassette-integration.js</h3>
+<pre><code class="language-javascript">/**
+ * Cassette Integration Tests
+ * Tests complete workflow: CPU → Memory → Cassette
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { Z80CPU } from &#39;@core/z80cpu.js&#39;;
+import { MemorySystem } from &#39;@core/memory.js&#39;;
+import { IOSystem } from &#39;@core/io.js&#39;;
+
+describe(&#39;Cassette Integration - Full Workflow&#39;, () =&gt; {
+    let cpu;
+    let memory;
+    let io;
+    
+    beforeEach(() =&gt; {
+        cpu = new Z80CPU();
+        memory = new MemorySystem();
+        io = new IOSystem();
+        
+        const romData = new Uint8Array(0x4000);
+        memory.loadROM(romData);
+        
+        cpu.readMemory = (addr) =&gt; memory.readByte(addr);
+        cpu.writeMemory = (addr, val) =&gt; memory.writeByte(addr, val);
+        cpu.readPort = (port) =&gt; io.readPort(port);
+        cpu.writePort = (port, val) =&gt; io.writePort(port, val);
+    });
+    
+    it(&#39;should load and execute BASIC program via cassette&#39;, () =&gt; {
+        // Simulate a simple BASIC program
+        const program = new Uint8Array([
+            0x3E, 0x42,  // LD A, 42
+            0x76         // HALT
+        ]);
+        
+        // Load into cassette
+        io.cassette.loadTape(program);
+        
+        // Simulate CLOAD
+        const loadAddr = io.cassette.simulateCLoad(memory, 0x4200);
+        
+        expect(loadAddr).toBe(0x4200);
+        
+        // Execute program
+        cpu.registers.PC = 0x4200;
+        cpu.executeInstruction();
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.A).toBe(0x42);
+        expect(cpu.halted).toBe(true);
+    });
+    
+    it(&#39;should control cassette via I/O ports&#39;, () =&gt; {
+        // Load tape
+        io.cassette.loadTape([0x10, 0x20, 0x30]);
+        
+        // Turn motor on via port write
+        memory.rom[0x0000] = 0xD3;  // OUT (n), A
+        memory.rom[0x0001] = 0xFE;  // Port 0xFE
+        cpu.registers.A = 0x01;     // Motor on
+        
+        cpu.executeInstruction();
+        
+        expect(io.cassette.motorOn).toBe(true);
+        
+        // Read status via port read
+        memory.rom[0x0002] = 0xDB;  // IN A, (n)
+        memory.rom[0x0003] = 0xFE;  // Port 0xFE
+        
+        cpu.executeInstruction();
+        
+        expect(cpu.registers.A &amp; 0x01).toBe(0x01);  // Motor on in status
+    });
+});
+
+describe(&#39;Cassette - CLOAD Workflow&#39;, () =&gt; {
+    let memory;
+    let io;
+    
+    beforeEach(() =&gt; {
+        memory = new MemorySystem();
+        io = new IOSystem();
+        
+        const romData = new Uint8Array(0x4000);
+        memory.loadROM(romData);
+    });
+    
+    it(&#39;should complete full CLOAD workflow&#39;, () =&gt; {
+        // 1. User loads file (simulated)
+        const programFile = new Uint8Array([
+            0x3E, 0x55,  // LD A, 0x55
+            0x76         // HALT
+        ]);
+        
+        // 2. Load into cassette
+        const loaded = io.cassette.loadTape(programFile);
+        expect(loaded).toBe(true);
+        
+        // 3. CLOAD transfers to memory
+        const addr = io.cassette.simulateCLoad(memory, 0x4200);
+        expect(addr).toBe(0x4200);
+        
+        // 4. Verify program in memory
+        expect(memory.readByte(0x4200)).toBe(0x3E);
+        expect(memory.readByte(0x4201)).toBe(0x55);
+        expect(memory.readByte(0x4202)).toBe(0x76);
+    });
+});
+</code></pre>
+<h3>File: tests/integration/system-tests.js</h3>
+<pre><code class="language-javascript">/**
+ * Full System Integration Tests
+ * Tests complete TRS-80 system with all components
+ */
+
+import { describe, it, expect, beforeEach } from &#39;vitest&#39;;
+import { TRS80System } from &#39;@system/trs80.js&#39;;
+
+// Mock canvas
+class MockCanvas {
+    constructor() {
+        this.width = 0;
+        this.height = 0;
+    }
+    getContext() {
+        return {
+            fillStyle: &#39;&#39;,
+            fillRect: () =&gt; {},
+            clearRect: () =&gt; {}
+        };
+    }
+}
+
+describe(&#39;TRS80System - Full Integration&#39;, () =&gt; {
+    let system;
+    let romData;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        romData = new Uint8Array(0x4000);
+        canvas = new MockCanvas();
+        system = new TRS80System(romData, canvas);
+    });
+    
+    it(&#39;should initialize all subsystems&#39;, () =&gt; {
+        expect(system.cpu).toBeDefined();
+        expect(system.memory).toBeDefined();
+        expect(system.io).toBeDefined();
+        expect(system.video).toBeDefined();
+        expect(system.keyboard).toBeDefined();
+    });
+    
+    it(&#39;should connect CPU to memory&#39;, () =&gt; {
+        system.memory.ram[0] = 0x42;
+        
+        const value = system.cpu.readMemory(0x4000);
+        
+        expect(value).toBe(0x42);
+    });
+    
+    it(&#39;should connect CPU to I/O&#39;, () =&gt; {
+        system.io.cassette.loadTape([0x10]);
+        system.io.cassette.control(0x01);
+        
+        const status = system.cpu.readPort(0xFE);
+        
+        expect(status &amp; 0x01).toBe(0x01);
+    });
+    
+    it(&#39;should load and execute graphics SET command&#39;, () =&gt; {
+        // Set pixel at (10, 10)
+        system.setPixel(10, 10);
+        
+        // Verify pixel is set
+        const result = system.pointPixel(10, 10);
+        
+        expect(result).toBe(-1);  // -1 = pixel on
+    });
+});
+
+describe(&#39;TRS80System - Sample Program Execution&#39;, () =&gt; {
+    let system;
+    let romData;
+    let canvas;
+    
+    beforeEach(() =&gt; {
+        romData = new Uint8Array(0x4000);
+        canvas = new MockCanvas();
+        system = new TRS80System(romData, canvas);
+    });
+    
+    it(&#39;should load BASIC program&#39;, () =&gt; {
+        const program = &#39;10 PRINT &quot;HELLO&quot;\n20 END\n&#39;;
+        const bytes = new TextEncoder().encode(program);
+        
+        system.loadProgram(bytes, false);
+        
+        // Program should be in memory
+        expect(system.memory.readByte(0x4200)).toBeGreaterThan(0);
+    });
+    
+    it(&#39;should load assembly routine&#39;, () =&gt; {
+        const routine = new Uint8Array([0x3E, 0x42, 0xC9]);  // LD A,42; RET
+        
+        system.loadProgram(routine, true);
+        
+        // Routine should be in memory
+        expect(system.memory.readByte(0x4200)).toBe(0x3E);
+    });
+});
+</code></pre>
+<hr>
+<h2>Test Configuration</h2>
+<h3>File: vitest.config.js (already in main prompt)</h3>
+<p>This configuration is already included in the main build prompt in the <code>vite.config.js</code> file.</p>
+<hr>
+<h2>Running the Tests</h2>
+<h3>Install and Run</h3>
+<pre><code class="language-bash"># Install dependencies
+yarn install
+
+# Run all tests
+yarn test
+
+# Run tests once (CI mode)
+yarn test:run
+
+# Run specific test file
+yarn test tests/unit/cpu-tests.js
+
+# Run with coverage
+yarn test --coverage
+
+# Run tests for specific phase
+yarn test tests/unit/cpu-tests.js tests/unit/memory-tests.js
+</code></pre>
+<h3>Test Execution Order</h3>
+<p>For development, run tests in this order:</p>
+<ol>
+<li><strong>Phase 1</strong>: <code>yarn test tests/unit/cpu-tests.js</code></li>
+<li><strong>Phase 2</strong>: <code>yarn test tests/unit/memory-tests.js</code></li>
+<li><strong>Phase 3</strong>: <code>yarn test tests/unit/cassette-tests.js tests/unit/io-tests.js</code></li>
+<li><strong>Phase 4</strong>: <code>yarn test tests/unit/video-tests.js</code></li>
+<li><strong>Phase 5</strong>: <code>yarn test tests/integration/cpu-memory-integration.js</code></li>
+<li><strong>Phase 6</strong>: <code>yarn test tests/unit/program-loader-tests.js</code></li>
+<li><strong>Integration</strong>: <code>yarn test tests/integration/</code></li>
+</ol>
+<h3>Expected Results</h3>
+<p>All tests should pass (100% success rate) before moving to the next phase.</p>
+<p><strong>Success looks like:</strong></p>
+<pre><code>✓ tests/unit/cpu-tests.js (45 tests)
+✓ tests/unit/memory-tests.js (28 tests)
+✓ tests/unit/cassette-tests.js (22 tests)
+✓ tests/unit/io-tests.js (15 tests)
+✓ tests/unit/video-tests.js (32 tests)
+✓ tests/integration/ (12 tests)
+✓ tests/unit/program-loader-tests.js (18 tests)
+
+Test Files  7 passed (7)
+     Tests  172 passed (172)
+</code></pre>
+<hr>
+<h2>Test Coverage Goals</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Target Coverage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU Core</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Memory System</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Cassette I/O</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Video System</td>
+<td>95%+</td>
+</tr>
+<tr>
+<td>Program Loader</td>
+<td>90%+</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td>85%+</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>All tests are complete and ready to copy into your project!</strong></p>
+
+  <hr>
+  <p style="text-align: center; color: #666;">
+    <a href="/">TRS-80 Model III Emulator</a> | 
+    <a href="https://github.com/cschweda/trs80-emulator">GitHub</a>
+  </p>
+</body>
+</html>

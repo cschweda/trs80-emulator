@@ -1,12 +1,25 @@
 # TRS-80 Model III Emulator
 
-A complete, web-based emulator for the TRS-80 Model III computer, built with JavaScript and Vite. This project implements a full Z80 CPU emulator with complete instruction set support, memory management, I/O systems, and a web-based user interface.
+A web-based emulator for the TRS-80 Model III computer, built with JavaScript and Vite. This project is being developed in phases, starting with a complete Z80 CPU emulator and expanding to include memory management, I/O systems, video display, and a web-based user interface.
 
 🌐 **Live Demo**: [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
-## Features
+📋 **Complete Design Document**: [docs/TRS80-COMPLETE-BUILD-PROMPT.md](docs/TRS80-COMPLETE-BUILD-PROMPT.md)
+
+## Current Status
+
+**Phase 1: Z80 CPU Core** ✅ **COMPLETE**
+
+The emulator currently implements a complete Z80 CPU with full instruction set support. A browser-based development console allows you to run comprehensive CPU tests directly in the browser.
+
+### ✅ Implemented Features
 
 - **Complete Z80 CPU Emulation**: Full instruction set implementation (252+ opcodes including CB, ED, DD, FD prefixes)
+- **Browser Test Console**: Interactive test runner for Phase 1 CPU tests
+- **Comprehensive Test Suite**: 130+ CPU tests with 100% pass rate
+
+### 🚧 Planned Features (Future Phases)
+
 - **Memory Management**: 16K ROM + 48K RAM with proper memory mapping
 - **Video Display**: 128x48 pixel character-based graphics
 - **Cassette Interface**: Load and save programs
@@ -45,19 +58,32 @@ yarn dev
 
 The emulator will be available at `http://localhost:3000`
 
-### Browser Dev Console
+### Browser Development Console
 
-To access the browser development console:
+The emulator includes a built-in development console accessible at the live demo URL. The console provides:
 
-1. **Chrome/Edge**: Press `F12` or `Ctrl+Shift+I` (Windows/Linux) / `Cmd+Option+I` (Mac)
-2. **Firefox**: Press `F12` or `Ctrl+Shift+K` (Windows/Linux) / `Cmd+Option+K` (Mac)
-3. **Safari**: Enable Developer menu: Preferences → Advanced → "Show Develop menu", then `Cmd+Option+C`
+- **Phase 0: Design Document**: View the complete design document inline in the console with full scrolling support
+- **Phase 1: Z80 CPU Test Runner**: Run comprehensive CPU tests directly in the browser with scrollable results
+- **Interactive Test Results**: View detailed test execution and results with keyboard and mouse navigation
+- **Real-time Logging**: See CPU operations, register states, and test outcomes
+- **Design Document Link**: Direct link to the rendered design document
+- **Full Viewport Layout**: All tabs take up the entire viewport width and height
+- **Scrollable Content**: Both Phase 0 and Phase 1 tabs support mouse wheel scrolling and keyboard navigation (arrow keys, Page Up/Down)
 
-The console will show:
+To use the development console:
+
+1. Visit [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+2. Click "Phase 0: Design Doc" to view the design document inline (scrollable)
+3. Click "Phase 1: Z80 CPU" to run CPU tests (console auto-focuses for scrolling)
+4. View test results and execution details in the scrollable console
+5. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
+6. Use the link at the bottom to open the design document in a new page
+
+For browser developer tools (F12), the console will show:
 
 - CPU execution logs
-- Memory access logs
-- I/O port operations
+- Memory access logs (when implemented)
+- I/O port operations (when implemented)
 - Test results
 - Debug information
 
@@ -94,6 +120,8 @@ node scripts/phase-workflow.js <phase-number> <test-files>
 
 ## Phased Development Status
 
+This project follows a phased development approach. See the [Complete Design Document](docs/TRS80-COMPLETE-BUILD-PROMPT.md) for full specifications.
+
 ### ✅ Phase 0: ROM Analysis and Setup
 
 **Status**: Complete
@@ -101,20 +129,37 @@ node scripts/phase-workflow.js <phase-number> <test-files>
 - ROM file validation
 - Base64 encoding scripts
 - Project structure setup
+- Netlify deployment configuration
 
 ### ✅ Phase 1: Z80 CPU Core Implementation
 
-**Status**: Complete ✅
+**Status**: Complete ✅ **CURRENT PHASE**
 
 - Complete Z80 instruction set (252+ opcodes)
 - All CB prefix instructions (bit operations, rotates, shifts)
 - All ED prefix instructions (block operations, extended I/O)
 - All DD/FD prefix instructions (IX/IY operations)
-- Register operations
-- Flag calculations
+- Register operations (AF, BC, DE, HL, IX, IY, SP, PC)
+- Flag calculations (S, Z, H, P/V, N, C)
 - Cycle-accurate timing
-- Verbose test logging with detailed instruction execution tracking
+- Browser-based test runner
+- Interactive development console
 - **Tests**: All 130 Phase 1 tests passing ✅ (100% success rate)
+- **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+
+#### Phase 1 Test Results
+
+The browser-based development console provides real-time test execution and results. Here's what the Phase 1 Z80 CPU test suite looks like when all tests pass:
+
+![Phase 1 Z80 CPU Test Results](docs/phase1-test-results.png)
+
+The console displays:
+
+- Test execution progress
+- Detailed test results for each suite
+- Summary statistics (Total, Passed, Failed)
+- Success confirmation when all tests pass
+- **Fully scrollable content**: The console automatically focuses when Phase 1 is activated, allowing you to scroll through all 130+ test results using mouse wheel or keyboard (arrow keys, Page Up/Down)
 
 ### ⏳ Phase 2: Memory Management System
 
@@ -188,11 +233,12 @@ This project is configured for automatic deployment on Netlify.
 
 2. **Build Settings** (automatically configured via `netlify.toml`):
 
-   - **Build command**: `yarn build`
+   - **Build command**: `yarn build` (includes documentation rendering)
    - **Publish directory**: `dist`
    - **Node version**: 20
    - **Yarn version**: 1.22.22
    - **Live URL**: [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+   - **Note**: The build process automatically renders all Markdown documentation files from `docs/` to HTML in `public/docs/` for web deployment
 
 3. **Deploy**:
    - Netlify will automatically deploy on every push to the main branch
@@ -219,28 +265,56 @@ If needed, configure environment variables in Netlify dashboard:
 ```
 trs80-emulator/
 ├── src/
-│   ├── core/           # CPU core implementation
-│   │   └── z80cpu.js   # Z80 CPU emulator
-│   ├── data/           # ROM and data files
-│   ├── ui/             # User interface components
-│   └── main.js         # Application entry point
+│   ├── core/
+│   │   └── z80cpu.js          # Z80 CPU emulator (Phase 1 ✅)
+│   ├── browser-test-runner.js # Browser test runner
+│   ├── test-runner.js         # Test runner utilities
+│   └── main.js                # Application entry point
 ├── tests/
-│   └── unit/           # Unit tests
-├── scripts/            # Build and utility scripts
-├── docs/               # Documentation
-├── dist/               # Build output (gitignored)
-└── node_modules/       # Dependencies (gitignored)
+│   └── unit/
+│       └── cpu-tests.js       # Phase 1 CPU tests (130+ tests)
+├── scripts/
+│   ├── postbuild.js           # Post-build script with serve instructions
+│   ├── render-docs.js         # Markdown to HTML documentation renderer
+│   ├── phase-workflow.js      # Phase gate workflow
+│   └── rom-to-base64.js       # ROM encoding utilities
+├── docs/
+│   ├── TRS80-COMPLETE-BUILD-PROMPT.md  # Complete design document
+│   ├── TRS80-COMPLETE-TEST-SUITE.md    # Test suite documentation
+│   └── IMPROVEMENTS-APPLIED.md          # Applied improvements log
+├── public/
+│   └── docs/                            # Rendered HTML documentation (generated)
+├── dist/                      # Build output (gitignored)
+├── netlify.toml              # Netlify deployment configuration
+└── package.json               # Project dependencies and scripts
 ```
 
 ## Scripts
 
-- `yarn dev` - Start development server
+### Development
+
+- `yarn dev` - Start development server (http://localhost:3000)
 - `yarn build` - Build for production
+- `yarn build:serve` - Build and serve locally with auto-open browser
+- `yarn preview` - Preview production build (http://localhost:5150)
+
+### Testing
+
 - `yarn test` - Run tests in watch mode
-- `yarn test:run` - Run tests once
+- `yarn test:run` - Run tests once (CI mode)
 - `yarn test:coverage` - Run tests with coverage
+- `yarn test:ui` - Run tests with Vitest UI
+
+### Phase Workflows
+
 - `yarn phase:1` - Run Phase 1 test gate workflow
-- `yarn lint` - Run linter
+
+### Deployment
+
+- `yarn deploy` - Run tests, build, and deploy to Netlify
+- `yarn deploy:build` - Build and deploy (skip tests)
+- `yarn netlify:build` - Run Netlify build locally
+- `yarn netlify:dev` - Run Netlify dev server
 
 ## Memory Map
 
@@ -267,12 +341,19 @@ trs80-emulator/
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
+## Documentation
+
+- **[Complete Design Document](docs/TRS80-COMPLETE-BUILD-PROMPT.md)** - Full specification and implementation guide
+- **[Test Suite Documentation](docs/TRS80-COMPLETE-TEST-SUITE.md)** - Comprehensive test specifications
+- **[Improvements Log](docs/IMPROVEMENTS-APPLIED.md)** - Applied improvements and enhancements
+
 ## References
 
 - [Z80 Instruction Set Reference](https://en.wikipedia.org/wiki/Z80_instruction_set)
 - [TRS-80 Model III Technical Reference](https://en.wikipedia.org/wiki/TRS-80_Model_III)
 - [Vite Documentation](https://vitejs.dev/)
 - [Vitest Documentation](https://vitest.dev/)
+- [Netlify Documentation](https://docs.netlify.com/)
 
 ## Acknowledgments
 
