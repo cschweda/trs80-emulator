@@ -8,19 +8,21 @@ A web-based emulator for the TRS-80 Model III computer, built with JavaScript an
 
 ## Current Status
 
-**Phase 1: Z80 CPU Core** ✅ **COMPLETE**
+**Phase 2: Memory Management System** ✅ **COMPLETE**
 
-The emulator currently implements a complete Z80 CPU with full instruction set support. A browser-based development console allows you to run comprehensive CPU tests directly in the browser.
+The emulator currently implements a complete Z80 CPU with full instruction set support and a comprehensive memory management system. A browser-based development console allows you to run comprehensive CPU and memory tests directly in the browser.
 
 ### ✅ Implemented Features
 
 - **Complete Z80 CPU Emulation**: Full instruction set implementation (252+ opcodes including CB, ED, DD, FD prefixes)
-- **Browser Test Console**: Interactive test runner for Phase 1 CPU tests
-- **Comprehensive Test Suite**: 130+ CPU tests with 100% pass rate
+- **Memory Management System**: 16K ROM + 48K RAM with proper memory mapping, ROM protection, and program loading
+- **Browser Test Console**: Interactive test runner for Phase 1 CPU tests and Phase 2 memory tests
+- **Comprehensive Test Suites**:
+  - 130+ CPU tests with 100% pass rate
+  - 27 memory system tests with 100% pass rate
 
 ### 🚧 Planned Features (Future Phases)
 
-- **Memory Management**: 16K ROM + 48K RAM with proper memory mapping
 - **Video Display**: 128x48 pixel character-based graphics
 - **Cassette Interface**: Load and save programs
 - **BASIC Interpreter**: Run TRS-80 BASIC programs
@@ -64,28 +66,34 @@ The emulator includes a built-in development console accessible at the live demo
 
 - **Phase 0: Design Document**: View the complete design document inline in the console with full scrolling support
 - **Phase 1: Z80 CPU Test Runner**: Run comprehensive CPU tests directly in the browser with scrollable results
+- **Phase 2: Memory System Test Runner**: Run comprehensive memory system tests directly in the browser with scrollable results
 - **Interactive Test Results**: View detailed test execution and results with keyboard and mouse navigation
-- **Real-time Logging**: See CPU operations, register states, and test outcomes
+- **Real-time Logging**: See CPU operations, memory operations, register states, and test outcomes
 - **Design Document Link**: Direct link to the rendered design document
 - **Full Viewport Layout**: All tabs take up the entire viewport width and height
-- **Scrollable Content**: Both Phase 0 and Phase 1 tabs support mouse wheel scrolling and keyboard navigation (arrow keys, Page Up/Down)
+- **Scrollable Content**: All tabs support mouse wheel scrolling and keyboard navigation (arrow keys, Page Up/Down)
+- **Smart Scroll Behavior**: Console content starts at the top when tests begin, allowing you to scroll down to view all results as they load
 
 To use the development console:
 
 1. Visit [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 2. Click "Phase 0: Design Doc" to view the design document inline (scrollable)
-3. Click "Phase 1: Z80 CPU" to run CPU tests (console auto-focuses for scrolling)
-4. View test results and execution details in the scrollable console
-5. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
-6. Use the link at the bottom to open the design document in a new page
+3. Click "Phase 1: Z80 CPU" to run CPU tests (console starts at top, scroll down to view results)
+4. Click "Phase 2: Memory System" to run memory system tests (console starts at top, scroll down to view results)
+5. View test results and execution details in the scrollable console
+6. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
+7. The console automatically maintains scroll position at the top so you can see when content finishes loading
+8. Use the link at the bottom to open the design document in a new page
 
 For browser developer tools (F12), the console will show:
 
-- CPU execution logs
-- Memory access logs (when implemented)
+- CPU execution logs (Phase 1)
+- Memory access logs (Phase 2)
 - I/O port operations (when implemented)
 - Test results
 - Debug information
+
+**Note**: The browser console uses optimized logging for loop-based tests to reduce noise while maintaining full test coverage. Summary messages are provided for tests that verify large address ranges.
 
 ### Testing
 
@@ -103,7 +111,8 @@ yarn test:run
 yarn test:coverage
 
 # Run tests for a specific phase
-yarn test:run tests/unit/cpu-tests.js
+yarn test:run tests/unit/cpu-tests.js      # Phase 1: CPU tests
+yarn test:run tests/unit/memory-tests.js   # Phase 2: Memory tests
 ```
 
 ### Phase-by-Phase Development
@@ -113,6 +122,9 @@ This project follows a phased development approach with test gates between phase
 ```bash
 # Run Phase 1 tests with workflow script (waits for user confirmation)
 yarn phase:1
+
+# Run Phase 2 tests with workflow script (waits for user confirmation)
+yarn phase:2
 
 # Or manually run phase workflow
 node scripts/phase-workflow.js <phase-number> <test-files>
@@ -133,7 +145,7 @@ This project follows a phased development approach. See the [Complete Design Doc
 
 ### ✅ Phase 1: Z80 CPU Core Implementation
 
-**Status**: Complete ✅ **CURRENT PHASE**
+**Status**: Complete ✅
 
 - Complete Z80 instruction set (252+ opcodes)
 - All CB prefix instructions (bit operations, rotates, shifts)
@@ -159,16 +171,42 @@ The console displays:
 - Detailed test results for each suite
 - Summary statistics (Total, Passed, Failed)
 - Success confirmation when all tests pass
-- **Fully scrollable content**: The console automatically focuses when Phase 1 is activated, allowing you to scroll through all 130+ test results using mouse wheel or keyboard (arrow keys, Page Up/Down)
+- **Fully scrollable content**: The console automatically focuses when Phase 1 is activated, starting at the top so you can scroll down to view all 130+ test results using mouse wheel or keyboard (arrow keys, Page Up/Down)
 
-### ⏳ Phase 2: Memory Management System
+### ✅ Phase 2: Memory Management System
 
-**Status**: Pending
+**Status**: Complete ✅ **CURRENT PHASE**
 
-- 16K ROM + 48K RAM mapping
-- ROM protection
-- Video RAM shadowing
-- Memory bank switching
+- **16K ROM + 48K RAM mapping**: Complete 64KB address space (0x0000-0x3FFF ROM, 0x4000-0xFFFF RAM)
+- **ROM protection**: Writes to ROM area are ignored (except video RAM)
+- **Video RAM area**: 0x3C00-0x3FFF (1KB) is writable even though it's in ROM space
+- **Program loading**: Load programs at custom addresses with automatic validation
+- **16-bit word operations**: Little-endian word read/write support
+- **Address wrapping**: Automatic 16-bit address masking for safety
+- **ROM size support**: Handles both 14KB and 16KB ROMs (14KB ROMs are auto-padded)
+- **Memory statistics**: Get detailed memory usage and status information
+- **RAM management**: Clear RAM while preserving ROM
+- **Browser-based test runner**: Interactive test execution with optimized logging
+- **Tests**: All 27 Phase 2 tests passing ✅ (100% success rate)
+- **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+
+#### Phase 2 Test Results
+
+The browser-based development console provides real-time test execution and results for the memory system. The Phase 2 test suite includes:
+
+- **Initialization tests** (3 tests): Memory system setup and statistics
+- **ROM loading tests** (3 tests): 16KB ROM loading, size validation, data integrity
+- **Memory reading tests** (3 tests): ROM reads, RAM reads, 16-bit word reads
+- **Memory writing tests** (3 tests): RAM writes, high RAM writes, 16-bit word writes
+- **ROM protection tests** (3 tests): Write protection, video RAM writability, full range verification
+- **RAM operations tests** (3 tests): Sequential reads/writes, boundary testing
+- **Program loading tests** (5 tests): Default address, custom address, array support, validation, edge cases
+- **RAM management tests** (2 tests): RAM clearing, ROM preservation
+- **Address wrapping tests** (2 tests): 16-bit wrapping, address masking
+
+All 27 tests pass with 100% success rate, verifying proper memory management, ROM protection, and program loading capabilities.
+
+**Optimized Logging**: The test runner uses intelligent logging that reduces verbosity for loop-based tests (e.g., video RAM range testing) while maintaining full test coverage. This provides a clean, readable output while ensuring all assertions are verified.
 
 ### ⏳ Phase 3: Cassette I/O System
 
@@ -266,13 +304,16 @@ If needed, configure environment variables in Netlify dashboard:
 trs80-emulator/
 ├── src/
 │   ├── core/
-│   │   └── z80cpu.js          # Z80 CPU emulator (Phase 1 ✅)
-│   ├── browser-test-runner.js # Browser test runner
+│   │   ├── z80cpu.js          # Z80 CPU emulator (Phase 1 ✅)
+│   │   └── memory.js          # Memory management system (Phase 2 ✅)
+│   ├── browser-test-runner.js           # Browser test runner for Phase 1
+│   ├── browser-test-runner-phase2.js    # Browser test runner for Phase 2
 │   ├── test-runner.js         # Test runner utilities
 │   └── main.js                # Application entry point
 ├── tests/
 │   └── unit/
-│       └── cpu-tests.js       # Phase 1 CPU tests (130+ tests)
+│       ├── cpu-tests.js       # Phase 1 CPU tests (130+ tests)
+│       └── memory-tests.js    # Phase 2 Memory tests (27 tests)
 ├── scripts/
 │   ├── postbuild.js           # Post-build script with serve instructions
 │   ├── render-docs.js         # Markdown to HTML documentation renderer
@@ -308,6 +349,7 @@ trs80-emulator/
 ### Phase Workflows
 
 - `yarn phase:1` - Run Phase 1 test gate workflow
+- `yarn phase:2` - Run Phase 2 test gate workflow
 
 ### Deployment
 
@@ -319,10 +361,14 @@ trs80-emulator/
 ## Memory Map
 
 ```
-0x0000 - 0x3FFF: ROM (16KB)
-0x4000 - 0x7FFF: RAM (16KB)
-0x8000 - 0xFFFF: RAM (32KB)
+0x0000 - 0x3BFF: ROM (14KB) - Read-only, protected
+0x3C00 - 0x3FFF: Video RAM (1KB) - Writable (shadowed in ROM space)
+0x4000 - 0xFFFF: RAM (48KB) - Read/write
 ```
+
+**Total**: 64KB address space (16KB ROM + 48KB RAM)
+
+**Note**: The memory system supports both 14KB and 16KB ROMs. 14KB ROMs are automatically padded to 16KB.
 
 ## Port I/O
 

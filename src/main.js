@@ -13,7 +13,7 @@ function log(message, type = "info") {
   logEntry.className = `log ${type}`;
   logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
   consoleDiv.appendChild(logEntry);
-  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+  // Don't auto-scroll - keep scroll position at top so user can scroll down to view content
 
   // Also log to browser console
   if (type === "error") {
@@ -43,6 +43,8 @@ function showTab(tabName) {
       console.style.display = "block";
       // Focus the console so scroll/keyboard navigation works
       console.focus();
+      // Reset scroll position to top when showing console
+      console.scrollTop = 0;
     }
   } else if (tabName === "design-doc") {
     if (designDocContainer) designDocContainer.style.display = "block";
@@ -74,6 +76,8 @@ window.runCPUTest = async function () {
 
   // Clear any previous test output
   consoleDiv.innerHTML = "";
+  // Reset scroll position to top
+  consoleDiv.scrollTop = 0;
 
   log("═══════════════════════════════════════════════════════════", "info");
   log("Z80 CPU Comprehensive Test Suite - Phase 1", "info");
@@ -167,6 +171,143 @@ window.runCPUTest = async function () {
     );
     log("═══════════════════════════════════════════════════════════", "info");
 
+    // Ensure scroll position stays at top after all content is loaded
+    // Use multiple strategies to ensure scroll stays at top
+    requestAnimationFrame(() => {
+      consoleDiv.scrollTop = 0;
+      // Also set after a small delay to catch any late DOM updates
+      setTimeout(() => {
+        consoleDiv.scrollTop = 0;
+      }, 100);
+    });
+
+    return results;
+  } catch (error) {
+    log(`❌ Fatal Error: ${error.message}`, "error");
+    log(error.stack, "error");
+    return {
+      total: 0,
+      passed: 0,
+      failed: 1,
+      errors: [{ suite: "Setup", error: error.message }],
+    };
+  }
+};
+
+// Memory System Test function - Runs all Phase 2 tests via dynamic import
+window.runMemoryTest = async function () {
+  // Always show console first when running tests
+  showTab("console");
+
+  // Clear any previous test output
+  consoleDiv.innerHTML = "";
+  // Reset scroll position to top
+  consoleDiv.scrollTop = 0;
+
+  log("═══════════════════════════════════════════════════════════", "info");
+  log("Memory System Comprehensive Test Suite - Phase 2", "info");
+  log("═══════════════════════════════════════════════════════════", "info");
+  log("");
+  log("🚀 Starting Phase 2: Memory System Test Suite...", "info");
+  log("📥 Loading Memory System test runner...", "info");
+  log("");
+
+  try {
+    // Import the browser test runner
+    const { runAllPhase2Tests } = await import(
+      "./browser-test-runner-phase2.js"
+    );
+    const results = await runAllPhase2Tests(log);
+
+    log("═══════════════════════════════════════════════════════════", "info");
+    log("📊 Test Results Summary:", "info");
+    log(`  Total Tests: ${results.total}`, "info");
+    log(
+      `  ✅ Passed: ${results.passed}`,
+      results.passed === results.total ? "success" : "info"
+    );
+    log(
+      `  ❌ Failed: ${results.failed}`,
+      results.failed > 0 ? "error" : "success"
+    );
+    log("");
+
+    if (results.errors.length > 0) {
+      log(
+        "═══════════════════════════════════════════════════════════",
+        "error"
+      );
+      log("❌ Test Failures:", "error");
+      log(
+        "═══════════════════════════════════════════════════════════",
+        "error"
+      );
+      log("");
+      results.errors.forEach((err, idx) => {
+        const testName = err.test || "Unknown test";
+        const suiteName = err.suite || "Unknown suite";
+        log(
+          `  ┌─ Failure #${
+            idx + 1
+          } ────────────────────────────────────────────┐`,
+          "error"
+        );
+        log(`  │ Suite: ${suiteName.padEnd(50)} │`, "error");
+        log(`  │ Test:  ${testName.padEnd(50)} │`, "error");
+        const errorMsg = (err.error || "Unknown error").substring(0, 50);
+        log(`  │ Error: ${errorMsg.padEnd(50)} │`, "error");
+        if (err.name) {
+          log(`  │ Type:  ${err.name.padEnd(50)} │`, "error");
+        }
+        if (err.stack) {
+          log(`  │ Stack Trace:`, "error");
+          const stackLines = err.stack.split("\n").slice(0, 8);
+          stackLines.forEach((line, lineIdx) => {
+            if (lineIdx > 0) {
+              // Skip first line (error message)
+              const trimmed = line.trim().substring(0, 55);
+              log(`  │   ${trimmed.padEnd(55)} │`, "error");
+            }
+          });
+        }
+        log(
+          `  └───────────────────────────────────────────────────────────────┘`,
+          "error"
+        );
+        log("");
+      });
+      log(
+        "═══════════════════════════════════════════════════════════",
+        "error"
+      );
+      log("");
+    }
+
+    if (results.failed === 0 && results.total > 0) {
+      log("✅ All tests passed!", "success");
+    } else if (results.total === 0) {
+      log("⚠️  No tests were executed", "error");
+    } else {
+      log(`⚠️  ${results.failed} test(s) failed. See errors above.`, "error");
+    }
+
+    log("═══════════════════════════════════════════════════════════", "info");
+    log(
+      "💡 Note: For complete 28-test coverage, run: yarn test:run tests/unit/memory-tests.js",
+      "info"
+    );
+    log("═══════════════════════════════════════════════════════════", "info");
+
+    // Ensure scroll position stays at top after all content is loaded
+    // Use multiple strategies to ensure scroll stays at top
+    requestAnimationFrame(() => {
+      consoleDiv.scrollTop = 0;
+      // Also set after a small delay to catch any late DOM updates
+      setTimeout(() => {
+        consoleDiv.scrollTop = 0;
+      }, 100);
+    });
+
     return results;
   } catch (error) {
     log(`❌ Fatal Error: ${error.message}`, "error");
@@ -182,4 +323,7 @@ window.runCPUTest = async function () {
 
 // Initial message
 log("TRS-80 Model III Emulator - Development Console Ready", "success");
-log('Click "Phase 0: Design Doc" or "Phase 1: Z80 CPU" to get started', "info");
+log(
+  'Click "Phase 0: Design Doc", "Phase 1: Z80 CPU", or "Phase 2: Memory System" to get started',
+  "info"
+);
