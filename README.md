@@ -24,7 +24,7 @@ The emulator currently implements a complete Z80 CPU with full instruction set s
 - **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, and BASIC source code display
 - **Comprehensive Test Suites**:
   - 52 Phase 1 CPU tests with 100% pass rate (organized by complexity, showing opcodes and assembly)
-  - 28 Phase 2 memory system tests with 100% pass rate (showing relevant Z80 memory opcodes)
+  - 27 Phase 2 memory system tests with 100% pass rate (showing relevant Z80 memory opcodes)
   - 33 Phase 3 cassette & I/O tests with 100% pass rate (showing IN/OUT opcodes and descriptions)
   - 41 Phase 4 BASIC program tests with 97.6% pass rate (showing BASIC source code and expected output)
 
@@ -72,7 +72,7 @@ The emulator includes a built-in development console accessible at the live demo
 
 - **Phase 0: Design Document**: View the complete design document inline in the console with full scrolling support
 - **Phase 1: Z80 CPU Test Runner**: Run 52 comprehensive CPU tests with assembly mnemonics and opcode bytes displayed
-- **Phase 2: Memory System Test Runner**: Run 28 memory system tests with relevant Z80 memory opcodes
+- **Phase 2: Memory System Test Runner**: Run 27 memory system tests with relevant Z80 memory opcodes
 - **Phase 3: Cassette & I/O Test Runner**: Run 33 cassette and I/O tests with IN/OUT opcodes and detailed descriptions
 - **Phase 4: BASIC Program Test Runner**: Run 41 BASIC program execution tests with source code and expected output modals
 - **Interactive Test Results**: View detailed test execution and results with keyboard and mouse navigation
@@ -125,9 +125,9 @@ yarn test:coverage
 
 # Run tests for a specific phase
 yarn test:run tests/unit/cpu-tests.js           # Phase 1: CPU tests (52 tests)
-yarn test:run tests/unit/memory-tests.js        # Phase 2: Memory tests (28 tests)
+yarn test:run tests/unit/memory-tests.js        # Phase 2: Memory tests (27 tests)
 yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js  # Phase 3: Cassette & I/O tests (33 tests)
-yarn test:run tests/unit/basic-program-tests.js # Phase 4: BASIC program tests (45 tests)
+yarn test:run tests/unit/basic-program-tests.js # Phase 4: BASIC program tests (32 tests)
 ```
 
 ### Phase-by-Phase Development
@@ -211,7 +211,7 @@ The browser-based development console provides real-time test execution and resu
 - **Memory statistics**: Get detailed memory usage and status information
 - **RAM management**: Clear RAM while preserving ROM
 - **Browser-based test runner**: Interactive test execution with optimized logging
-- **Tests**: All 28 Phase 2 tests passing ✅ (100% success rate)
+- **Tests**: All 27 Phase 2 tests passing ✅ (100% success rate)
 - **Learning Tool**: All memory operation tests display relevant Z80 opcodes and assembly instructions
 - **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
@@ -229,7 +229,7 @@ The browser-based development console provides real-time test execution and resu
 - **RAM management tests** (2 tests): RAM clearing, ROM preservation (shows memory management operations)
 - **Address wrapping tests** (2 tests): 16-bit wrapping, address masking (shows 16-bit address handling)
 
-All 28 tests pass with 100% success rate, verifying proper memory management, ROM protection, and program loading capabilities.
+All 27 tests pass with 100% success rate, verifying proper memory management, ROM protection, and program loading capabilities.
 
 **Learning Features**: Each memory operation test displays the relevant Z80 assembly instruction and opcode bytes (e.g., "LD A, (0x4000)" with opcode "0x3A 0x00 0x40"), making it easy to understand how the Z80 CPU accesses memory. This helps learners connect memory operations to actual Z80 instructions.
 
@@ -260,7 +260,7 @@ All 28 tests pass with 100% success rate, verifying proper memory management, RO
 - **Program execution flow**: Programs can call ROM routines, use stack operations
 - **Browser-based test runner**: Interactive test execution with BASIC source code display
 - **BASIC Source Modal**: Click links to view program source code and expected output
-- **Tests**: 41 Phase 4 browser tests (97.6% pass rate), 45 unit tests total
+- **Tests**: 41 Phase 4 browser tests (97.6% pass rate), 32 unit tests total
 - **Learning Tool**: All tests display BASIC source code, expected output, assembly mnemonics, and opcode bytes
 - **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
@@ -386,7 +386,7 @@ trs80-emulator/
 │   ├── data/
 │   │   └── basic-programs.js  # BASIC program examples (Phase 4 ✅)
 │   ├── browser-test-runner.js           # Browser test runner for Phase 1 (52 tests)
-│   ├── browser-test-runner-phase2.js    # Browser test runner for Phase 2 (28 tests)
+│   ├── browser-test-runner-phase2.js    # Browser test runner for Phase 2 (27 tests)
 │   ├── browser-test-runner-phase3.js    # Browser test runner for Phase 3 (33 tests)
 │   ├── browser-test-runner-phase4.js    # Browser test runner for Phase 4 (41 tests)
 │   ├── test-runner.js         # Test runner utilities
@@ -394,10 +394,10 @@ trs80-emulator/
 ├── tests/
 │   └── unit/
 │       ├── cpu-tests.js       # Phase 1 CPU tests (52 tests, organized by complexity)
-│       ├── memory-tests.js    # Phase 2 Memory tests (28 tests)
+│       ├── memory-tests.js    # Phase 2 Memory tests (27 tests)
 │       ├── cassette-tests.js  # Phase 3 Cassette tests
 │       ├── io-tests.js        # Phase 3 I/O tests
-│       └── basic-program-tests.js  # Phase 4 BASIC program tests (45 tests)
+│       └── basic-program-tests.js  # Phase 4 BASIC program tests (32 tests)
 ├── scripts/
 │   ├── postbuild.js           # Post-build script with serve instructions
 │   ├── render-docs.js         # Markdown to HTML documentation renderer
@@ -433,9 +433,9 @@ trs80-emulator/
 ### Phase Workflows
 
 - `yarn phase:1` - Run Phase 1 test gate workflow (52 CPU tests)
-- `yarn phase:2` - Run Phase 2 test gate workflow (28 memory tests)
+- `yarn phase:2` - Run Phase 2 test gate workflow (27 memory tests)
 - `yarn phase:3` - Run Phase 3 test gate workflow (33 cassette & I/O tests)
-- `yarn phase:4` - Run Phase 4 test gate workflow (45 BASIC program tests)
+- `yarn phase:4` - Run Phase 4 test gate workflow (32 BASIC program tests)
 
 ### Deployment
 
@@ -458,9 +458,9 @@ trs80-emulator/
 
 ## Port I/O
 
-- Port 0x84: Keyboard input
-- Port 0xEC: Video control
-- Port 0xF4: Cassette I/O
+- Port 0xFF: Keyboard input
+- Port 0xFE: Cassette I/O
+- Port 0xEC: System control
 
 ## Contributing
 
