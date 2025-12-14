@@ -250,3 +250,4 @@ export function getAllBasicPrograms() {
 export function getBasicProgramsByComplexity(complexity) {
   return BASIC_PROGRAMS.filter((p) => p.complexity === complexity);
 }
+

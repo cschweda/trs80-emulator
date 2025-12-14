@@ -30,3 +30,4 @@ On macOS, you can use:
 - `screencapture -l<window-id> docs/phase1-test-results.png` (capture specific window)
 - Or use Chrome DevTools: F12 → More tools → Screenshot
 - Or use Cmd+Shift+4 for area selection
+

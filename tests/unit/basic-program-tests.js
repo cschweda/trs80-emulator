@@ -604,3 +604,4 @@ describe("BASIC Program Execution - Integration Tests", () => {
     expect(memory.readByte(0x4200)).toBe(0x3e); // Program still in memory
   });
 });
+
