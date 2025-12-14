@@ -8,9 +8,9 @@ A web-based emulator for the TRS-80 Model III computer, built with JavaScript an
 
 ## Current Status
 
-**Phase 4: BASIC Program Execution** ✅ **COMPLETE**
+**Phase 5: Video Display System** ✅ **COMPLETE**
 
-The emulator currently implements a complete Z80 CPU with full instruction set support, comprehensive memory management, cassette I/O system, and BASIC program execution capabilities. A browser-based development console allows you to run comprehensive tests directly in the browser with detailed assembly, opcodes, and BASIC source code display.
+The emulator currently implements a complete Z80 CPU with full instruction set support, comprehensive memory management, cassette I/O system, BASIC program execution, and a full 128×48 pixel graphics display system. A browser-based development console allows you to run comprehensive tests directly in the browser with detailed assembly, opcodes, BASIC source code, and graphics display.
 
 ![Phase 1 Test Results](docs/phase1-test-results.png)
 ![Phase 4 BASIC Source & Results](docs/phase4-basic-modal.png)
@@ -21,19 +21,20 @@ The emulator currently implements a complete Z80 CPU with full instruction set s
 - **Memory Management System**: 16K ROM + 48K RAM with proper memory mapping, ROM protection, and program loading
 - **Cassette I/O System**: Tape loading/saving simulation, CLOAD/CSAVE operations, cassette motor control
 - **BASIC Program Execution**: ROM loading, program storage, CPU execution with ROM, CLOAD integration
-- **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, and BASIC source code display
+- **Video Display System**: 64×16 character text display with 128×48 pixel graphics mode, SET/RESET/POINT commands, CHR$() graphics characters
+- **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, BASIC source code, and graphics display
 - **Comprehensive Test Suites**:
   - 52 Phase 1 CPU tests with 100% pass rate (organized by complexity, showing opcodes and assembly)
   - 27 Phase 2 memory system tests with 100% pass rate (showing relevant Z80 memory opcodes)
   - 33 Phase 3 cassette & I/O tests with 100% pass rate (showing IN/OUT opcodes and descriptions)
-  - 41 Phase 4 BASIC program tests with 97.6% pass rate (showing BASIC source code and expected output)
+  - 32 Phase 4 BASIC program tests with 100% pass rate (showing BASIC source code and expected output)
+  - 61 Phase 5 video display tests with 100% pass rate (showing graphics patterns, SET/RESET/POINT, and CHR$() examples)
 
 ### 🚧 Planned Features (Future Phases)
 
-- **Video Display**: 128x48 pixel character-based graphics (Phase 5)
 - **System Integration**: Complete system boot, keyboard input, display updates (Phase 6)
-- **Z80 Assembler**: In-browser assembly editing and compilation (Phase 8)
 - **Sample Programs Library**: 15 built-in BASIC programs and 5 assembly routines (Phase 7)
+- **Z80 Assembler**: In-browser assembly editing and compilation (Phase 8)
 
 ## Technology Stack
 
@@ -74,9 +75,11 @@ The emulator includes a built-in development console accessible at the live demo
 - **Phase 1: Z80 CPU Test Runner**: Run 52 comprehensive CPU tests with assembly mnemonics and opcode bytes displayed
 - **Phase 2: Memory System Test Runner**: Run 27 memory system tests with relevant Z80 memory opcodes
 - **Phase 3: Cassette & I/O Test Runner**: Run 33 cassette and I/O tests with IN/OUT opcodes and detailed descriptions
-- **Phase 4: BASIC Program Test Runner**: Run 41 BASIC program execution tests with source code and expected output modals
+- **Phase 4: BASIC Program Test Runner**: Run 32 BASIC program execution tests with source code and expected output modals
+- **Phase 5: Video Display Test Runner**: Run 61 video display tests with graphics patterns, SET/RESET/POINT commands, and CHR$() examples
 - **Interactive Test Results**: View detailed test execution and results with keyboard and mouse navigation
 - **BASIC Source Code Modal**: Click "View BASIC Source & Results" links to see program source code and expected PRINT output
+- **Graphics Display Modal**: Click "View Graphics & Source" links to see rendered graphics (128×48) and BASIC source code
 - **Real-time Logging**: See CPU operations, memory operations, register states, and test outcomes
 - **Full Viewport Layout**: All tabs take up the entire viewport width and height
 - **Scrollable Content**: All tabs support mouse wheel scrolling and keyboard navigation (arrow keys, Page Up/Down)
@@ -87,13 +90,15 @@ To use the development console:
 1. Visit [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 2. Click "Phase 0: Design Doc" to view the design document inline (scrollable)
 3. Click "Phase 1: Z80 CPU" to run 52 CPU tests with assembly and opcodes displayed
-4. Click "Phase 2: Memory System" to run 28 memory tests with memory opcodes displayed
+4. Click "Phase 2: Memory System" to run 27 memory tests with memory opcodes displayed
 5. Click "Phase 3: Cassette & I/O" to run 33 I/O tests with IN/OUT opcodes displayed
-6. Click "Phase 4: BASIC Programs" to run 41 BASIC program tests
-7. **View BASIC Source**: Click "View BASIC Source & Results" links in Phase 4 tests to see program source code and expected output in a modal
-8. View test results and execution details in the scrollable console
-9. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
-10. The console automatically maintains scroll position at the top so you can see when content finishes loading
+6. Click "Phase 4: BASIC Programs" to run 32 BASIC program tests
+7. Click "Phase 5: Video Display" to run 61 video display tests with graphics patterns
+8. **View BASIC Source**: Click "View BASIC Source & Results" links in Phase 4 tests to see program source code and expected output in a modal
+9. **View Graphics**: Click "View Graphics & Source" links in Phase 5 tests to see rendered graphics (128×48) and BASIC source code in a modal
+10. View test results and execution details in the scrollable console
+11. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
+12. The console automatically maintains scroll position at the top so you can see when content finishes loading
 
 For browser developer tools (F12), the console will show:
 
@@ -101,12 +106,15 @@ For browser developer tools (F12), the console will show:
 - Memory access logs (Phase 2)
 - I/O port operations (Phase 3)
 - BASIC program execution (Phase 4)
+- Graphics operations (Phase 5)
 - Test results
 - Debug information
 
 **Note**: The browser console uses optimized logging for loop-based tests to reduce noise while maintaining full test coverage. Summary messages are provided for tests that verify large address ranges.
 
 **Phase 4 Learning Features**: Each BASIC program test includes a clickable link to view the program source code and expected output in a modal window. This makes it easy to see both what the program does (source) and what it produces (output), perfect for learning BASIC programming.
+
+**Phase 5 Learning Features**: Each graphics test includes a clickable link to view the rendered graphics (128×48 pixels, scaled 4x for visibility) and BASIC source code in a modal window. Graphics patterns include checkerboards, frames, crosshairs, filled shapes, and all CHR$() graphics characters (128-191), making it easy to see how SET, RESET, POINT, and CHR$() commands work.
 
 ### Testing
 
@@ -128,6 +136,7 @@ yarn test:run tests/unit/cpu-tests.js           # Phase 1: CPU tests (52 tests)
 yarn test:run tests/unit/memory-tests.js        # Phase 2: Memory tests (27 tests)
 yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js  # Phase 3: Cassette & I/O tests (33 tests)
 yarn test:run tests/unit/basic-program-tests.js # Phase 4: BASIC program tests (32 tests)
+yarn test:run tests/unit/video-tests.js         # Phase 5: Video display tests (61 tests)
 ```
 
 ### Phase-by-Phase Development
@@ -146,6 +155,9 @@ yarn phase:3
 
 # Run Phase 4 tests
 yarn phase:4
+
+# Run Phase 5 tests
+yarn phase:5
 
 # Or manually run phase workflow
 node scripts/phase-workflow.js <phase-number> <test-files>
@@ -250,7 +262,7 @@ All 27 tests pass with 100% success rate, verifying proper memory management, RO
 
 ### ✅ Phase 4: BASIC Program Execution
 
-**Status**: Complete ✅ **CURRENT PHASE**
+**Status**: Complete ✅
 
 - **ROM loading**: Load ModelIII.rom (14KB or 16KB) into memory system
 - **Program storage**: Store BASIC programs at default (0x4200) or custom addresses
@@ -260,7 +272,7 @@ All 27 tests pass with 100% success rate, verifying proper memory management, RO
 - **Program execution flow**: Programs can call ROM routines, use stack operations
 - **Browser-based test runner**: Interactive test execution with BASIC source code display
 - **BASIC Source Modal**: Click links to view program source code and expected output
-- **Tests**: 41 Phase 4 browser tests (97.6% pass rate), 32 unit tests total
+- **Tests**: 32 Phase 4 unit tests with 100% pass rate
 - **Learning Tool**: All tests display BASIC source code, expected output, assembly mnemonics, and opcode bytes
 - **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
@@ -288,14 +300,43 @@ This makes it easy to see both what the program does and what it produces, perfe
 
 **Screenshot**: See `docs/phase4-basic-modal.png` for the BASIC source code and results modal display
 
-### ⏳ Phase 5: Video Display System
+### ✅ Phase 5: Video Display System
 
-**Status**: Pending
+**Status**: Complete ✅ **CURRENT PHASE**
 
-- 128x48 character display
-- Graphics mode support
-- Character ROM rendering
-- SET/RESET/POINT pixel operations
+- **64×16 character text display**: Full character-based text mode with ASCII and graphics characters
+- **128×48 pixel graphics mode**: Character-based graphics using 2×3 pixel blocks
+- **SET/RESET/POINT commands**: Full implementation of BASIC graphics commands
+- **CHR$() graphics characters**: All 64 graphics characters (128-191) for pixel-level graphics
+- **Character ROM**: Complete character set with ASCII (0-127) and graphics (128-191)
+- **Video RAM**: 1KB video memory at 0x3C00-0x3FFF
+- **Graphics display modal**: View rendered graphics (128×48, scaled 4x) with BASIC source code
+- **Browser-based test runner**: Interactive test execution with graphics display
+- **Tests**: 61 Phase 5 tests with 100% pass rate
+- **Learning Tool**: All tests display graphics patterns, BASIC source code, and demonstrate SET/RESET/POINT/CHR$() usage
+- **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+
+#### Phase 5 Test Coverage
+
+The Phase 5 test suite includes:
+
+- **Initialization tests** (6 tests): Video system setup, dimensions, character ROM loading
+- **Character ROM tests** (3 tests): Graphics character generation, pattern verification
+- **SET Command tests** (10 tests): Pixel setting, boundary checking, pattern creation (lines, rectangles, diagonals)
+- **RESET Command tests** (4 tests): Pixel clearing, pattern modification, border creation
+- **POINT Command tests** (6 tests): Pixel state detection, boundary handling
+- **CHR$() Graphics tests** (4 tests): Graphics character usage, pattern combinations
+- **Screen Operations tests** (5 tests): Screen clearing, string writing, snapshots
+- **Edge Cases tests** (7 tests): Boundary coordinates, rapid operations, coordinate mapping
+- **Integration tests** (2 tests): ROM/RAM integration, memory independence
+- **Visual Verification tests** (8 tests): Checkerboard patterns, screen frames, all CHR$() characters, crosshairs, filled shapes
+
+**Learning Features**: Each graphics test includes a "View Graphics & Source" link that opens a modal showing:
+
+- The rendered graphics display (128×48 pixels, scaled 4x for visibility)
+- The BASIC source code that creates the graphics pattern
+
+This makes it easy to see both the code and the visual result, perfect for learning TRS-80 graphics programming with SET, RESET, POINT, and CHR$() commands.
 
 ### ⏳ Phase 6: System Integration
 
@@ -382,13 +423,15 @@ trs80-emulator/
 │   │   ├── memory.js          # Memory management system (Phase 2 ✅)
 │   │   └── io.js              # I/O system (Phase 3 ✅)
 │   ├── peripherals/
-│   │   └── cassette.js        # Cassette system (Phase 3 ✅)
+│   │   ├── cassette.js        # Cassette system (Phase 3 ✅)
+│   │   └── video.js           # Video display system (Phase 5 ✅)
 │   ├── data/
 │   │   └── basic-programs.js  # BASIC program examples (Phase 4 ✅)
 │   ├── browser-test-runner.js           # Browser test runner for Phase 1 (52 tests)
 │   ├── browser-test-runner-phase2.js    # Browser test runner for Phase 2 (27 tests)
 │   ├── browser-test-runner-phase3.js    # Browser test runner for Phase 3 (33 tests)
-│   ├── browser-test-runner-phase4.js    # Browser test runner for Phase 4 (41 tests)
+│   ├── browser-test-runner-phase4.js    # Browser test runner for Phase 4 (32 tests)
+│   ├── browser-test-runner-phase5.js    # Browser test runner for Phase 5 (61 tests)
 │   ├── test-runner.js         # Test runner utilities
 │   └── main.js                # Application entry point
 ├── tests/
@@ -397,7 +440,8 @@ trs80-emulator/
 │       ├── memory-tests.js    # Phase 2 Memory tests (27 tests)
 │       ├── cassette-tests.js  # Phase 3 Cassette tests
 │       ├── io-tests.js        # Phase 3 I/O tests
-│       └── basic-program-tests.js  # Phase 4 BASIC program tests (32 tests)
+│       ├── basic-program-tests.js  # Phase 4 BASIC program tests (32 tests)
+│       └── video-tests.js     # Phase 5 Video display tests (61 tests)
 ├── scripts/
 │   ├── postbuild.js           # Post-build script with serve instructions
 │   ├── render-docs.js         # Markdown to HTML documentation renderer
@@ -436,6 +480,7 @@ trs80-emulator/
 - `yarn phase:2` - Run Phase 2 test gate workflow (27 memory tests)
 - `yarn phase:3` - Run Phase 3 test gate workflow (33 cassette & I/O tests)
 - `yarn phase:4` - Run Phase 4 test gate workflow (32 BASIC program tests)
+- `yarn phase:5` - Run Phase 5 test gate workflow (61 video display tests)
 
 ### Deployment
 
