@@ -31,3 +31,4 @@ On macOS, you can use:
 - Or use Chrome DevTools: F12 → More tools → Screenshot
 - Or use Cmd+Shift+4 for area selection
 
+
