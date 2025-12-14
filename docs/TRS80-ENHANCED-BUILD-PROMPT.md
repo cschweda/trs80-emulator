@@ -22,7 +22,7 @@ Build a complete, production-ready TRS-80 Model III emulator that runs in modern
 - **In-browser program editor** for both BASIC and Assembly programs
 - **Complete Z80 assembler integration** - write, edit, assemble, and run assembly code
 - Modern development workflow with Vite and Yarn
-- **Comprehensive test suite** (172+ tests) with phase-by-phase test gates
+- **Comprehensive test suite** (217+ tests) with phase-by-phase test gates
 - Netlify deployment with complete configuration
 
 **Key Features:**
@@ -39,7 +39,7 @@ Build a complete, production-ready TRS-80 Model III emulator that runs in modern
 
 - **Sequential phase development** - Build one phase at a time
 - **Test-driven** - All tests must pass before proceeding to next phase
-- **172+ comprehensive tests** provided in `TRS80-COMPLETE-TEST-SUITE.md`
+- **217+ comprehensive tests** provided in `TRS80-COMPLETE-TEST-SUITE.md`
 - **Phase gates** - Explicit test requirements between phases
 - **Vite build system** with hot module replacement
 - **Netlify deployment** ready
@@ -69,10 +69,11 @@ Build a complete, production-ready TRS-80 Model III emulator that runs in modern
 - [Phase 1: Z80 CPU Core Implementation](#phase-1-z80-cpu-core-implementation)
 - [Phase 2: Memory Management System](#phase-2-memory-management-system)
 - [Phase 3: Cassette I/O System](#phase-3-cassette-io-system)
-- [Phase 4: Video Display System with Graphics Support](#phase-4-video-display-system-with-graphics-support)
-- [Phase 5: System Integration](#phase-5-system-integration)
-- [Phase 6: Sample Programs Library and User Interface](#phase-6-sample-programs-library-and-user-interface)
-- [Phase 7: Z80 Assembler Integration](#phase-7-z80-assembler-integration)
+- [Phase 4: BASIC Program Execution](#phase-4-basic-program-execution)
+- [Phase 5: Video Display System with Graphics Support](#phase-5-video-display-system-with-graphics-support)
+- [Phase 6: System Integration](#phase-6-system-integration)
+- [Phase 7: Sample Programs Library and User Interface](#phase-7-sample-programs-library-and-user-interface)
+- [Phase 8: Z80 Assembler Integration](#phase-8-z80-assembler-integration)
 
 ### Testing & Quality
 
@@ -118,7 +119,7 @@ This enhanced build prompt references the following documents for complete imple
   - HTML structure: Lines 2549-2660
   - CSS styles: Lines 2828-3139
 
-- **`docs/TRS80-COMPLETE-TEST-SUITE.md`** - Contains all test files (172+ tests)
+- **`docs/TRS80-COMPLETE-TEST-SUITE.md`** - Contains all test files (217+ tests)
 
   - Copy test files to `tests/` directory as you implement each phase
   - Tests are organized by phase for easy reference
@@ -249,7 +250,10 @@ yarn test:run tests/unit/memory-tests.js
 # Phase 3: Cassette & I/O Tests
 yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
 
-# Phase 4: Video Tests
+# Phase 4: BASIC Program Execution
+yarn test:run tests/unit/basic-program-tests.js
+
+# Phase 5: Video Display System
 yarn test:run tests/unit/video-tests.js
 
 # Phase 5: Integration Tests
@@ -287,19 +291,21 @@ yarn test:run tests/integration/
 1. **Before Phase 1:** Copy `tests/unit/cpu-tests.js` from test suite document
 2. **Before Phase 2:** Copy `tests/unit/memory-tests.js` from test suite document
 3. **Before Phase 3:** Copy `tests/unit/cassette-tests.js` and `tests/unit/io-tests.js`
-4. **Before Phase 4:** Copy `tests/unit/video-tests.js` from test suite document
-5. **Before Phase 5:** Copy `tests/integration/cpu-memory-integration.js`
-6. **Before Phase 6:** Copy `tests/unit/program-loader-tests.js`
-7. **Before Phase 7:** Copy `tests/unit/assembler-tests.js` (if creating)
+4. **Before Phase 4:** Copy `tests/unit/basic-program-tests.js` from test suite document
+5. **Before Phase 5:** Copy `tests/unit/video-tests.js` from test suite document
+6. **Before Phase 6:** Copy `tests/integration/cpu-memory-integration.js`
+7. **Before Phase 7:** Copy `tests/unit/program-loader-tests.js`
+8. **Before Phase 8:** Copy `tests/unit/assembler-tests.js` (if creating)
 
 **Test File Locations in Test Suite Document:**
 
 - **Phase 1:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 1: CPU Tests" (starts line 21)
 - **Phase 2:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 2: Memory Tests" (starts line 675)
 - **Phase 3:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 3: Cassette & I/O Tests" (starts line 1004)
-- **Phase 4:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 4: Video Tests" (starts line 1408)
-- **Phase 5:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 5: System Integration Tests" (starts line 1684)
-- **Phase 6:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 6: Program Loader Tests" (starts line 1837)
+- **Phase 4:** `tests/unit/basic-program-tests.js` - BASIC program execution tests (45 tests)
+- **Phase 5:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 4: Video Tests" (starts line 1408)
+- **Phase 6:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 5: System Integration Tests" (starts line 1684)
+- **Phase 7:** `docs/TRS80-COMPLETE-TEST-SUITE.md` - Section "PHASE 6: Program Loader Tests" (starts line 1837)
 
 **Verification After Copying Test Files:**
 
@@ -316,10 +322,11 @@ head -10 tests/unit/cpu-tests.js
 - Phase 1: 45 tests (CPU core)
 - Phase 2: 28 tests (Memory system)
 - Phase 3: 37 tests (Cassette + I/O)
-- Phase 4: 32 tests (Video system)
-- Phase 5: Integration tests
-- Phase 6: 18 tests (Program loader)
-- **Total: 172+ tests**
+- Phase 4: 45 tests (BASIC program execution)
+- Phase 5: 32 tests (Video system)
+- Phase 6: Integration tests
+- Phase 7: 18 tests (Program loader)
+- **Total: 217+ tests** (45 new Phase 4 tests)
 
 ---
 
@@ -346,10 +353,11 @@ head -10 tests/unit/cpu-tests.js
     "phase:1": "node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js",
     "phase:2": "node scripts/phase-workflow.js 2 tests/unit/memory-tests.js",
     "phase:3": "node scripts/phase-workflow.js 3 \"tests/unit/cassette-tests.js tests/unit/io-tests.js\"",
-    "phase:4": "node scripts/phase-workflow.js 4 tests/unit/video-tests.js",
-    "phase:5": "node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js",
-    "phase:6": "node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js",
-    "phase:7": "node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js"
+    "phase:4": "node scripts/phase-workflow.js 4 tests/unit/basic-program-tests.js",
+    "phase:5": "node scripts/phase-workflow.js 5 tests/unit/video-tests.js",
+    "phase:6": "node scripts/phase-workflow.js 6 tests/integration/cpu-memory-integration.js",
+    "phase:7": "node scripts/phase-workflow.js 7 tests/unit/program-loader-tests.js",
+    "phase:8": "node scripts/phase-workflow.js 8 tests/unit/assembler-tests.js"
   },
   "devDependencies": {
     "vite": "^5.4.0",
@@ -2364,7 +2372,166 @@ export class EmulatorDebugger {
 
 ---
 
-## PHASE 4: Video Display System with Graphics Support
+## PHASE 4: BASIC Program Execution
+
+### Test File Setup
+
+**BEFORE starting implementation, copy the test file:**
+
+1. **Copy Test File:**
+
+   - Source: `tests/unit/basic-program-tests.js` (already created)
+   - Destination: `tests/unit/basic-program-tests.js`
+   - File contains 45 comprehensive tests
+
+2. **Verify Test File:**
+
+   ```bash
+   # Check file exists
+   ls -lh tests/unit/basic-program-tests.js
+
+   # Verify imports (should use @core, @peripherals aliases)
+   head -10 tests/unit/basic-program-tests.js
+   ```
+
+3. **Expected Test Count:** 45 tests
+
+**DO NOT proceed with implementation until test file is copied and verified.**
+
+### Objectives
+
+Verify that BASIC programs can be loaded, stored, and executed properly under the Z80 CPU with ModelIII.rom. This phase demonstrates that the emulator can run TRS-80 BASIC programs by:
+
+- Loading ModelIII.rom (which contains the BASIC interpreter)
+- Storing BASIC programs in memory at correct addresses
+- Executing Z80 instructions from ROM (BASIC interpreter code)
+- Integrating with cassette system for CLOAD operations
+- Supporting BASIC program data structures and execution flow
+
+**Test-First Approach:**
+
+- Tests define expected BASIC program execution behavior
+- Verify ROM loading and execution
+- Test program storage and memory layout
+- Validate CPU execution with ROM and RAM programs
+- Test CLOAD integration for program loading
+
+### Key Features
+
+- **ROM Loading**: ModelIII.rom contains the BASIC interpreter and must load correctly
+- **Program Storage**: BASIC programs stored at 0x4200 (default) or custom addresses
+- **CPU Execution**: Z80 CPU executes instructions from both ROM and RAM
+- **CLOAD Integration**: Programs loaded via cassette system (CLOAD command)
+- **Memory Layout**: Correct ROM/RAM separation and address ranges
+- **Program Execution Flow**: Complete flow from loading to execution
+
+### BASIC Program Examples
+
+Phase 4 includes 15 BASIC program examples of increasing complexity:
+
+1. **Hello World** (Complexity 1): Simple PRINT statement
+2. **Simple Variable** (Complexity 2): Variable assignment and display
+3. **Arithmetic** (Complexity 2): Basic math operations
+4. **Input** (Complexity 3): User input handling
+5. **Conditional** (Complexity 3): IF-THEN statements
+6. **FOR Loop** (Complexity 3): FOR/NEXT loops
+7. **Nested Loop** (Complexity 4): Nested FOR loops
+8. **GOTO** (Complexity 3): GOTO control flow
+9. **Array** (Complexity 4): Array operations
+10. **String Operations** (Complexity 4): String concatenation
+11. **GOSUB/RETURN** (Complexity 4): Subroutine calls
+12. **Math Functions** (Complexity 4): Built-in functions (SQR, INT)
+13. **DATA/READ** (Complexity 5): DATA and READ statements
+14. **Complex Logic** (Complexity 5): Multiple control structures
+15. **Number Guessing Game** (Complexity 5): Complete interactive program
+
+**Program Source:** `src/data/basic-programs.js`
+
+### Testing
+
+**Test File:** `tests/unit/basic-program-tests.js`
+
+**Test Categories:**
+
+- **ROM Loading Tests (4 tests)**: ModelIII.rom loading, 14KB/16KB support, ROM protection
+- **Program Storage Tests (4 tests)**: Default address (0x4200), custom addresses, multiple programs
+- **CPU Execution with ROM Tests (4 tests)**: Executing instructions from ROM, jumps, calls
+- **CLOAD Integration Tests (3 tests)**: Loading via cassette, custom addresses, ROM protection
+- **Memory Layout Tests (4 tests)**: ROM/RAM address ranges, BASIC program area
+- **Program Execution Flow Tests (3 tests)**: Programs from ROM, RAM, ROM routine calls
+- **Simple BASIC Programs Tests (4 tests)**: PRINT, multi-line, variables, GOTO
+- **Complex Scenarios Tests (3 tests)**: Large programs, stack operations, loops
+- **Integration Tests (3 tests)**: Complete CLOAD/RUN flow, I/O operations, program persistence
+
+**Run Tests:**
+
+```bash
+yarn test:run tests/unit/basic-program-tests.js
+```
+
+**Expected Result:** All 45 tests pass
+
+### ⚠️ PHASE 4 TEST GATE
+
+**CRITICAL:** Use the phase workflow script to enforce the test gate:
+
+```bash
+# Run Phase 4 tests with workflow script (waits for user confirmation)
+yarn phase:4
+
+# OR manually:
+node scripts/phase-workflow.js 4 tests/unit/basic-program-tests.js
+```
+
+**Expected Output (if tests pass):**
+
+- All 45 tests pass
+- Script displays success message
+- Script waits for user confirmation before proceeding
+
+**If tests fail:**
+
+- Script will exit with error code 1
+- Review test failures
+- Fix implementation issues
+- Re-run tests until all pass
+- **DO NOT proceed to Phase 5 until all tests pass**
+
+### Phase 4 Completion Criteria
+
+- ✅ All unit tests pass (100% success rate)
+- ✅ ModelIII.rom loads successfully (14KB or 16KB)
+- ✅ ROM data is readable and protected from writes
+- ✅ BASIC programs can be stored at 0x4200 and custom addresses
+- ✅ CPU can execute instructions from ROM (BASIC interpreter)
+- ✅ CPU can execute programs from RAM
+- ✅ CLOAD integration works correctly
+- ✅ Memory layout is correct (ROM 0x0000-0x3FFF, RAM 0x4000-0xFFFF)
+- ✅ Programs can call ROM routines
+- ✅ Complete CLOAD and RUN flow works
+
+**Verification Command:**
+
+```bash
+yarn test:run tests/unit/basic-program-tests.js
+# Expected: ✓ 45 passed (45)
+```
+
+### Browser Test Runner
+
+Phase 4 includes a browser-compatible test runner that displays:
+
+- Assembly mnemonics for Z80 instructions
+- Opcode bytes for executed instructions
+- Detailed descriptions of what each test does and expects
+
+**File:** `src/browser-test-runner-phase4.js`
+
+**Usage:** Click "Phase 4: BASIC Programs" button in the web UI to run all 45 tests with detailed output.
+
+---
+
+## PHASE 5: Video Display System with Graphics Support
 
 ### Test File Setup
 
@@ -2435,16 +2602,16 @@ yarn test:run tests/unit/video-tests.js
 
 **Expected Result:** All 32 tests pass
 
-### ⚠️ PHASE 4 TEST GATE
+### ⚠️ PHASE 5 TEST GATE
 
 **CRITICAL:** Use the phase workflow script to enforce the test gate:
 
 ```bash
-# Run Phase 4 tests with workflow script (waits for user confirmation)
-yarn phase:4
+# Run Phase 5 tests with workflow script (waits for user confirmation)
+yarn phase:5
 
 # OR manually:
-node scripts/phase-workflow.js 4 tests/unit/video-tests.js
+node scripts/phase-workflow.js 5 tests/unit/video-tests.js
 ```
 
 **Expected Output (if tests pass):**
@@ -2459,9 +2626,9 @@ node scripts/phase-workflow.js 4 tests/unit/video-tests.js
 - Review test failures
 - Fix implementation issues
 - Re-run tests until all pass
-- **DO NOT proceed to Phase 5 until all tests pass**
+- **DO NOT proceed to Phase 6 until all tests pass**
 
-### Phase 4 Completion Criteria
+### Phase 5 Completion Criteria
 
 - ✅ All unit tests pass (100% success rate)
 - ✅ 64×16 text display works
@@ -2479,7 +2646,7 @@ yarn test:run tests/unit/video-tests.js
 
 ---
 
-## PHASE 5: System Integration
+## PHASE 6: System Integration
 
 ### Test File Setup
 
@@ -2551,16 +2718,16 @@ yarn test:run tests/integration/cpu-memory-integration.js
 
 **Expected Result:** All integration tests pass
 
-### ⚠️ PHASE 5 TEST GATE
+### ⚠️ PHASE 6 TEST GATE
 
 **CRITICAL:** Use the phase workflow script to enforce the test gate:
 
 ```bash
-# Run Phase 5 tests with workflow script (waits for user confirmation)
-yarn phase:5
+# Run Phase 6 tests with workflow script (waits for user confirmation)
+yarn phase:6
 
 # OR manually:
-node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js
+node scripts/phase-workflow.js 6 tests/integration/cpu-memory-integration.js
 ```
 
 **Expected Output (if tests pass):**
@@ -2575,9 +2742,9 @@ node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js
 - Review test failures
 - Fix implementation issues
 - Re-run tests until all pass
-- **DO NOT proceed to Phase 6 until all tests pass**
+- **DO NOT proceed to Phase 7 until all tests pass**
 
-### Phase 5 Completion Criteria
+### Phase 6 Completion Criteria
 
 - ✅ All integration tests pass
 - ✅ System boots to ROM
@@ -2595,7 +2762,7 @@ yarn test:run tests/integration/cpu-memory-integration.js
 
 ---
 
-## PHASE 6: Sample Programs Library and User Interface
+## PHASE 7: Sample Programs Library and User Interface
 
 ### Test File Setup
 
@@ -2712,16 +2879,16 @@ yarn test:run tests/unit/program-loader-tests.js
 
 **Expected Result:** All 18 tests pass
 
-### ⚠️ PHASE 6 TEST GATE
+### ⚠️ PHASE 7 TEST GATE
 
 **CRITICAL:** Use the phase workflow script to enforce the test gate:
 
 ```bash
-# Run Phase 6 tests with workflow script (waits for user confirmation)
-yarn phase:6
+# Run Phase 7 tests with workflow script (waits for user confirmation)
+yarn phase:7
 
 # OR manually:
-node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js
+node scripts/phase-workflow.js 7 tests/unit/program-loader-tests.js
 ```
 
 **Expected Output (if tests pass):**
@@ -2736,9 +2903,9 @@ node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js
 - Review test failures
 - Fix implementation issues
 - Re-run tests until all pass
-- **DO NOT proceed to Phase 7 until all tests pass**
+- **DO NOT proceed to Phase 8 until all tests pass**
 
-### Phase 6 Completion Criteria
+### Phase 7 Completion Criteria
 
 - ✅ All unit tests pass (100% success rate)
 - ✅ Complete UI functional
@@ -2757,7 +2924,7 @@ yarn test:run tests/unit/program-loader-tests.js
 
 ---
 
-## PHASE 7: Z80 Assembler Integration
+## PHASE 8: Z80 Assembler Integration
 
 ### Test File Setup
 
@@ -3227,16 +3394,16 @@ yarn test:run tests/unit/assembler-tests.js
 - Error reporting (3+ tests)
 - Symbol table generation (3+ tests)
 
-### ⚠️ PHASE 7 TEST GATE
+### ⚠️ PHASE 8 TEST GATE
 
 **CRITICAL:** Use the phase workflow script to enforce the test gate:
 
 ```bash
-# Run Phase 7 tests with workflow script (waits for user confirmation)
-yarn phase:7
+# Run Phase 8 tests with workflow script (waits for user confirmation)
+yarn phase:8
 
 # OR manually:
-node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js
+node scripts/phase-workflow.js 8 tests/unit/assembler-tests.js
 ```
 
 **Expected Output (if tests pass):**
@@ -3258,10 +3425,10 @@ node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js
 ```bash
 # Run all tests to ensure complete system works
 yarn test:run
-# Expected: All 172+ tests pass
+# Expected: All 217+ tests pass
 ```
 
-### Phase 7 Completion Criteria
+### Phase 8 Completion Criteria
 
 - ✅ All assembler modules integrated
 - ✅ Assembly editor UI functional
@@ -3284,7 +3451,7 @@ yarn test:run
 ```bash
 # Run all tests to ensure complete system works
 yarn test:run
-# Expected: All 172+ tests pass
+# Expected: All 217+ tests pass
 ```
 
 ---
@@ -3318,21 +3485,28 @@ yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
 # Expected: 37 tests pass
 ```
 
-**Phase 4 - Video:**
+**Phase 4 - BASIC Program Execution:**
+
+```bash
+yarn test:run tests/unit/basic-program-tests.js
+# Expected: 45 tests pass
+```
+
+**Phase 5 - Video Display System:**
 
 ```bash
 yarn test:run tests/unit/video-tests.js
 # Expected: 32 tests pass
 ```
 
-**Phase 5 - Integration:**
+**Phase 6 - System Integration:**
 
 ```bash
 yarn test:run tests/integration/cpu-memory-integration.js
 # Expected: Integration tests pass
 ```
 
-**Phase 6 - Program Loader:**
+**Phase 7 - Program Loader:**
 
 ```bash
 yarn test:run tests/unit/program-loader-tests.js
@@ -3343,7 +3517,7 @@ yarn test:run tests/unit/program-loader-tests.js
 
 ```bash
 yarn test:run
-# Expected: 172+ tests pass
+# Expected: 217+ tests pass
 ```
 
 ### Test Coverage Goals
@@ -3860,10 +4034,11 @@ yarn dev
 2. **Phase 1:** Implement CPU core, run tests, verify
 3. **Phase 2:** Implement memory system, run tests, verify
 4. **Phase 3:** Implement cassette & I/O, run tests, verify
-5. **Phase 4:** Implement video system, run tests, verify
-6. **Phase 5:** System integration, run tests, verify
-7. **Phase 6:** UI and sample programs, run tests, verify
-8. **Phase 7:** Assembler integration, verify
+5. **Phase 4:** Test BASIC program execution, run tests, verify
+6. **Phase 5:** Implement video system, run tests, verify
+7. **Phase 6:** System integration, run tests, verify
+8. **Phase 7:** UI and sample programs, run tests, verify
+9. **Phase 8:** Assembler integration, verify
 
 **After each phase:**
 
@@ -3888,6 +4063,7 @@ echo $?
 - Phase 5: `yarn phase:5`
 - Phase 6: `yarn phase:6`
 - Phase 7: `yarn phase:7`
+- Phase 8: `yarn phase:8`
 
 **The workflow script will:**
 
@@ -4122,16 +4298,19 @@ yarn test:run tests/unit/memory-tests.js
 # Phase 3: Cassette & I/O
 yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js
 
-# Phase 4: Video
+# Phase 4: BASIC Program Execution
+yarn test:run tests/unit/basic-program-tests.js
+
+# Phase 5: Video Display System
 yarn test:run tests/unit/video-tests.js
 
-# Phase 5: Integration
+# Phase 6: System Integration
 yarn test:run tests/integration/cpu-memory-integration.js
 
-# Phase 6: Program Loader
+# Phase 7: Program Loader
 yarn test:run tests/unit/program-loader-tests.js
 
-# Phase 7: Assembler
+# Phase 8: Assembler
 yarn test:run tests/unit/assembler-tests.js
 
 # All Tests
@@ -4239,7 +4418,7 @@ This enhanced build prompt incorporates:
 
 ### 2. ✅ Enhanced Test Integration
 
-- Complete test suite reference (172+ tests)
+- Complete test suite reference (217+ tests)
 - Phase-by-phase test execution
 - Test gates between phases
 - Coverage requirements
@@ -4309,7 +4488,7 @@ This enhanced build prompt incorporates:
 **This prompt is production-ready for LLM consumption with:**
 
 - ✅ Maximum clarity - No ambiguous requirements
-- ✅ Complete test suite - 172+ tests provided
+- ✅ Complete test suite - 217+ tests provided
 - ✅ Sequential workflow - Phase-by-phase with gates
 - ✅ Complete specifications - Every requirement detailed
 - ✅ Verifiable success - 53 specific checkpoints
@@ -4332,7 +4511,7 @@ This enhanced build prompt incorporates:
 **Document Stats:**
 
 - **Enhanced specifications** with assembler integration
-- **172+ comprehensive tests** organized by phase
+- **217+ comprehensive tests** organized by phase
 - **53 verifiable** success criteria
 - **7 development phases** with test gates
 - **Complete build and deployment** specifications

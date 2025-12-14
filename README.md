@@ -8,28 +8,32 @@ A web-based emulator for the TRS-80 Model III computer, built with JavaScript an
 
 ## Current Status
 
-**Phase 2: Memory Management System** ✅ **COMPLETE**
+**Phase 4: BASIC Program Execution** ✅ **COMPLETE**
 
-The emulator currently implements a complete Z80 CPU with full instruction set support and a comprehensive memory management system. A browser-based development console allows you to run comprehensive CPU and memory tests directly in the browser.
+The emulator currently implements a complete Z80 CPU with full instruction set support, comprehensive memory management, cassette I/O system, and BASIC program execution capabilities. A browser-based development console allows you to run comprehensive tests directly in the browser with detailed assembly, opcodes, and BASIC source code display.
 
-![TRS-80 Emulator UI](docs/phase2-ui-screenshot.png)
+![Phase 1 Test Results](docs/phase1-test-results.png)
+![Phase 4 BASIC Source & Results](docs/phase4-basic-modal.png)
 
 ### ✅ Implemented Features
 
 - **Complete Z80 CPU Emulation**: Full instruction set implementation (252+ opcodes including CB, ED, DD, FD prefixes)
 - **Memory Management System**: 16K ROM + 48K RAM with proper memory mapping, ROM protection, and program loading
-- **Browser Test Console**: Interactive test runner for Phase 1 CPU tests and Phase 2 memory tests
+- **Cassette I/O System**: Tape loading/saving simulation, CLOAD/CSAVE operations, cassette motor control
+- **BASIC Program Execution**: ROM loading, program storage, CPU execution with ROM, CLOAD integration
+- **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, and BASIC source code display
 - **Comprehensive Test Suites**:
-  - 130+ CPU tests with 100% pass rate
-  - 27 memory system tests with 100% pass rate
+  - 52 Phase 1 CPU tests with 100% pass rate (organized by complexity, showing opcodes and assembly)
+  - 28 Phase 2 memory system tests with 100% pass rate (showing relevant Z80 memory opcodes)
+  - 33 Phase 3 cassette & I/O tests with 100% pass rate (showing IN/OUT opcodes and descriptions)
+  - 41 Phase 4 BASIC program tests with 97.6% pass rate (showing BASIC source code and expected output)
 
 ### 🚧 Planned Features (Future Phases)
 
-- **Video Display**: 128x48 pixel character-based graphics
-- **Cassette Interface**: Load and save programs
-- **BASIC Interpreter**: Run TRS-80 BASIC programs
-- **Z80 Assembler**: In-browser assembly editing and compilation
-- **Sample Programs**: 12 built-in BASIC programs and 5 assembly routines
+- **Video Display**: 128x48 pixel character-based graphics (Phase 5)
+- **System Integration**: Complete system boot, keyboard input, display updates (Phase 6)
+- **Z80 Assembler**: In-browser assembly editing and compilation (Phase 8)
+- **Sample Programs Library**: 15 built-in BASIC programs and 5 assembly routines (Phase 7)
 
 ## Technology Stack
 
@@ -67,11 +71,13 @@ The emulator will be available at `http://localhost:3000`
 The emulator includes a built-in development console accessible at the live demo URL. The console provides:
 
 - **Phase 0: Design Document**: View the complete design document inline in the console with full scrolling support
-- **Phase 1: Z80 CPU Test Runner**: Run comprehensive CPU tests directly in the browser with scrollable results
-- **Phase 2: Memory System Test Runner**: Run comprehensive memory system tests directly in the browser with scrollable results
+- **Phase 1: Z80 CPU Test Runner**: Run 52 comprehensive CPU tests with assembly mnemonics and opcode bytes displayed
+- **Phase 2: Memory System Test Runner**: Run 28 memory system tests with relevant Z80 memory opcodes
+- **Phase 3: Cassette & I/O Test Runner**: Run 33 cassette and I/O tests with IN/OUT opcodes and detailed descriptions
+- **Phase 4: BASIC Program Test Runner**: Run 41 BASIC program execution tests with source code and expected output modals
 - **Interactive Test Results**: View detailed test execution and results with keyboard and mouse navigation
+- **BASIC Source Code Modal**: Click "View BASIC Source & Results" links to see program source code and expected PRINT output
 - **Real-time Logging**: See CPU operations, memory operations, register states, and test outcomes
-- **Design Document Link**: Direct link to the rendered design document
 - **Full Viewport Layout**: All tabs take up the entire viewport width and height
 - **Scrollable Content**: All tabs support mouse wheel scrolling and keyboard navigation (arrow keys, Page Up/Down)
 - **Smart Scroll Behavior**: Console content starts at the top when tests begin, allowing you to scroll down to view all results as they load
@@ -80,22 +86,27 @@ To use the development console:
 
 1. Visit [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 2. Click "Phase 0: Design Doc" to view the design document inline (scrollable)
-3. Click "Phase 1: Z80 CPU" to run CPU tests (console starts at top, scroll down to view results)
-4. Click "Phase 2: Memory System" to run memory system tests (console starts at top, scroll down to view results)
-5. View test results and execution details in the scrollable console
-6. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
-7. The console automatically maintains scroll position at the top so you can see when content finishes loading
-8. Use the link at the bottom to open the design document in a new page
+3. Click "Phase 1: Z80 CPU" to run 52 CPU tests with assembly and opcodes displayed
+4. Click "Phase 2: Memory System" to run 28 memory tests with memory opcodes displayed
+5. Click "Phase 3: Cassette & I/O" to run 33 I/O tests with IN/OUT opcodes displayed
+6. Click "Phase 4: BASIC Programs" to run 41 BASIC program tests
+7. **View BASIC Source**: Click "View BASIC Source & Results" links in Phase 4 tests to see program source code and expected output in a modal
+8. View test results and execution details in the scrollable console
+9. Use mouse wheel or keyboard (arrow keys, Page Up/Down) to navigate long test results
+10. The console automatically maintains scroll position at the top so you can see when content finishes loading
 
 For browser developer tools (F12), the console will show:
 
 - CPU execution logs (Phase 1)
 - Memory access logs (Phase 2)
-- I/O port operations (when implemented)
+- I/O port operations (Phase 3)
+- BASIC program execution (Phase 4)
 - Test results
 - Debug information
 
 **Note**: The browser console uses optimized logging for loop-based tests to reduce noise while maintaining full test coverage. Summary messages are provided for tests that verify large address ranges.
+
+**Phase 4 Learning Features**: Each BASIC program test includes a clickable link to view the program source code and expected output in a modal window. This makes it easy to see both what the program does (source) and what it produces (output), perfect for learning BASIC programming.
 
 ### Testing
 
@@ -113,8 +124,10 @@ yarn test:run
 yarn test:coverage
 
 # Run tests for a specific phase
-yarn test:run tests/unit/cpu-tests.js      # Phase 1: CPU tests
-yarn test:run tests/unit/memory-tests.js   # Phase 2: Memory tests
+yarn test:run tests/unit/cpu-tests.js           # Phase 1: CPU tests (52 tests)
+yarn test:run tests/unit/memory-tests.js        # Phase 2: Memory tests (28 tests)
+yarn test:run tests/unit/cassette-tests.js tests/unit/io-tests.js  # Phase 3: Cassette & I/O tests (33 tests)
+yarn test:run tests/unit/basic-program-tests.js # Phase 4: BASIC program tests (45 tests)
 ```
 
 ### Phase-by-Phase Development
@@ -127,6 +140,12 @@ yarn phase:1
 
 # Run Phase 2 tests with workflow script (waits for user confirmation)
 yarn phase:2
+
+# Run Phase 3 tests
+yarn phase:3
+
+# Run Phase 4 tests
+yarn phase:4
 
 # Or manually run phase workflow
 node scripts/phase-workflow.js <phase-number> <test-files>
@@ -158,22 +177,29 @@ This project follows a phased development approach. See the [Complete Design Doc
 - Cycle-accurate timing
 - Browser-based test runner
 - Interactive development console
-- **Tests**: All 130 Phase 1 tests passing ✅ (100% success rate)
+- **Tests**: All 52 Phase 1 tests passing ✅ (100% success rate)
+- **Learning Tool**: All tests display assembly mnemonics and opcode bytes in the web UI
 - **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+
+**Screenshot**: See `docs/phase1-test-results.png` for Phase 1 test results display
 
 #### Phase 1 Test Results
 
 The browser-based development console provides real-time test execution and results. The console displays:
 
-- Test execution progress
+- **Assembly mnemonics** (e.g., "LD A, 0x42", "LDIR", "JP 0x5000") for each instruction test
+- **Opcode bytes** (e.g., "0x3E 0x42", "0xED 0xB0", "0xC3 0x00 0x50") showing the actual machine code
+- Test execution progress organized by complexity levels (Levels 1-13)
 - Detailed test results for each suite
 - Summary statistics (Total, Passed, Failed)
 - Success confirmation when all tests pass
-- **Fully scrollable content**: The console automatically focuses when Phase 1 is activated, starting at the top so you can scroll down to view all 130+ test results using mouse wheel or keyboard (arrow keys, Page Up/Down)
+- **Fully scrollable content**: The console automatically focuses when Phase 1 is activated, starting at the top so you can scroll down to view all 52 test results using mouse wheel or keyboard (arrow keys, Page Up/Down)
+
+**Learning Features**: Each test that executes Z80 instructions shows both the assembly mnemonic and the opcode bytes, making this a valuable learning tool for understanding Z80 assembly language and machine code.
 
 ### ✅ Phase 2: Memory Management System
 
-**Status**: Complete ✅ **CURRENT PHASE**
+**Status**: Complete ✅
 
 - **16K ROM + 48K RAM mapping**: Complete 64KB address space (0x0000-0x3FFF ROM, 0x4000-0xFFFF RAM)
 - **ROM protection**: Writes to ROM area are ignored (except video RAM)
@@ -185,7 +211,8 @@ The browser-based development console provides real-time test execution and resu
 - **Memory statistics**: Get detailed memory usage and status information
 - **RAM management**: Clear RAM while preserving ROM
 - **Browser-based test runner**: Interactive test execution with optimized logging
-- **Tests**: All 27 Phase 2 tests passing ✅ (100% success rate)
+- **Tests**: All 28 Phase 2 tests passing ✅ (100% success rate)
+- **Learning Tool**: All memory operation tests display relevant Z80 opcodes and assembly instructions
 - **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
 #### Phase 2 Test Results
@@ -193,53 +220,102 @@ The browser-based development console provides real-time test execution and resu
 The browser-based development console provides real-time test execution and results for the memory system. The Phase 2 test suite includes:
 
 - **Initialization tests** (3 tests): Memory system setup and statistics
-- **ROM loading tests** (3 tests): 16KB ROM loading, size validation, data integrity
-- **Memory reading tests** (3 tests): ROM reads, RAM reads, 16-bit word reads
-- **Memory writing tests** (3 tests): RAM writes, high RAM writes, 16-bit word writes
-- **ROM protection tests** (3 tests): Write protection, video RAM writability, full range verification
-- **RAM operations tests** (3 tests): Sequential reads/writes, boundary testing
-- **Program loading tests** (5 tests): Default address, custom address, array support, validation, edge cases
-- **RAM management tests** (2 tests): RAM clearing, ROM preservation
-- **Address wrapping tests** (2 tests): 16-bit wrapping, address masking
+- **ROM loading tests** (3 tests): 16KB ROM loading, size validation, data integrity (shows opcodes stored in ROM)
+- **Memory reading tests** (3 tests): ROM reads, RAM reads, 16-bit word reads (shows LD A, (nn), LD HL, (nn) opcodes)
+- **Memory writing tests** (3 tests): RAM writes, high RAM writes, 16-bit word writes (shows LD (nn), A, LD (nn), HL opcodes)
+- **ROM protection tests** (3 tests): Write protection, video RAM writability, full range verification (shows ROM protection behavior)
+- **RAM operations tests** (3 tests): Sequential reads/writes, boundary testing (shows LD (HL), A and LD A, (HL) patterns)
+- **Program loading tests** (5 tests): Default address, custom address, array support, validation, edge cases (shows complete program opcodes)
+- **RAM management tests** (2 tests): RAM clearing, ROM preservation (shows memory management operations)
+- **Address wrapping tests** (2 tests): 16-bit wrapping, address masking (shows 16-bit address handling)
 
-All 27 tests pass with 100% success rate, verifying proper memory management, ROM protection, and program loading capabilities.
+All 28 tests pass with 100% success rate, verifying proper memory management, ROM protection, and program loading capabilities.
+
+**Learning Features**: Each memory operation test displays the relevant Z80 assembly instruction and opcode bytes (e.g., "LD A, (0x4000)" with opcode "0x3A 0x00 0x40"), making it easy to understand how the Z80 CPU accesses memory. This helps learners connect memory operations to actual Z80 instructions.
 
 **Optimized Logging**: The test runner uses intelligent logging that reduces verbosity for loop-based tests (e.g., video RAM range testing) while maintaining full test coverage. This provides a clean, readable output while ensuring all assertions are verified.
 
-### ⏳ Phase 3: Cassette I/O System
+### ✅ Phase 3: Cassette I/O System
 
-**Status**: Pending
+**Status**: Complete ✅
 
-- Cassette interface simulation
-- Load/save programs
-- Tape format support
+- **Cassette interface simulation**: Tape loading/saving, CLOAD/CSAVE operations
+- **Cassette motor control**: Port 0xFE control, motor on/off states
+- **Tape data management**: Load tape data, simulate CLOAD operations
+- **I/O port handling**: Port 0xFF (keyboard), Port 0xFE (cassette), Port 0xEC (system control)
+- **Browser-based test runner**: Interactive test execution with IN/OUT opcodes displayed
+- **Tests**: All 33 Phase 3 tests passing ✅ (100% success rate)
+- **Learning Tool**: All I/O tests display assembly mnemonics (IN/OUT) and opcode bytes
+- **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
-### ⏳ Phase 4: Video Display System
+### ✅ Phase 4: BASIC Program Execution
+
+**Status**: Complete ✅ **CURRENT PHASE**
+
+- **ROM loading**: Load ModelIII.rom (14KB or 16KB) into memory system
+- **Program storage**: Store BASIC programs at default (0x4200) or custom addresses
+- **CPU execution with ROM**: Execute Z80 instructions from ROM (BASIC interpreter)
+- **CLOAD integration**: Load programs via cassette system simulation
+- **Memory layout**: Proper ROM (0x0000-0x3FFF) and RAM (0x4000-0xFFFF) separation
+- **Program execution flow**: Programs can call ROM routines, use stack operations
+- **Browser-based test runner**: Interactive test execution with BASIC source code display
+- **BASIC Source Modal**: Click links to view program source code and expected output
+- **Tests**: 41 Phase 4 browser tests (97.6% pass rate), 45 unit tests total
+- **Learning Tool**: All tests display BASIC source code, expected output, assembly mnemonics, and opcode bytes
+- **Live**: Available at [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
+
+#### Phase 4 Test Coverage
+
+The Phase 4 test suite includes:
+
+- **ROM Loading tests** (4 tests): ROM validation, size handling, data reading, write protection
+- **Program Storage tests** (4 tests): Default address, custom address, multiple programs, ROM preservation
+- **CPU Execution with ROM tests** (4 tests): Instruction execution, jumps, calls, multi-instruction sequences
+- **Program Execution Flow tests** (3 tests): RAM execution, ROM routine calls, stack operations
+- **CLOAD Integration tests** (3 tests): CLOAD simulation, program execution after load, I/O operations
+- **Memory Layout tests** (4 tests): Address ranges, ROM/RAM separation, program boundaries
+- **Simple BASIC Programs tests** (4 tests): PRINT statements, multi-line programs, variables, GOTO statements
+- **Advanced BASIC Programs tests** (9 tests): GOTO loops, random numbers, nested loops, arithmetic, strings, conditionals
+- **Complex Scenarios tests** (3 tests): Large programs, stack operations, loops
+- **Integration tests** (3 tests): Complete CLOAD/RUN flow, I/O operations, program persistence
+
+**Learning Features**: Each BASIC program test includes a "View BASIC Source & Results" link that opens a modal showing:
+
+- The program's BASIC source code
+- The expected program output (from PRINT statements)
+
+This makes it easy to see both what the program does and what it produces, perfect for learning BASIC programming on the TRS-80.
+
+**Screenshot**: See `docs/phase4-basic-modal.png` for the BASIC source code and results modal display
+
+### ⏳ Phase 5: Video Display System
 
 **Status**: Pending
 
 - 128x48 character display
 - Graphics mode support
 - Character ROM rendering
+- SET/RESET/POINT pixel operations
 
-### ⏳ Phase 5: System Integration
+### ⏳ Phase 6: System Integration
 
 **Status**: Pending
 
 - ROM boot sequence
-- BASIC interpreter integration
+- Complete system initialization
 - Keyboard input handling
+- Component integration
 
-### ⏳ Phase 6: Sample Programs Library and User Interface
+### ⏳ Phase 7: Sample Programs Library and User Interface
 
 **Status**: Pending
 
-- 12 BASIC sample programs
+- 15 BASIC sample programs (from Phase 4 data)
 - 5 assembly routines
-- Web-based UI
+- Web-based UI enhancements
 - Program editor
 
-### ⏳ Phase 7: Z80 Assembler Integration
+### ⏳ Phase 8: Z80 Assembler Integration
 
 **Status**: Pending
 
@@ -303,15 +379,25 @@ trs80-emulator/
 ├── src/
 │   ├── core/
 │   │   ├── z80cpu.js          # Z80 CPU emulator (Phase 1 ✅)
-│   │   └── memory.js          # Memory management system (Phase 2 ✅)
-│   ├── browser-test-runner.js           # Browser test runner for Phase 1
-│   ├── browser-test-runner-phase2.js    # Browser test runner for Phase 2
+│   │   ├── memory.js          # Memory management system (Phase 2 ✅)
+│   │   └── io.js              # I/O system (Phase 3 ✅)
+│   ├── peripherals/
+│   │   └── cassette.js        # Cassette system (Phase 3 ✅)
+│   ├── data/
+│   │   └── basic-programs.js  # BASIC program examples (Phase 4 ✅)
+│   ├── browser-test-runner.js           # Browser test runner for Phase 1 (52 tests)
+│   ├── browser-test-runner-phase2.js    # Browser test runner for Phase 2 (28 tests)
+│   ├── browser-test-runner-phase3.js    # Browser test runner for Phase 3 (33 tests)
+│   ├── browser-test-runner-phase4.js    # Browser test runner for Phase 4 (41 tests)
 │   ├── test-runner.js         # Test runner utilities
 │   └── main.js                # Application entry point
 ├── tests/
 │   └── unit/
-│       ├── cpu-tests.js       # Phase 1 CPU tests (130+ tests)
-│       └── memory-tests.js    # Phase 2 Memory tests (27 tests)
+│       ├── cpu-tests.js       # Phase 1 CPU tests (52 tests, organized by complexity)
+│       ├── memory-tests.js    # Phase 2 Memory tests (28 tests)
+│       ├── cassette-tests.js  # Phase 3 Cassette tests
+│       ├── io-tests.js        # Phase 3 I/O tests
+│       └── basic-program-tests.js  # Phase 4 BASIC program tests (45 tests)
 ├── scripts/
 │   ├── postbuild.js           # Post-build script with serve instructions
 │   ├── render-docs.js         # Markdown to HTML documentation renderer
@@ -346,8 +432,10 @@ trs80-emulator/
 
 ### Phase Workflows
 
-- `yarn phase:1` - Run Phase 1 test gate workflow
-- `yarn phase:2` - Run Phase 2 test gate workflow
+- `yarn phase:1` - Run Phase 1 test gate workflow (52 CPU tests)
+- `yarn phase:2` - Run Phase 2 test gate workflow (28 memory tests)
+- `yarn phase:3` - Run Phase 3 test gate workflow (33 cassette & I/O tests)
+- `yarn phase:4` - Run Phase 4 test gate workflow (45 BASIC program tests)
 
 ### Deployment
 

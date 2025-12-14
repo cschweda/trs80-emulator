@@ -131,6 +131,84 @@
       button:hover {
         background: #0ff;
       }
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        overflow: auto;
+      }
+      .modal-content {
+        background-color: #000;
+        margin: 5% auto;
+        padding: 20px;
+        border: 2px solid #0f0;
+        width: 80%;
+        max-width: 800px;
+        color: #0f0;
+        font-family: monospace;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #0f0;
+        padding-bottom: 10px;
+      }
+      .modal-header h2 {
+        margin: 0;
+        color: #0f0;
+      }
+      .close {
+        color: #0f0;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+      .close:hover {
+        color: #0ff;
+      }
+      .modal-body {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding: 10px;
+      }
+      .modal-body pre {
+        background: #111;
+        padding: 15px;
+        border: 1px solid #0f0;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: #0ff;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      #basic-modal-results {
+        background: #1a1a1a;
+        color: #0f0;
+        border-color: #0f0;
+      }
+      .basic-link {
+        color: #0ff;
+        text-decoration: underline;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+      .basic-link:hover {
+        color: #0f0;
+      }
     </style>
   </head>
   <body>
@@ -139,10 +217,33 @@
       <button onclick="showDesignDoc()">Phase 0: Design Doc</button>
       <button onclick="runCPUTest()">Phase 1: Z80 CPU</button>
       <button onclick="runMemoryTest()">Phase 2: Memory System</button>
+      <button onclick="runPhase3Test()">Phase 3: Cassette & I/O</button>
+      <button onclick="runPhase4Test()">Phase 4: BASIC Programs</button>
     </div>
     <div id="console" tabindex="0"></div>
     <div id="design-doc-container" style="display: none">
       <div id="design-doc-content"></div>
+    </div>
+
+    <!-- BASIC Program Modal -->
+    <div id="basic-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="basic-modal-header">BASIC Program Source Code</h2>
+          <button class="close" onclick="closeBasicModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="basic-modal-title"></div>
+          <div style="margin-bottom: 20px">
+            <h3 style="color: #0ff; margin-bottom: 10px">BASIC Source Code:</h3>
+            <pre id="basic-modal-source"></pre>
+          </div>
+          <div id="basic-modal-results-container" style="display: none">
+            <h3 style="color: #0ff; margin-bottom: 10px">Program Output:</h3>
+            <pre id="basic-modal-results"></pre>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="./src/main.js"></script>

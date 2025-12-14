@@ -198,16 +198,13 @@ export async function runAllPhase1Tests(logFn) {
   function runTest(testName, testFn, metadata = {}) {
     results.total++;
 
-    // Display test with assembly, opcode, and description if available
+    // Display test with assembly and opcode if available
     let testHeader = `  🧪 Running: ${testName}`;
     if (metadata.assembly) {
       testHeader += `\n     📝 Assembly: ${metadata.assembly}`;
     }
     if (metadata.opcode) {
       testHeader += `\n     🔢 Opcode: ${metadata.opcode}`;
-    }
-    if (metadata.description) {
-      testHeader += `\n     💡 ${metadata.description}`;
     }
     logFn(testHeader, "info");
 
@@ -218,13 +215,12 @@ export async function runAllPhase1Tests(logFn) {
       const duration = (endTime - startTime).toFixed(2);
       results.passed++;
 
-      // Display success with assembly/opcode/description info
+      // Display success with assembly/opcode info
       let successMsg = `  ✅ ${testName} (${duration}ms)`;
-      if (metadata.assembly || metadata.opcode || metadata.description) {
+      if (metadata.assembly || metadata.opcode) {
         const parts = [];
         if (metadata.assembly) parts.push(`📝 Assembly: ${metadata.assembly}`);
         if (metadata.opcode) parts.push(`🔢 Opcode: ${metadata.opcode}`);
-        if (metadata.description) parts.push(`💡 ${metadata.description}`);
         successMsg += `\n     ${parts.join(" | ")}`;
       }
       logFn(successMsg, "success");
@@ -553,45 +549,29 @@ export async function runAllPhase1Tests(logFn) {
 
   // ============================================================================
   // LEVEL 1: BASIC CPU INITIALIZATION (2 tests)
-  // Tests CPU initialization and reset functionality
   // ============================================================================
   runSuite("LEVEL 1: CPU Initialization", () => {
-    runTest(
-      "1.1 - CPU initializes with default values",
-      () => {
-        const cpu = new Z80CPU();
-        expect(cpu.registers.PC).toBe(0x0000);
-        expect(cpu.registers.SP).toBe(0xffff);
-        expect(cpu.halted).toBe(false);
-      },
-      {
-        description:
-          "Verifies CPU starts in correct initial state - PC at 0x0000, SP at 0xFFFF, not halted",
-      }
-    );
+    runTest("1.1 - CPU initializes with default values", () => {
+      const cpu = new Z80CPU();
+      expect(cpu.registers.PC).toBe(0x0000);
+      expect(cpu.registers.SP).toBe(0xffff);
+      expect(cpu.halted).toBe(false);
+    });
 
-    runTest(
-      "1.2 - CPU reset restores initial state",
-      () => {
-        const cpu = new Z80CPU();
-        cpu.registers.PC = 0x1234;
-        cpu.registers.SP = 0x5678;
-        cpu.halted = true;
-        cpu.reset();
-        expect(cpu.registers.PC).toBe(0x0000);
-        expect(cpu.registers.SP).toBe(0xffff);
-        expect(cpu.halted).toBe(false);
-      },
-      {
-        description:
-          "Tests reset() function - restores all registers and flags to initial values",
-      }
-    );
+    runTest("1.2 - CPU reset restores initial state", () => {
+      const cpu = new Z80CPU();
+      cpu.registers.PC = 0x1234;
+      cpu.registers.SP = 0x5678;
+      cpu.halted = true;
+      cpu.reset();
+      expect(cpu.registers.PC).toBe(0x0000);
+      expect(cpu.registers.SP).toBe(0xffff);
+      expect(cpu.halted).toBe(false);
+    });
   });
 
   // ============================================================================
   // LEVEL 2: SIMPLE 8-BIT LOAD INSTRUCTIONS (5 tests)
-  // Tests basic 8-bit load operations - immediate values and register-to-register transfers
   // ============================================================================
   runSuite("LEVEL 2: Simple 8-bit Load Instructions", () => {
     runTest(
@@ -607,8 +587,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD A, 0x42",
         opcode: "0x3E 0x42",
-        description:
-          "Loads 8-bit immediate value into accumulator A - PC advances by 2 bytes (opcode + operand)",
       }
     );
 
@@ -624,8 +602,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD B, 0x55",
         opcode: "0x06 0x55",
-        description:
-          "Loads 8-bit immediate value into B register - demonstrates register-specific load opcodes",
       }
     );
 
@@ -641,8 +617,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD C, 0xAA",
         opcode: "0x0E 0xAA",
-        description:
-          "Loads 8-bit immediate value into C register - each register has its own load immediate opcode",
       }
     );
 
@@ -658,8 +632,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD A, B",
         opcode: "0x78",
-        description:
-          "Copies value from B register to accumulator A - register-to-register transfer, single byte opcode",
       }
     );
 
@@ -675,15 +647,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD B, A",
         opcode: "0x47",
-        description:
-          "Copies value from accumulator A to B register - reverse direction of register transfer",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 3: 16-BIT LOAD INSTRUCTIONS (4 tests)
-  // Tests loading 16-bit immediate values into register pairs (little-endian byte order)
   // ============================================================================
   runSuite("LEVEL 3: 16-bit Load Instructions", () => {
     runTest(
@@ -700,8 +669,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD HL, 0x1234",
         opcode: "0x21 0x34 0x12",
-        description:
-          "Loads 16-bit value into HL register pair - Z80 uses little-endian (low byte first, then high byte), PC advances by 3 bytes",
       }
     );
 
@@ -718,8 +685,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD BC, 0x5678",
         opcode: "0x01 0x78 0x56",
-        description:
-          "Loads 16-bit value into BC register pair - BC often used for loop counters and block operations",
       }
     );
 
@@ -736,8 +701,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD DE, 0x9ABC",
         opcode: "0x11 0xBC 0x9A",
-        description:
-          "Loads 16-bit value into DE register pair - DE often used as destination pointer in block operations",
       }
     );
 
@@ -754,15 +717,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD SP, 0x4000",
         opcode: "0x31 0x00 0x40",
-        description:
-          "Loads 16-bit value into stack pointer SP - sets stack location for PUSH/POP operations",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 4: MEMORY ACCESS INSTRUCTIONS (4 tests)
-  // Tests reading from and writing to memory using HL as pointer and absolute addresses
   // ============================================================================
   runSuite("LEVEL 4: Memory Access Instructions", () => {
     runTest(
@@ -778,8 +738,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD (HL), 0xAA",
         opcode: "0x36 0xAA",
-        description:
-          "Stores immediate value to memory address in HL - HL acts as memory pointer, 2-byte instruction",
       }
     );
 
@@ -796,8 +754,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD A, (HL)",
         opcode: "0x7E",
-        description:
-          "Loads byte from memory address in HL into accumulator A - HL is most common memory pointer register",
       }
     );
 
@@ -814,8 +770,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD (HL), B",
         opcode: "0x70",
-        description:
-          "Stores register B to memory address in HL - single-byte opcode for register-to-memory transfer",
       }
     );
 
@@ -833,15 +787,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD A, (0x5000)",
         opcode: "0x3A 0x00 0x50",
-        description:
-          "Loads byte from absolute 16-bit address into accumulator - 3-byte instruction (opcode + address), uses little-endian address",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 5: ARITHMETIC OPERATIONS (6 tests)
-  // Tests addition, subtraction, increment, decrement, and flag calculations
   // ============================================================================
   runSuite("LEVEL 5: Arithmetic Operations", () => {
     runTest(
@@ -859,8 +810,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "ADD A, B",
         opcode: "0x80",
-        description:
-          "Adds register B to accumulator A - result in A, flags updated (C=carry, Z=zero), no overflow in this case",
       }
     );
 
@@ -879,8 +828,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "ADD A, 0x01",
         opcode: "0xC6 0x01",
-        description:
-          "Adds immediate value to accumulator - demonstrates overflow: 0xFF + 0x01 = 0x00 with carry flag set and zero flag set",
       }
     );
 
@@ -899,8 +846,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "SUB A, B",
         opcode: "0x90",
-        description:
-          "Subtracts register B from accumulator A - N flag set (subtraction), C flag clear (no borrow needed)",
       }
     );
 
@@ -917,8 +862,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "INC A",
         opcode: "0x3C",
-        description:
-          "Increments accumulator A by 1 - faster than ADD A, 1, flags updated (Z flag set if result is 0)",
       }
     );
 
@@ -936,8 +879,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "DEC A",
         opcode: "0x3D",
-        description:
-          "Decrements accumulator A by 1 - demonstrates wrap-around: 0x00 - 1 = 0xFF, N flag set (subtraction)",
       }
     );
 
@@ -954,15 +895,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "ADD HL, BC",
         opcode: "0x09",
-        description:
-          "Adds 16-bit register pair BC to HL - used for pointer arithmetic and address calculations",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 6: LOGICAL OPERATIONS (4 tests)
-  // Tests bitwise logical operations (AND, OR, XOR) and comparison operations
   // ============================================================================
   runSuite("LEVEL 6: Logical Operations", () => {
     runTest(
@@ -979,8 +917,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "AND B",
         opcode: "0xA0",
-        description:
-          "Bitwise AND of A and B - result in A, H flag set (half-carry for AND), used for masking bits",
       }
     );
 
@@ -997,8 +933,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "OR B",
         opcode: "0xB0",
-        description:
-          "Bitwise OR of A and B - result in A, combines bits from both operands",
       }
     );
 
@@ -1016,8 +950,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "XOR B",
         opcode: "0xA8",
-        description:
-          "Bitwise XOR of A and B - result in A, Z flag set when result is zero, XOR with self clears register",
       }
     );
 
@@ -1035,15 +967,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "CP B",
         opcode: "0xB8",
-        description:
-          "Compares A with B (subtracts but doesn't store result) - A unchanged, flags set (Z=1 if equal), used for conditional jumps",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 7: CONTROL FLOW - JUMPS (4 tests)
-  // Tests program counter manipulation - absolute and relative jumps, conditional branches
   // ============================================================================
   runSuite("LEVEL 7: Control Flow - Jumps", () => {
     runTest(
@@ -1059,8 +988,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "JP 0x5000",
         opcode: "0xC3 0x00 0x50",
-        description:
-          "Unconditional absolute jump to 16-bit address - PC set to target address, 3-byte instruction",
       }
     );
 
@@ -1078,8 +1005,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "JP Z, 0x5000",
         opcode: "0xCA 0x00 0x50",
-        description:
-          "Conditional jump if zero flag is set - jumps to address if Z=1, otherwise continues to next instruction",
       }
     );
 
@@ -1097,8 +1022,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "JP NZ, 0x5000",
         opcode: "0xC2 0x00 0x50",
-        description:
-          "Conditional jump if zero flag is clear - jumps to address if Z=0, used for 'if not equal' branches",
       }
     );
 
@@ -1115,15 +1038,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "JR +5",
         opcode: "0x18 0x05",
-        description:
-          "Relative jump using signed offset - PC = PC + 2 + offset (0x1000 + 2 + 5 = 0x1007), 2-byte instruction, position-independent code",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 8: STACK OPERATIONS (3 tests)
-  // Tests stack manipulation - PUSH/POP for saving registers, CALL for subroutines
   // ============================================================================
   runSuite("LEVEL 8: Stack Operations", () => {
     runTest(
@@ -1141,8 +1061,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "PUSH BC",
         opcode: "0xC5",
-        description:
-          "Pushes 16-bit register pair BC onto stack - SP decrements by 2, low byte (C) stored first, then high byte (B), stack grows downward",
       }
     );
 
@@ -1161,8 +1079,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "POP BC",
         opcode: "0xC1",
-        description:
-          "Pops 16-bit value from stack into BC - SP increments by 2, restores previously saved register pair",
       }
     );
 
@@ -1184,15 +1100,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "CALL 0x5000",
         opcode: "0xCD 0x00 0x50",
-        description:
-          "Calls subroutine at address - pushes return address (PC+3) onto stack, jumps to subroutine address, enables function calls",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 9: CB PREFIX - BIT OPERATIONS (5 tests)
-  // Tests CB prefix instructions - bit manipulation, rotates, and shifts
   // ============================================================================
   runSuite("LEVEL 9: CB Prefix - Bit Operations", () => {
     runTest(
@@ -1209,8 +1122,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "RLC B",
         opcode: "0xCB 0x00",
-        description:
-          "Rotates register B left circular - bit 7 moves to bit 0 and carry flag, 2-byte instruction (CB prefix + opcode)",
       }
     );
 
@@ -1228,8 +1139,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "RRC C",
         opcode: "0xCB 0x09",
-        description:
-          "Rotates register C right circular - bit 0 moves to bit 7 and carry flag, opposite direction of RLC",
       }
     );
 
@@ -1247,8 +1156,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "SLA H",
         opcode: "0xCB 0x24",
-        description:
-          "Shifts register H left arithmetic - multiplies by 2, bit 7 goes to carry, bit 0 becomes 0, preserves sign bit behavior",
       }
     );
 
@@ -1266,8 +1173,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "BIT 0, B",
         opcode: "0xCB 0x40",
-        description:
-          "Tests bit 0 in register B - Z flag clear (bit is set), H flag set (always for BIT), register unchanged, used for conditional logic",
       }
     );
 
@@ -1284,15 +1189,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "SET 0, D",
         opcode: "0xCB 0xC2",
-        description:
-          "Sets bit 0 in register D to 1 - modifies register, used for setting flags or control bits",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 10: ED PREFIX - EXTENDED INSTRUCTIONS (5 tests)
-  // Tests ED prefix instructions - block transfers, extended loads, and special operations
   // ============================================================================
   runSuite("LEVEL 10: ED Prefix - Extended Instructions", () => {
     runTest(
@@ -1314,8 +1216,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LDI",
         opcode: "0xED 0xA0",
-        description:
-          "Loads byte from (HL) to (DE), increments HL and DE, decrements BC - single iteration of block copy, 2-byte instruction",
       }
     );
 
@@ -1344,8 +1244,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LDIR",
         opcode: "0xED 0xB0",
-        description:
-          "Repeats LDI until BC=0 - copies block of memory from (HL) to (DE), efficient for memcpy operations, continues until BC reaches zero",
       }
     );
 
@@ -1367,8 +1265,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "CPI",
         opcode: "0xED 0xA1",
-        description:
-          "Compares A with (HL), increments HL, decrements BC - Z flag set if match found, used for searching memory blocks",
       }
     );
 
@@ -1387,8 +1283,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "NEG",
         opcode: "0xED 0x44",
-        description:
-          "Negates accumulator using two's complement - A = 0 - A, C flag always set (unless A was 0), N flag set (subtraction)",
       }
     );
 
@@ -1408,15 +1302,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD BC, (0x5000)",
         opcode: "0xED 0x4B 0x00 0x50",
-        description:
-          "Loads 16-bit value from absolute address into BC - reads little-endian word from memory, 4-byte instruction (ED prefix + opcode + address)",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 11: DD/FD PREFIX - INDEX REGISTERS (4 tests)
-  // Tests IX and IY index register operations - used for indexed addressing modes
   // ============================================================================
   runSuite("LEVEL 11: DD/FD Prefix - Index Registers", () => {
     runTest(
@@ -1433,8 +1324,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD IX, 0x1234",
         opcode: "0xDD 0x21 0x34 0x12",
-        description:
-          "Loads 16-bit value into IX index register - DD prefix selects IX, 4-byte instruction, IX used for indexed memory access",
       }
     );
 
@@ -1452,8 +1341,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD IY, 0x5678",
         opcode: "0xFD 0x21 0x78 0x56",
-        description:
-          "Loads 16-bit value into IY index register - FD prefix selects IY, IY often used for system variables and data structures",
       }
     );
 
@@ -1471,8 +1358,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "ADD IX, BC",
         opcode: "0xDD 0x09",
-        description:
-          "Adds 16-bit register pair BC to IX - used for pointer arithmetic with index registers, 2-byte instruction",
       }
     );
 
@@ -1493,15 +1378,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "RLC (IX+5)",
         opcode: "0xDD 0xCB 0x05 0x06",
-        description:
-          "Rotates memory byte at (IX+5) left circular - indexed addressing with displacement, 4-byte instruction, operates on memory not register",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 12: SPECIAL INSTRUCTIONS (4 tests)
-  // Tests special CPU control and arithmetic instructions
   // ============================================================================
   runSuite("LEVEL 12: Special Instructions", () => {
     runTest(
@@ -1516,8 +1398,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "NOP",
         opcode: "0x00",
-        description:
-          "No operation - does nothing except advance PC, used for timing delays and code alignment",
       }
     );
 
@@ -1532,8 +1412,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "HALT",
         opcode: "0x76",
-        description:
-          "Halts CPU execution - sets halted flag, CPU stops until interrupt or reset, used to stop programs cleanly",
       }
     );
 
@@ -1550,8 +1428,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "DAA",
         opcode: "0x27",
-        description:
-          "Decimal adjust accumulator - corrects binary addition result to BCD (Binary Coded Decimal), used for decimal arithmetic (9+5=14 in BCD)",
       }
     );
 
@@ -1569,15 +1445,12 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "CPL",
         opcode: "0x2F",
-        description:
-          "Complements accumulator (bitwise NOT) - inverts all bits, H and N flags set, used for logical operations",
       }
     );
   });
 
   // ============================================================================
   // LEVEL 13: COMPLETE PROGRAM EXECUTION (2 tests)
-  // Tests complete program sequences - multiple instructions working together
   // ============================================================================
   runSuite("LEVEL 13: Complete Program Execution", () => {
     runTest(
@@ -1603,8 +1476,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "LD A, 0x55; LD B, 0xAA; ADD A, B; HALT",
         opcode: "0x3E 0x55, 0x06 0xAA, 0x80, 0x76",
-        description:
-          "Complete program: loads two values, adds them (0x55 + 0xAA = 0xFF), sets flags (S=sign, H=half-carry), then halts - demonstrates instruction sequencing",
       }
     );
 
@@ -1632,8 +1503,6 @@ export async function runAllPhase1Tests(logFn) {
       {
         assembly: "CALL 0x5000; LD A, 0x42; RET",
         opcode: "0xCD 0x00 0x50, 0x3E 0x42, 0xC9",
-        description:
-          "Complete subroutine: CALL saves return address on stack, subroutine executes (loads A), RET restores PC from stack - demonstrates function call/return mechanism",
       }
     );
   });

@@ -20,10 +20,11 @@
     "phase:1": "node scripts/phase-workflow.js 1 tests/unit/cpu-tests.js",
     "phase:2": "node scripts/phase-workflow.js 2 tests/unit/memory-tests.js",
     "phase:3": "node scripts/phase-workflow.js 3 \"tests/unit/cassette-tests.js tests/unit/io-tests.js\"",
-    "phase:4": "node scripts/phase-workflow.js 4 tests/unit/video-tests.js",
-    "phase:5": "node scripts/phase-workflow.js 5 tests/integration/cpu-memory-integration.js",
-    "phase:6": "node scripts/phase-workflow.js 6 tests/unit/program-loader-tests.js",
-    "phase:7": "node scripts/phase-workflow.js 7 tests/unit/assembler-tests.js"
+    "phase:4": "node scripts/phase-workflow.js 4 tests/unit/basic-program-tests.js",
+    "phase:5": "node scripts/phase-workflow.js 5 tests/unit/video-tests.js",
+    "phase:6": "node scripts/phase-workflow.js 6 tests/integration/cpu-memory-integration.js",
+    "phase:7": "node scripts/phase-workflow.js 7 tests/unit/program-loader-tests.js",
+    "phase:8": "node scripts/phase-workflow.js 8 tests/unit/assembler-tests.js"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.0",
