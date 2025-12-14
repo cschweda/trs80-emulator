@@ -209,6 +209,21 @@
       .basic-link:hover {
         color: #0f0;
       }
+      .graphics-link {
+        color: #0ff;
+        text-decoration: underline;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+      .graphics-link:hover {
+        color: #0f0;
+      }
+      #graphics-modal-canvas {
+        background: #000;
+        border: 2px solid #0f0;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
     </style>
   </head>
   <body>
@@ -219,6 +234,7 @@
       <button onclick="runMemoryTest()">Phase 2: Memory System</button>
       <button onclick="runPhase3Test()">Phase 3: Cassette & I/O</button>
       <button onclick="runPhase4Test()">Phase 4: BASIC Programs</button>
+      <button onclick="runPhase5Test()">Phase 5: Video Display</button>
     </div>
     <div id="console" tabindex="0"></div>
     <div id="design-doc-container" style="display: none">
@@ -241,6 +257,34 @@
           <div id="basic-modal-results-container" style="display: none">
             <h3 style="color: #0ff; margin-bottom: 10px">Program Output:</h3>
             <pre id="basic-modal-results"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphics Display Modal -->
+    <div id="graphics-modal" class="modal">
+      <div class="modal-content" style="max-width: 900px">
+        <div class="modal-header">
+          <h2 id="graphics-modal-header">Graphics Display & Source Code</h2>
+          <button class="close" onclick="closeGraphicsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="graphics-modal-title"></div>
+          <div style="margin-bottom: 20px">
+            <h3 style="color: #0ff; margin-bottom: 10px">
+              Graphics Display (128×48):
+            </h3>
+            <canvas
+              id="graphics-modal-canvas"
+              width="512"
+              height="192"
+              style="display: block; margin: 10px auto"
+            ></canvas>
+          </div>
+          <div style="margin-bottom: 20px">
+            <h3 style="color: #0ff; margin-bottom: 10px">BASIC Source Code:</h3>
+            <pre id="graphics-modal-source"></pre>
           </div>
         </div>
       </div>

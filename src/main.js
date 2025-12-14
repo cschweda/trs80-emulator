@@ -93,6 +93,58 @@ window.closeBasicModal = function () {
   if (modal) modal.style.display = "none";
 };
 
+// Graphics Modal Functions
+window.showGraphicsModal = function (title, source, graphicsData = null) {
+  const modal = document.getElementById("graphics-modal");
+  const modalHeader = document.getElementById("graphics-modal-header");
+  const titleDiv = document.getElementById("graphics-modal-title");
+  const sourcePre = document.getElementById("graphics-modal-source");
+  const canvas = document.getElementById("graphics-modal-canvas");
+
+  if (!modal || !modalHeader || !titleDiv || !sourcePre || !canvas) {
+    console.error("Graphics modal elements not found");
+    return;
+  }
+
+  modalHeader.textContent = "Graphics Display & Source Code";
+  titleDiv.innerHTML = `<h3 style="color: #0ff; margin-bottom: 10px;">${title}</h3>`;
+  sourcePre.textContent = source;
+
+  // Render graphics if provided
+  if (graphicsData) {
+    const ctx = canvas.getContext("2d");
+    const scale = 4;
+    canvas.width = 128 * scale;
+    canvas.height = 48 * scale;
+
+    // Fill background
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw pixels
+    ctx.fillStyle = "#00FF00"; // TRS-80 green
+    for (let y = 0; y < 48; y++) {
+      for (let x = 0; x < 128; x++) {
+        if (graphicsData[y] && graphicsData[y][x] === 1) {
+          ctx.fillRect(x * scale, y * scale, scale, scale);
+        }
+      }
+    }
+  } else {
+    // Clear canvas
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  modal.style.display = "block";
+};
+
+window.closeGraphicsModal = function () {
+  const modal = document.getElementById("graphics-modal");
+  if (modal) modal.style.display = "none";
+};
+
 // Event delegation for BASIC source links
 // Use capture phase to ensure we catch the event
 document.addEventListener(
@@ -136,6 +188,52 @@ document.addEventListener(
     // Close modal when clicking close button
     if (event.target.classList && event.target.classList.contains("close")) {
       closeBasicModal();
+      closeGraphicsModal();
+      return;
+    }
+
+    // Handle graphics links
+    let graphicsTarget = event.target;
+    while (graphicsTarget && graphicsTarget !== document.body) {
+      if (
+        graphicsTarget.classList &&
+        graphicsTarget.classList.contains("graphics-link")
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        const title =
+          graphicsTarget.getAttribute("data-graphics-title") ||
+          "Graphics Display";
+        let source = graphicsTarget.getAttribute("data-graphics-source") || "";
+        const graphicsDataStr =
+          graphicsTarget.getAttribute("data-graphics-data");
+
+        // Decode HTML entities
+        source = source
+          .replace(/&#10;/g, "\n")
+          .replace(/&#13;/g, "\r")
+          .replace(/&quot;/g, '"');
+
+        // Parse graphics data if provided (JSON string)
+        let graphicsData = null;
+        if (graphicsDataStr) {
+          try {
+            graphicsData = JSON.parse(graphicsDataStr);
+          } catch (e) {
+            console.error("Failed to parse graphics data:", e);
+          }
+        }
+
+        showGraphicsModal(title, source, graphicsData);
+        return;
+      }
+      graphicsTarget = graphicsTarget.parentElement;
+    }
+
+    // Close graphics modal when clicking outside
+    const graphicsModal = document.getElementById("graphics-modal");
+    if (event.target === graphicsModal) {
+      closeGraphicsModal();
       return;
     }
   },
@@ -689,9 +787,109 @@ window.runPhase4Test = async function () {
   }
 };
 
+// Phase 5 Video Display Test function
+window.runPhase5Test = async function () {
+  showTab("console");
+  consoleDiv.innerHTML = "";
+  consoleDiv.scrollTop = 0;
+
+  log("═══════════════════════════════════════════════════════════", "info");
+  log("Video Display System Comprehensive Test Suite - Phase 5", "info");
+  log("═══════════════════════════════════════════════════════════", "info");
+  log("");
+  log("🚀 Starting Phase 5: Video Display System Test Suite...", "info");
+  log("📥 Loading Phase 5 test runner...", "info");
+  log("");
+
+  try {
+    const { runAllPhase5Tests } = await import(
+      "./browser-test-runner-phase5.js"
+    );
+    const results = await runAllPhase5Tests(log);
+
+    log("═══════════════════════════════════════════════════════════", "info");
+    log("📊 Test Results Summary:", "info");
+    log(`  Total Tests: ${results.total}`, "info");
+    log(
+      `  ✅ Passed: ${results.passed}`,
+      results.passed === results.total ? "success" : "info"
+    );
+    log(
+      `  ❌ Failed: ${results.failed}`,
+      results.failed > 0 ? "error" : "success"
+    );
+    log("");
+
+    if (results.errors.length > 0) {
+      log(
+        "═══════════════════════════════════════════════════════════",
+        "error"
+      );
+      log("❌ Test Failures:", "error");
+      log(
+        "═══════════════════════════════════════════════════════════",
+        "error"
+      );
+      log("");
+      results.errors.forEach((err, idx) => {
+        const testName = err.test || "Unknown test";
+        const suiteName = err.suite || "Unknown suite";
+        log(
+          `  ┌─ Failure #${
+            idx + 1
+          } ────────────────────────────────────────────┐`,
+          "error"
+        );
+        log(`  │ Suite: ${suiteName.padEnd(50)} │`, "error");
+        log(`  │ Test:  ${testName.padEnd(50)} │`, "error");
+        const errorMsg = (err.error || "Unknown error").substring(0, 50);
+        log(`  │ Error: ${errorMsg.padEnd(50)} │`, "error");
+        log(
+          `  └───────────────────────────────────────────────────────────────┘`,
+          "error"
+        );
+        log("");
+      });
+    }
+
+    if (results.failed === 0 && results.total > 0) {
+      log("✅ All tests passed!", "success");
+    } else if (results.total === 0) {
+      log("⚠️  No tests were executed", "error");
+    } else {
+      log(`⚠️  ${results.failed} test(s) failed. See errors above.`, "error");
+    }
+
+    log("═══════════════════════════════════════════════════════════", "info");
+    log(
+      "💡 Note: Click 'View Graphics & Source' links to see graphics and BASIC code",
+      "info"
+    );
+    log("═══════════════════════════════════════════════════════════", "info");
+
+    requestAnimationFrame(() => {
+      consoleDiv.scrollTop = 0;
+      setTimeout(() => {
+        consoleDiv.scrollTop = 0;
+      }, 100);
+    });
+
+    return results;
+  } catch (error) {
+    log(`❌ Fatal Error: ${error.message}`, "error");
+    log(error.stack, "error");
+    return {
+      total: 0,
+      passed: 0,
+      failed: 1,
+      errors: [{ suite: "Setup", error: error.message }],
+    };
+  }
+};
+
 // Initial message
 log("TRS-80 Model III Emulator - Development Console Ready", "success");
 log(
-  'Click "Phase 0: Design Doc", "Phase 1: Z80 CPU", "Phase 2: Memory System", "Phase 3: Cassette & I/O", or "Phase 4: BASIC Programs" to get started',
+  'Click "Phase 0: Design Doc", "Phase 1: Z80 CPU", "Phase 2: Memory System", "Phase 3: Cassette & I/O", "Phase 4: BASIC Programs", or "Phase 5: Video Display" to get started',
   "info"
 );
