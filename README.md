@@ -8,9 +8,9 @@ A web-based emulator for the TRS-80 Model III computer, built with JavaScript an
 
 ## Current Status
 
-**Phase 5: Video Display System** ✅ **COMPLETE**
+**Phase 6: Real ROM Boot** ✅ **COMPLETE**
 
-The emulator currently implements a complete Z80 CPU with full instruction set support, comprehensive memory management, cassette I/O system, BASIC program execution, and a full 128×48 pixel graphics display system. A browser-based development console allows you to run comprehensive tests directly in the browser with detailed assembly, opcodes, BASIC source code, and graphics display.
+The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — exactly like pressing the orange reset button on a non-disk Model III. The app launches straight into the machine: answer `Cass?` and `Memory Size?` with ENTER and you're at the genuine Level II `READY` prompt, typing BASIC that executes in ROM on the emulated Z80 at 2.03 MHz, with the 30 Hz heartbeat interrupt driving the blinking cursor and clock. A full-screen mode, TRS-80/modern screen fonts, and adjustable screen sizes make it usable for real coding; the Phase 0–6 development consoles live in the View dropdown.
 
 ![Phase 1 Test Results](docs/phase1-test-results.png)
 ![Phase 4 BASIC Source & Results](docs/phase4-basic-modal.png)
@@ -30,11 +30,18 @@ The emulator currently implements a complete Z80 CPU with full instruction set s
   - 32 Phase 4 BASIC program tests with 100% pass rate (showing BASIC source code and expected output)
   - 61 Phase 5 video display tests with 100% pass rate (showing graphics patterns, SET/RESET/POINT, and CHR$() examples)
 
+**Phase 7: Storage & Library** ✅ **COMPLETE**
+
+- **.cas cassette loading**: BASIC and SYSTEM (machine-code) tapes fast-load from the MACHINE menu — drop in your own game tapes (e.g. Big Five titles from bigfivesoftware.com)
+- **Dual disk drives**: WD1793 FDC emulation (ports 0xF0-0xF4, NMI via 0xE4) with JV1/JV3 `.dsk` mounting — mount LDOS/TRSDOS in drive 0, games/data in drive 1, press RESET to boot the DOS
+- **Program Library**: built-in public-domain BASIC classics (Hammurabi, Lunar Lander, Hurkle, Number Guess) turbo-typed into the real ROM, plus paste-BASIC-from-clipboard
+- See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the implementation map and extension guide
+
 ### 🚧 Planned Features (Future Phases)
 
-- **System Integration**: Complete system boot, keyboard input, display updates (Phase 6)
-- **Sample Programs Library**: 15 built-in BASIC programs and 5 assembly routines (Phase 7)
-- **Z80 Assembler**: In-browser assembly editing and compilation (Phase 8)
+- **DOS FORMAT support** (WD1793 WRITE TRACK), disk-image export, DMK format
+- **Authentic cassette audio** (bit-level port 0xFF playback) and cassette-out sound
+- **Printer** (0x37E8), **RS-232** (0xE8-0xEB), **Z80 Assembler** (later phases)
 
 ## Technology Stack
 

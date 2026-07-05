@@ -478,7 +478,8 @@ export async function runAllPhase2Tests(logFn) {
         memory.writeByte(0x3c00, 0x55);
 
         expect(memory.readByte(0x3c00)).toBe(0x55);
-        expect(memory.rom[0x3c00]).toBe(0x55);
+        // Video RAM is its own 1K array on the Model III, not part of ROM
+        expect(memory.videoRam[0]).toBe(0x55);
       },
       {
         assembly: "LD (0x3C00), A",

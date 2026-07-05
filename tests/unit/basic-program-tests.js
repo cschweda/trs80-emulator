@@ -120,7 +120,8 @@ describe("BASIC Program Execution - CPU Execution with ROM", () => {
   beforeEach(() => {
     memory = new MemorySystem();
     cpu = new Z80CPU();
-    cpu.memory = memory;
+    cpu.readMemory = (addr) => memory.readByte(addr);
+    cpu.writeMemory = (addr, value) => memory.writeByte(addr, value);
   });
 
   it("should execute instruction from ROM", () => {
@@ -277,7 +278,8 @@ describe("BASIC Program Execution - Program Execution Flow", () => {
   beforeEach(() => {
     memory = new MemorySystem();
     cpu = new Z80CPU();
-    cpu.memory = memory;
+    cpu.readMemory = (addr) => memory.readByte(addr);
+    cpu.writeMemory = (addr, value) => memory.writeByte(addr, value);
   });
 
   it("should execute program loaded from ROM", () => {
@@ -345,7 +347,8 @@ describe("BASIC Program Execution - Simple BASIC Programs", () => {
     const romData = new Uint8Array(0x4000);
     memory.loadROM(romData);
     cpu = new Z80CPU();
-    cpu.memory = memory;
+    cpu.readMemory = (addr) => memory.readByte(addr);
+    cpu.writeMemory = (addr, value) => memory.writeByte(addr, value);
     cassette = new CassetteSystem();
   });
 
@@ -398,7 +401,8 @@ describe("BASIC Program Execution - Simple BASIC Programs", () => {
     cassette.simulateCLoad(memory);
 
     expect(memory.readByte(0x4200)).toBe(0x0a); // Line 10
-    expect(memory.readByte(0x4207)).toBe(0x14); // Line 20
+    // Line 10 occupies 8 bytes (0x4200-0x4207); line 20 starts at 0x4208
+    expect(memory.readByte(0x4208)).toBe(0x14); // Line 20
   });
 
   it("should handle program with variables", () => {
@@ -423,7 +427,8 @@ describe("BASIC Program Execution - Simple BASIC Programs", () => {
     cassette.simulateCLoad(memory);
 
     expect(memory.readByte(0x4200)).toBe(0x0a);
-    expect(memory.readByte(0x4206)).toBe(0x14);
+    // LET A=2 line occupies 7 bytes (0x4200-0x4206); line 20 starts at 0x4207
+    expect(memory.readByte(0x4207)).toBe(0x14);
   });
 
   it("should handle program with GOTO statement", () => {
@@ -450,7 +455,8 @@ describe("BASIC Program Execution - Simple BASIC Programs", () => {
     cassette.simulateCLoad(memory);
 
     expect(memory.readByte(0x4200)).toBe(0x0a);
-    expect(memory.readByte(0x4205)).toBe(0x14);
+    // GOTO 20 line occupies 6 bytes (0x4200-0x4205); line 20 starts at 0x4206
+    expect(memory.readByte(0x4206)).toBe(0x14);
   });
 });
 
@@ -464,7 +470,8 @@ describe("BASIC Program Execution - Complex Scenarios", () => {
     const romData = new Uint8Array(0x4000);
     memory.loadROM(romData);
     cpu = new Z80CPU();
-    cpu.memory = memory;
+    cpu.readMemory = (addr) => memory.readByte(addr);
+    cpu.writeMemory = (addr, value) => memory.writeByte(addr, value);
     cassette = new CassetteSystem();
   });
 
@@ -548,7 +555,8 @@ describe("BASIC Program Execution - Integration Tests", () => {
     const romData = new Uint8Array(0x4000);
     memory.loadROM(romData);
     cpu = new Z80CPU();
-    cpu.memory = memory;
+    cpu.readMemory = (addr) => memory.readByte(addr);
+    cpu.writeMemory = (addr, value) => memory.writeByte(addr, value);
     cassette = new CassetteSystem();
     io = new IOSystem();
   });

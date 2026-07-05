@@ -73,11 +73,20 @@ describe("VideoSystem - Character ROM", () => {
     expect(char128.every((byte) => byte === 0x00)).toBe(true);
   });
 
-  it("should generate correct graphics pattern for char 129 (bottom-right on)", () => {
+  it("should generate correct graphics pattern for char 129 (top-left on)", () => {
+    // Level II manual encoding: CHR$(128 + 1) lights the TOP-LEFT pixel
     const char129 = video.charRom[129];
-    // Bottom-right pixel should be on (bit 0)
-    // This affects the bottom row (rows 8-11)
-    expect(char129[8] & 0x0f).toBe(0x0f); // Bottom-right pixel
+    expect(char129[0] & 0xf0).toBe(0xf0); // Top-left pixel (rows 0-3)
+    expect(char129[8]).toBe(0x00); // Bottom row untouched
+  });
+
+  it("should render the ROM's cursor char 176 (0xB0) as a bottom underline", () => {
+    // CHR$(176) = +16 +32 = both bottom pixels: the Model III's blinking
+    // cursor is a low underline block, not a top bar.
+    const cursor = video.charRom[176];
+    expect(cursor[0]).toBe(0x00); // top row empty
+    expect(cursor[4]).toBe(0x00); // middle row empty
+    expect(cursor[8]).toBe(0xff); // bottom row fully lit
   });
 
   it("should generate correct graphics pattern for char 191 (all on)", () => {
@@ -110,26 +119,25 @@ describe("VideoSystem - SET Command (setPixel)", () => {
     const char = memory.readByte(0x3c00);
     expect(char).toBeGreaterThanOrEqual(128);
     expect(char).toBeLessThanOrEqual(191);
-    // Pixel (0,0) is top-left of first character block
-    // This should set bit 5 (top-left pixel)
+    // Pixel (0,0) is top-left of first character block: +1
     const pattern = char - 128;
-    expect(pattern & 0x20).toBe(0x20);
+    expect(pattern & 0x01).toBe(0x01);
   });
 
   it("should set pixel at (1, 0)", () => {
     expect(video.setPixel(1, 0, memory)).toBe(true);
     const char = memory.readByte(0x3c00);
     const pattern = char - 128;
-    // Pixel (1,0) is top-right of first character block (bit 4)
-    expect(pattern & 0x10).toBe(0x10);
+    // Pixel (1,0) is top-right of first character block: +2
+    expect(pattern & 0x02).toBe(0x02);
   });
 
   it("should set pixel at (0, 1)", () => {
     expect(video.setPixel(0, 1, memory)).toBe(true);
     const char = memory.readByte(0x3c00);
     const pattern = char - 128;
-    // Pixel (0,1) is middle-left (bit 3)
-    expect(pattern & 0x08).toBe(0x08);
+    // Pixel (0,1) is middle-left: +4
+    expect(pattern & 0x04).toBe(0x04);
   });
 
   it("should set pixel at (127, 47)", () => {
@@ -159,11 +167,11 @@ describe("VideoSystem - SET Command (setPixel)", () => {
   });
 
   it("should set multiple pixels in same character block", () => {
-    video.setPixel(0, 0, memory); // Top-left
-    video.setPixel(1, 0, memory); // Top-right
+    video.setPixel(0, 0, memory); // Top-left (+1)
+    video.setPixel(1, 0, memory); // Top-right (+2)
     const char = memory.readByte(0x3c00);
     const pattern = char - 128;
-    expect(pattern & 0x30).toBe(0x30); // Both top pixels
+    expect(pattern & 0x03).toBe(0x03); // Both top pixels
   });
 
   it("should set pixels across different character blocks", () => {
@@ -206,13 +214,13 @@ describe("VideoSystem - RESET Command (resetPixel)", () => {
     video.setPixel(0, 0, memory);
     let char = memory.readByte(0x3c00);
     let pattern = char - 128;
-    expect(pattern & 0x20).toBe(0x20); // Pixel is on
+    expect(pattern & 0x01).toBe(0x01); // Pixel is on
 
     // Then reset it
     expect(video.resetPixel(0, 0, memory)).toBe(true);
     char = memory.readByte(0x3c00);
     pattern = char - 128;
-    expect(pattern & 0x20).toBe(0); // Pixel is off
+    expect(pattern & 0x01).toBe(0); // Pixel is off
   });
 
   it("should not reset pixel if character is not graphics char", () => {
@@ -235,8 +243,8 @@ describe("VideoSystem - RESET Command (resetPixel)", () => {
     video.resetPixel(0, 0, memory);
     const char = memory.readByte(0x3c00);
     const pattern = char - 128;
-    expect(pattern & 0x20).toBe(0); // Top-left off
-    expect(pattern & 0x10).toBe(0x10); // Top-right still on
+    expect(pattern & 0x01).toBe(0); // Top-left off
+    expect(pattern & 0x02).toBe(0x02); // Top-right still on
   });
 
   it("should not reset pixel outside bounds", () => {
@@ -327,10 +335,10 @@ describe("VideoSystem - CHR$() Graphics Characters", () => {
     }
   });
 
-  it("should use CHR$(129) to set bottom-right pixel", () => {
+  it("should use CHR$(129) to set the top-left pixel", () => {
     memory.writeByte(0x3c00, 129);
-    expect(video.pointPixel(1, 2, memory)).toBe(-1); // Bottom-right
-    expect(video.pointPixel(0, 0, memory)).toBe(0); // Others off
+    expect(video.pointPixel(0, 0, memory)).toBe(-1); // Top-left (+1)
+    expect(video.pointPixel(1, 2, memory)).toBe(0); // Others off
   });
 
   it("should combine CHR$() with SET to modify graphics", () => {
@@ -339,7 +347,7 @@ describe("VideoSystem - CHR$() Graphics Characters", () => {
     // Use SET to turn on top-left
     video.setPixel(0, 0, memory);
     const char = memory.readByte(0x3c00);
-    expect(char).toBe(128 + 0x20); // Pattern should have bit 5 set
+    expect(char).toBe(129); // CHR$(128 + 1): top-left lit
   });
 });
 
@@ -820,5 +828,79 @@ describe("VideoSystem - Visual Verification Tests", () => {
         expect(video.pointPixel(x, y, memory)).toBe(0);
       }
     }
+  });
+});
+
+describe("VideoSystem - Character ROM glyphs", () => {
+  let video;
+
+  beforeEach(() => {
+    video = new VideoSystem();
+  });
+
+  it("defines a real glyph for every printable ASCII character", () => {
+    for (let code = 0x20; code <= 0x7e; code++) {
+      const glyph = video.charRom[code];
+      expect(glyph).toBeDefined();
+      expect(glyph).toHaveLength(12);
+      if (code !== 0x20) {
+        // Every visible character has at least one lit pixel
+        expect(glyph.some((row) => row !== 0)).toBe(true);
+      }
+    }
+  });
+
+  it("gives distinct characters distinct glyphs", () => {
+    const a = video.charRom[0x41].join(",");
+    const b = video.charRom[0x42].join(",");
+    const question = video.charRom[0x3f].join(",");
+
+    expect(a).not.toBe(b);
+    expect(a).not.toBe(question);
+  });
+
+  it("folds control codes 0x00-0x1F onto 0x40-0x5F like the hardware", () => {
+    expect(video.charRom[0x01].join(",")).toBe(video.charRom[0x41].join(","));
+  });
+
+  it("keeps graphics character 191 as the all-on 2x3 block", () => {
+    const glyph = video.charRom[191];
+    expect(glyph.every((row) => row === 0xff)).toBe(true);
+  });
+});
+
+describe("VideoSystem - selectable fonts", () => {
+  it("defaults to the authentic TRS-80 style font with true descenders", () => {
+    const video = new VideoSystem();
+
+    expect(video.fontName).toBe("trs80");
+    // 'g' (0x67) reaches below the baseline: rows 9-10 of the cell
+    const g = video.charRom[0x67];
+    expect(g[9] !== 0 || g[10] !== 0).toBe(true);
+  });
+
+  it("switches to the modern font and back", () => {
+    const video = new VideoSystem();
+    const authenticG = video.charRom[0x67].join(",");
+
+    video.setFont("modern");
+    expect(video.fontName).toBe("modern");
+    const modernG = video.charRom[0x67];
+    // Modern glyphs stay inside the 7-row band (no descender rows)
+    expect(modernG[9]).toBe(0);
+    expect(modernG[10]).toBe(0);
+    expect(modernG.join(",")).not.toBe(authenticG);
+
+    video.setFont("trs80");
+    expect(video.charRom[0x67].join(",")).toBe(authenticG);
+  });
+
+  it("keeps graphics characters identical across fonts", () => {
+    const video = new VideoSystem();
+    const block = video.charRom[191].join(",");
+
+    video.setFont("modern");
+
+    expect(video.charRom[191].join(",")).toBe(block);
   });
 });

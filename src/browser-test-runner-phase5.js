@@ -388,7 +388,7 @@ export async function runAllPhase5Tests(logFn) {
         expect(char).toBeGreaterThanOrEqual(128);
         expect(char).toBeLessThanOrEqual(191);
         const pattern = char - 128;
-        expect(pattern & 0x20).toBe(0x20);
+        expect(pattern & 0x01).toBe(0x01);
       },
       {
         description: "SET command turns on pixel at coordinates",
@@ -436,7 +436,7 @@ export async function runAllPhase5Tests(logFn) {
         video.setPixel(1, 0, memory); // Top-right
         const char = memory.readByte(0x3c00);
         const pattern = char - 128;
-        expect(pattern & 0x30).toBe(0x30); // Both top pixels
+        expect(pattern & 0x03).toBe(0x03); // Both top pixels
       },
       {
         description:
@@ -570,12 +570,12 @@ export async function runAllPhase5Tests(logFn) {
         video.setPixel(0, 0, memory);
         let char = memory.readByte(0x3c00);
         let pattern = char - 128;
-        expect(pattern & 0x20).toBe(0x20);
+        expect(pattern & 0x01).toBe(0x01);
 
         expect(video.resetPixel(0, 0, memory)).toBe(true);
         char = memory.readByte(0x3c00);
         pattern = char - 128;
-        expect(pattern & 0x20).toBe(0);
+        expect(pattern & 0x01).toBe(0);
       },
       {
         description: "RESET turns off pixel at coordinates",
@@ -608,8 +608,8 @@ export async function runAllPhase5Tests(logFn) {
         video.resetPixel(0, 0, memory);
         const char = memory.readByte(0x3c00);
         const pattern = char - 128;
-        expect(pattern & 0x20).toBe(0);
-        expect(pattern & 0x10).toBe(0x10);
+        expect(pattern & 0x01).toBe(0);
+        expect(pattern & 0x02).toBe(0x02);
       },
       {
         description: "RESET affects only specified pixel",
@@ -775,16 +775,16 @@ export async function runAllPhase5Tests(logFn) {
     );
 
     runTest(
-      "should use CHR$(129) to set bottom-right pixel",
+      "should use CHR$(129) to set top-left pixel",
       () => {
         const { video, memory } = setupVideo();
         memory.writeByte(0x3c00, 129);
-        expect(video.pointPixel(1, 2, memory)).toBe(-1);
-        expect(video.pointPixel(0, 0, memory)).toBe(0);
+        expect(video.pointPixel(0, 0, memory)).toBe(-1); // top-left (+1)
+        expect(video.pointPixel(1, 2, memory)).toBe(0);
       },
       {
-        description: "CHR$(129) sets only bottom-right pixel",
-        basicSource: `10 PRINT CHR$(129);\n' CHR$(129) = bottom-right pixel on`,
+        description: "CHR$(129) sets only the top-left pixel (+1)",
+        basicSource: `10 PRINT CHR$(129);\n' CHR$(129) = top-left pixel on`,
       }
     );
 
@@ -795,7 +795,7 @@ export async function runAllPhase5Tests(logFn) {
         memory.writeByte(0x3c00, 128);
         video.setPixel(0, 0, memory);
         const char = memory.readByte(0x3c00);
-        expect(char).toBe(128 + 0x20);
+        expect(char).toBe(128 + 0x01);
       },
       {
         description: "CHR$() and SET can be combined",

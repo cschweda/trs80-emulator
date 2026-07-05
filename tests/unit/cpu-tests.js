@@ -937,7 +937,7 @@ describe("LEVEL 13: Complete Program Execution", () => {
     expect(cpu.registers.A).toBe(0xff); // 0x55 + 0xAA = 0xFF
     expect(cpu.registers.B).toBe(0xaa);
     expect(cpu.flagS).toBe(1); // Sign flag (bit 7 set)
-    expect(cpu.flagH).toBe(1); // Half-carry flag
+    expect(cpu.flagH).toBe(0); // 0x5 + 0xA = 0xF: no carry out of bit 3
     expect(cpu.halted).toBe(true);
   });
 

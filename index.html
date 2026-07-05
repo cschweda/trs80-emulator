@@ -3,8 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TRS-80 Emulator - Phase 1</title>
+    <title>TRS-80 Model III</title>
     <style>
+      /* ------------------------------------------------------------------
+         Materials, from the machine itself:
+           --tandy-gray   warm putty gray of the one-piece cabinet
+           --bezel        the black CRT surround
+           --key-cap      beige-gray keycaps, black legends
+           --reset-orange the orange RESET key
+         The page backdrop is the dark room the machine glows in.
+         ------------------------------------------------------------------ */
+      :root {
+        --tandy-gray: #a9a295;
+        --tandy-gray-hi: #c2bcb0;
+        --tandy-gray-lo: #7d766c;
+        --bezel: #16181a;
+        --key-cap: #d8d2c4;
+        --key-side: #a49d8f;
+        --key-ink: #2a2721;
+        --reset-orange: #e0641e;
+        --room: #171310;
+        --phosphor: #00ff00;
+      }
       html,
       body {
         height: 100vh;
@@ -15,29 +35,418 @@
       }
       body {
         font-family: monospace;
-        background: #000;
+        background: var(--room);
         color: #0f0;
         display: flex;
         flex-direction: column;
         position: relative;
       }
-      h1 {
-        color: #0f0;
+
+      /* Slim development bar above the fiction */
+      #dev-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        padding: 8px 14px;
+        background: #0c0a09;
+        border-bottom: 1px solid #2a2521;
+      }
+      #dev-bar h1 {
+        color: #8f887e;
+        font-size: 13px;
+        letter-spacing: 2px;
+        margin: 0;
+        font-weight: normal;
+        text-transform: uppercase;
+      }
+      #dev-bar-controls {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      #dev-bar label {
+        color: #8f887e;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #view-select,
+      #font-select,
+      #scale-select {
+        background: #1c1916;
+        color: #d8d2c4;
+        border: 1px solid #3a342e;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+      #view-select:focus-visible,
+      #font-select:focus-visible,
+      #scale-select:focus-visible {
+        outline: 2px solid var(--reset-orange);
+        outline-offset: 1px;
+      }
+
+      /* ----------------------- Machine menu ----------------------------- */
+      #dev-bar-status {
+        color: #6d675e;
+        font-size: 12px;
+        margin: 0 14px;
+        flex: 1 1 auto;
         text-align: center;
-        margin: 10px 0;
-        flex-shrink: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .button-container {
+      #machine-menu {
         position: relative;
-        z-index: 10;
-        pointer-events: auto;
-        flex-shrink: 0;
-        padding: 10px;
+        z-index: 500;
       }
-      .button-container button {
+      #machine-menu-button {
+        background: #1c1916;
+        color: #d8d2c4;
+        border: 1px solid #3a342e;
+        font-family: monospace;
+        font-size: 12px;
+        letter-spacing: 1px;
+        padding: 5px 12px;
+        margin: 0;
+        cursor: pointer;
+      }
+      #machine-menu-button:hover {
+        border-color: var(--reset-orange);
+        background: rgba(40, 34, 28, 0.95);
+      }
+      #machine-menu-button:focus-visible {
+        outline: 2px solid var(--reset-orange);
+        outline-offset: 1px;
+      }
+      #machine-menu-panel {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
+        min-width: 230px;
+        background: rgba(16, 14, 12, 0.97);
+        border: 1px solid #3a342e;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      }
+      #machine-menu-panel[hidden] {
+        display: none;
+      }
+      #machine-menu-panel button {
+        background: transparent;
+        color: #d8d2c4;
+        border: none;
+        text-align: left;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 8px 10px;
+        margin: 0;
+        cursor: pointer;
+      }
+      #machine-menu-panel button:hover {
+        background: #2a241f;
+        color: #fff;
+      }
+      #machine-menu-panel button:focus-visible {
+        outline: 2px solid var(--reset-orange);
+        outline-offset: -2px;
+      }
+      .menu-separator {
+        height: 1px;
+        background: #3a342e;
+        margin: 4px 2px;
+      }
+      .menu-heading {
+        color: #8f887e;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 4px 10px 2px;
+      }
+      .menu-note {
+        color: #6d675e;
+        font-size: 11px;
+        padding: 2px 10px 6px;
+      }
+      #library-select {
+        margin: 2px 10px 4px;
+        background: #1c1916;
+        color: #d8d2c4;
+        border: 1px solid #3a342e;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 4px 6px;
+      }
+
+      /* ------------------------- Theater mode ---------------------------
+         Full-screen for real work: the nav/status bar stays pinned at the
+         top, the screen fills everything below it, and the case chrome
+         gets out of the way. Esc remains BREAK, so leaving theater mode
+         happens through the MACHINE menu (or F11 for true fullscreen). */
+      body.theater #drive-column,
+      body.theater #badge-row,
+      body.theater #machine-hint {
+        display: none;
+      }
+      body.theater #machine-stage {
+        padding: 0;
+        overflow: hidden;
+      }
+      body.theater #machine-case {
+        background: #000;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+        max-width: none;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      body.theater #machine-face {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+      body.theater #crt-bezel {
+        background: #000;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+      body.theater #crt-well {
+        border-radius: 0;
+        /* Largest 8:3 rectangle that fits under the 42px nav bar;
+           a fixed Size selection overrides this via inline style. */
+        width: min(100vw, calc((100vh - 42px) * 2.6667));
+      }
+      /* Fixed-scale screens center inside whichever mode is active */
+      #crt-well[data-fixed-scale] {
+        margin: 0 auto;
+      }
+
+      /* --------------------------- The machine --------------------------- */
+      #machine-stage {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 22px 12px 12px;
+        box-sizing: border-box;
+      }
+      #machine-case {
+        background: linear-gradient(
+          172deg,
+          var(--tandy-gray-hi) 0%,
+          var(--tandy-gray) 38%,
+          var(--tandy-gray-lo) 100%
+        );
+        border-radius: 18px 18px 10px 10px;
+        border: 1px solid #5d574e;
+        box-shadow:
+          0 30px 60px rgba(0, 0, 0, 0.65),
+          inset 0 2px 3px rgba(255, 255, 255, 0.35);
+        padding: 26px 28px 20px;
+        max-width: 1160px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      #machine-face {
+        display: grid;
+        grid-template-columns: minmax(0, 2.2fr) minmax(140px, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+      #crt-bezel {
+        background: linear-gradient(180deg, #26282b 0%, var(--bezel) 60%);
+        border-radius: 14px;
+        padding: clamp(14px, 3vw, 30px);
+        box-shadow:
+          inset 0 0 0 2px #000,
+          inset 0 4px 10px rgba(0, 0, 0, 0.8),
+          0 1px 0 rgba(255, 255, 255, 0.25);
+      }
+      #crt-well {
         position: relative;
-        z-index: 11;
-        pointer-events: auto;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #020402;
+      }
+      #emulator-screen {
+        display: block;
+        width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        background: #020402;
+        outline: none;
+        filter: drop-shadow(0 0 6px rgba(0, 255, 80, 0.35));
+      }
+      /* Glass: faint scanlines and a corner sheen; purely decorative */
+      #crt-glass {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.16) 0px,
+            rgba(0, 0, 0, 0.16) 1px,
+            transparent 1px,
+            transparent 3px
+          ),
+          radial-gradient(
+            ellipse at 18% 8%,
+            rgba(255, 255, 255, 0.10) 0%,
+            transparent 42%
+          );
+        border-radius: 10px;
+      }
+      #drive-column {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        justify-content: flex-start;
+        padding-top: 6px;
+      }
+      /* Blank plates where the disk drives would be: this is the cassette model */
+      .drive-blank {
+        height: 64px;
+        border-radius: 8px;
+        background:
+          repeating-linear-gradient(
+            180deg,
+            #23211e 0px,
+            #23211e 6px,
+            #1a1816 6px,
+            #1a1816 12px
+          );
+        border: 2px solid #4c463e;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+      }
+      #case-vents {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 8px 6px 0;
+      }
+      #case-vents span {
+        display: block;
+        height: 3px;
+        border-radius: 2px;
+        background: rgba(0, 0, 0, 0.28);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+      }
+      #badge-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 16px 2px 2px;
+      }
+      #trs80-badge {
+        background: #111;
+        border-radius: 4px;
+        padding: 5px 12px 6px;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 10px;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9),
+          0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      .badge-trs {
+        font-family: Arial, "Helvetica Neue", sans-serif;
+        font-weight: 900;
+        font-size: 18px;
+        letter-spacing: 1px;
+        color: #d6d2c8;
+      }
+      .badge-model {
+        font-family: Arial, "Helvetica Neue", sans-serif;
+        font-size: 10px;
+        letter-spacing: 3px;
+        color: #9a958c;
+      }
+      #emulator-status {
+        color: #4c463e;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      #emulator-reset {
+        /* The orange RESET key, isolated at the right of the deck */
+        background: linear-gradient(180deg, #f07830 0%, var(--reset-orange) 70%, #b04c12 100%);
+        color: #241205;
+        border: 1px solid #8a3c0e;
+        border-bottom-width: 4px;
+        border-radius: 6px;
+        margin: 0;
+        padding: 0 18px;
+        height: 40px;
+        align-self: flex-start;
+        font-family: Arial, "Helvetica Neue", sans-serif;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        cursor: pointer;
+      }
+      #emulator-reset:hover {
+        background: linear-gradient(180deg, #ff8a42 0%, #ef6f24 70%, #b04c12 100%);
+      }
+      #emulator-reset:active {
+        transform: translateY(2px);
+        border-bottom-width: 2px;
+      }
+      #emulator-reset:focus-visible {
+        outline: 3px solid #0ff;
+        outline-offset: 2px;
+      }
+      #machine-hint {
+        color: #6d675e;
+        font-size: 12px;
+        max-width: 960px;
+        margin: 12px 4px 0;
+      }
+
+      @media (max-width: 720px) {
+        #machine-face {
+          grid-template-columns: 1fr;
+        }
+        #drive-column {
+          flex-direction: row;
+          align-items: center;
+        }
+        .drive-blank {
+          flex: 1 1 0;
+          height: 40px;
+        }
+        #case-vents {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #emulator-reset:active {
+          transform: none;
+        }
       }
       #console {
         background: #000;
@@ -224,21 +633,282 @@
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
+      /* Phase 6 Command-Line Interface Styles */
+      #phase6-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0;
+        width: calc(100% - 20px);
+        margin: 0 10px;
+        min-height: 0;
+        box-sizing: border-box;
+      }
+      #phase6-terminal {
+        background: #000;
+        border: 2px solid #0f0;
+        padding: 20px;
+        flex: 1 1 0;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        min-height: 0;
+        box-sizing: border-box;
+        scrollbar-width: auto;
+        scrollbar-color: #0f0 #000;
+        font-family: "Courier New", "Courier", monospace;
+        font-size: 16px;
+        line-height: 1.4;
+        color: #0f0;
+      }
+      #phase6-terminal::-webkit-scrollbar {
+        width: 16px;
+        -webkit-appearance: none;
+        display: block;
+      }
+      #phase6-terminal::-webkit-scrollbar-track {
+        background: #111;
+        border: 1px solid #0f0;
+      }
+      #phase6-terminal::-webkit-scrollbar-thumb {
+        background: #0f0;
+        border: 2px solid #111;
+      }
+      #phase6-terminal::-webkit-scrollbar-thumb:hover {
+        background: #0ff;
+      }
+      #phase6-input-container {
+        background: #000;
+        border: 2px solid #0f0;
+        border-top: none;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        font-family: "Courier New", "Courier", monospace;
+        pointer-events: auto;
+        z-index: 100;
+        position: relative;
+      }
+      #phase6-prompt {
+        color: #0f0;
+        margin-right: 10px;
+        font-weight: bold;
+        flex-shrink: 0;
+        font-size: 16px;
+      }
+      #phase6-input {
+        background: #000;
+        color: #0f0;
+        border: 1px solid #0f0;
+        padding: 8px;
+        font-family: "Courier New", "Courier", monospace;
+        font-size: 16px;
+        flex: 1;
+        outline: none;
+        caret-color: #0f0;
+        pointer-events: auto;
+        z-index: 100;
+        position: relative;
+      }
+      #phase6-input::placeholder {
+        color: #0a0;
+        opacity: 0.5;
+      }
+      #phase6-input:focus {
+        border-color: #0ff;
+        box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      }
+      #phase6-terminal .terminal-line {
+        margin: 2px 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      #phase6-terminal .terminal-line.command {
+        color: #0ff;
+      }
+      #phase6-terminal .terminal-line.output {
+        color: #0f0;
+      }
+      #phase6-terminal .terminal-line.error {
+        color: #f00;
+      }
+      #phase6-terminal .terminal-line.info {
+        color: #0ff;
+      }
+      #phase6-terminal .terminal-line.success {
+        color: #0f0;
+      }
+      #phase6-terminal .terminal-line.output {
+        color: #0f0;
+      }
     </style>
   </head>
   <body>
-    <h1>TRS-80 Model III Emulator</h1>
-    <div class="button-container">
-      <button onclick="showDesignDoc()">Phase 0: Design Doc</button>
-      <button onclick="runCPUTest()">Phase 1: Z80 CPU</button>
-      <button onclick="runMemoryTest()">Phase 2: Memory System</button>
-      <button onclick="runPhase3Test()">Phase 3: Cassette & I/O</button>
-      <button onclick="runPhase4Test()">Phase 4: BASIC Programs</button>
-      <button onclick="runPhase5Test()">Phase 5: Video Display</button>
+    <header id="dev-bar">
+      <h1>TRS-80 Model III</h1>
+      <span id="dev-bar-status" aria-hidden="true"></span>
+      <div id="dev-bar-controls">
+        <div id="machine-menu">
+          <button
+            id="machine-menu-button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="machine-menu-panel"
+            onclick="toggleMachineMenu()"
+          >
+            MACHINE ▾
+          </button>
+          <div id="machine-menu-panel" role="menu" hidden>
+            <button role="menuitem" onclick="toggleTheaterMode()">
+              <span id="menu-theater-label">Full screen</span>
+            </button>
+            <button role="menuitem" onclick="menuReset()">
+              Reset (reboot)
+            </button>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-heading">Cassette</div>
+            <button role="menuitem" onclick="menuLoadCas()">
+              Load .cas &amp; run…
+            </button>
+            <button role="menuitem" onclick="menuCassette(true)">
+              Play (motor on)
+            </button>
+            <button role="menuitem" onclick="menuCassette(false)">
+              Stop (motor off)
+            </button>
+            <div id="menu-cassette-status" class="menu-note">
+              No tape loaded
+            </div>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-heading">Disks (reset to boot)</div>
+            <button role="menuitem" onclick="menuMountDisk(0)">
+              Mount drive 0…
+            </button>
+            <button role="menuitem" onclick="menuMountDisk(1)">
+              Mount drive 1…
+            </button>
+            <button role="menuitem" onclick="menuEjectDisks()">
+              Eject all
+            </button>
+            <div id="menu-disk0-status" class="menu-note">0: empty</div>
+            <div id="menu-disk1-status" class="menu-note">1: empty</div>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-heading">Library</div>
+            <select id="library-select" aria-label="Built-in program"></select>
+            <button role="menuitem" onclick="menuLoadLibrary()">
+              Load &amp; run
+            </button>
+            <button role="menuitem" onclick="menuPasteBasic()">
+              Paste BASIC from clipboard
+            </button>
+          </div>
+        </div>
+        <label>
+          Font
+          <select
+            id="font-select"
+            onchange="setScreenFont(this.value)"
+            aria-label="Screen font"
+          >
+            <option value="trs80" selected>TRS-80</option>
+            <option value="modern">Modern</option>
+          </select>
+        </label>
+        <label>
+          Size
+          <select
+            id="scale-select"
+            onchange="setScreenScale(this.value)"
+            aria-label="Screen size"
+          >
+            <option value="fit" selected>Fit</option>
+            <option value="1">1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+            <option value="3">3×</option>
+            <option value="4">4×</option>
+          </select>
+        </label>
+        <label>
+          View
+          <select
+            id="view-select"
+            onchange="selectDevView(this.value)"
+            aria-label="Switch between the emulator and development consoles"
+          >
+            <option value="emulator" selected>Emulator</option>
+            <option value="design">Phase 0: Design Doc</option>
+            <option value="phase1">Phase 1: Z80 CPU tests</option>
+            <option value="phase2">Phase 2: Memory tests</option>
+            <option value="phase3">Phase 3: Cassette &amp; I/O tests</option>
+            <option value="phase4">Phase 4: BASIC program tests</option>
+            <option value="phase5">Phase 5: Video tests</option>
+            <option value="phase6">Phase 6: Command line</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <input type="file" id="cas-file" accept=".cas" hidden />
+    <input type="file" id="dsk-file" accept=".dsk,.jv1,.jv3" hidden />
+
+    <div id="machine-stage" role="group" aria-label="TRS-80 Model III">
+      <div id="machine-case">
+        <div id="machine-face">
+          <div id="crt-bezel">
+            <div id="crt-well">
+              <canvas
+                id="emulator-screen"
+                width="512"
+                height="192"
+                aria-label="TRS-80 screen: 64 by 16 character green phosphor display"
+              ></canvas>
+              <div id="crt-glass" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div id="drive-column" aria-hidden="true">
+            <div class="drive-blank"></div>
+            <div class="drive-blank"></div>
+            <div id="case-vents">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+        <div id="badge-row">
+          <div id="trs80-badge" aria-hidden="true">
+            <span class="badge-trs">TRS-80</span>
+            <span class="badge-model">MODEL III</span>
+          </div>
+          <span id="emulator-status" role="status" aria-live="polite"></span>
+          <button id="emulator-reset" aria-label="Reset — reboot into ROM BASIC">
+            RESET
+          </button>
+        </div>
+      </div>
+      <p id="machine-hint">
+        Your keyboard is the TRS-80's keyboard. Press ENTER at Cass? and
+        Memory Size? to reach READY, then type BASIC. ESC is BREAK,
+        Backspace deletes. Typing is Model III style: the machine boots in
+        caps mode — press SHIFT+0 to unlock lowercase, then SHIFT+letter
+        types lowercase. Full screen lives in the MACHINE menu.
+      </p>
     </div>
-    <div id="console" tabindex="0"></div>
+
+    <div id="console" tabindex="0" style="display: none"></div>
     <div id="design-doc-container" style="display: none">
       <div id="design-doc-content"></div>
+    </div>
+    <div id="phase6-container" style="display: none">
+      <div id="phase6-terminal"></div>
+      <div id="phase6-input-container">
+        <span id="phase6-prompt">READY</span>
+        <input
+          type="text"
+          id="phase6-input"
+          autocomplete="off"
+          spellcheck="false"
+          tabindex="0"
+        />
+      </div>
     </div>
 
     <!-- BASIC Program Modal -->

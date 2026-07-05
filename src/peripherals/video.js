@@ -9,6 +9,149 @@
  * - Video RAM is located at 0x3C00-0x3FFF (1KB)
  */
 
+/**
+ * 5x7 pixel font for ASCII 0x20-0x7F, one glyph per entry, seven 5-bit
+ * rows each, MSB = leftmost pixel. Rendered into the 8x12 character cell.
+ */
+// prettier-ignore
+const FONT_5X7 = [
+  /* space */ [0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000],
+  /* !     */ [0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00000, 0b00100],
+  /* "     */ [0b01010, 0b01010, 0b01010, 0b00000, 0b00000, 0b00000, 0b00000],
+  /* #     */ [0b01010, 0b01010, 0b11111, 0b01010, 0b11111, 0b01010, 0b01010],
+  /* $     */ [0b00100, 0b01111, 0b10100, 0b01110, 0b00101, 0b11110, 0b00100],
+  /* %     */ [0b11000, 0b11001, 0b00010, 0b00100, 0b01000, 0b10011, 0b00011],
+  /* &     */ [0b01100, 0b10010, 0b10100, 0b01000, 0b10101, 0b10010, 0b01101],
+  /* '     */ [0b00110, 0b00100, 0b01000, 0b00000, 0b00000, 0b00000, 0b00000],
+  /* (     */ [0b00010, 0b00100, 0b01000, 0b01000, 0b01000, 0b00100, 0b00010],
+  /* )     */ [0b01000, 0b00100, 0b00010, 0b00010, 0b00010, 0b00100, 0b01000],
+  /* *     */ [0b00000, 0b00100, 0b10101, 0b01110, 0b10101, 0b00100, 0b00000],
+  /* +     */ [0b00000, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0b00000],
+  /* ,     */ [0b00000, 0b00000, 0b00000, 0b00000, 0b00110, 0b00100, 0b01000],
+  /* -     */ [0b00000, 0b00000, 0b00000, 0b11111, 0b00000, 0b00000, 0b00000],
+  /* .     */ [0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b01100, 0b01100],
+  /* /     */ [0b00000, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b00000],
+  /* 0     */ [0b01110, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b01110],
+  /* 1     */ [0b00100, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110],
+  /* 2     */ [0b01110, 0b10001, 0b00001, 0b00110, 0b01000, 0b10000, 0b11111],
+  /* 3     */ [0b11111, 0b00010, 0b00100, 0b00010, 0b00001, 0b10001, 0b01110],
+  /* 4     */ [0b00010, 0b00110, 0b01010, 0b10010, 0b11111, 0b00010, 0b00010],
+  /* 5     */ [0b11111, 0b10000, 0b11110, 0b00001, 0b00001, 0b10001, 0b01110],
+  /* 6     */ [0b00110, 0b01000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110],
+  /* 7     */ [0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b01000],
+  /* 8     */ [0b01110, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b01110],
+  /* 9     */ [0b01110, 0b10001, 0b10001, 0b01111, 0b00001, 0b00010, 0b01100],
+  /* :     */ [0b00000, 0b01100, 0b01100, 0b00000, 0b01100, 0b01100, 0b00000],
+  /* ;     */ [0b00000, 0b01100, 0b01100, 0b00000, 0b01100, 0b00100, 0b01000],
+  /* <     */ [0b00010, 0b00100, 0b01000, 0b10000, 0b01000, 0b00100, 0b00010],
+  /* =     */ [0b00000, 0b00000, 0b11111, 0b00000, 0b11111, 0b00000, 0b00000],
+  /* >     */ [0b01000, 0b00100, 0b00010, 0b00001, 0b00010, 0b00100, 0b01000],
+  /* ?     */ [0b01110, 0b10001, 0b00001, 0b00010, 0b00100, 0b00000, 0b00100],
+  /* @     */ [0b01110, 0b10001, 0b00001, 0b01101, 0b10101, 0b10101, 0b01110],
+  /* A     */ [0b00100, 0b01010, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001],
+  /* B     */ [0b11110, 0b10001, 0b10001, 0b11110, 0b10001, 0b10001, 0b11110],
+  /* C     */ [0b01110, 0b10001, 0b10000, 0b10000, 0b10000, 0b10001, 0b01110],
+  /* D     */ [0b11100, 0b10010, 0b10001, 0b10001, 0b10001, 0b10010, 0b11100],
+  /* E     */ [0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b11111],
+  /* F     */ [0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000],
+  /* G     */ [0b01110, 0b10001, 0b10000, 0b10111, 0b10001, 0b10001, 0b01111],
+  /* H     */ [0b10001, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001],
+  /* I     */ [0b01110, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110],
+  /* J     */ [0b00111, 0b00010, 0b00010, 0b00010, 0b00010, 0b10010, 0b01100],
+  /* K     */ [0b10001, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010, 0b10001],
+  /* L     */ [0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b11111],
+  /* M     */ [0b10001, 0b11011, 0b10101, 0b10101, 0b10001, 0b10001, 0b10001],
+  /* N     */ [0b10001, 0b10001, 0b11001, 0b10101, 0b10011, 0b10001, 0b10001],
+  /* O     */ [0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110],
+  /* P     */ [0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000],
+  /* Q     */ [0b01110, 0b10001, 0b10001, 0b10001, 0b10101, 0b10010, 0b01101],
+  /* R     */ [0b11110, 0b10001, 0b10001, 0b11110, 0b10100, 0b10010, 0b10001],
+  /* S     */ [0b01111, 0b10000, 0b10000, 0b01110, 0b00001, 0b00001, 0b11110],
+  /* T     */ [0b11111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100],
+  /* U     */ [0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110],
+  /* V     */ [0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100],
+  /* W     */ [0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b10101, 0b01010],
+  /* X     */ [0b10001, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001, 0b10001],
+  /* Y     */ [0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100],
+  /* Z     */ [0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b11111],
+  /* [     */ [0b01110, 0b01000, 0b01000, 0b01000, 0b01000, 0b01000, 0b01110],
+  /* \     */ [0b00000, 0b10000, 0b01000, 0b00100, 0b00010, 0b00001, 0b00000],
+  /* ]     */ [0b01110, 0b00010, 0b00010, 0b00010, 0b00010, 0b00010, 0b01110],
+  /* ^     */ [0b00100, 0b01010, 0b10001, 0b00000, 0b00000, 0b00000, 0b00000],
+  /* _     */ [0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b11111],
+  /* `     */ [0b01000, 0b00100, 0b00010, 0b00000, 0b00000, 0b00000, 0b00000],
+  /* a     */ [0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b01111],
+  /* b     */ [0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b11110],
+  /* c     */ [0b00000, 0b00000, 0b01110, 0b10000, 0b10000, 0b10001, 0b01110],
+  /* d     */ [0b00001, 0b00001, 0b01111, 0b10001, 0b10001, 0b10001, 0b01111],
+  /* e     */ [0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b01110],
+  /* f     */ [0b00110, 0b01001, 0b01000, 0b11100, 0b01000, 0b01000, 0b01000],
+  /* g     */ [0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00001, 0b01110],
+  /* h     */ [0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001],
+  /* i     */ [0b00100, 0b00000, 0b01100, 0b00100, 0b00100, 0b00100, 0b01110],
+  /* j     */ [0b00010, 0b00000, 0b00110, 0b00010, 0b00010, 0b10010, 0b01100],
+  /* k     */ [0b10000, 0b10000, 0b10010, 0b10100, 0b11000, 0b10100, 0b10010],
+  /* l     */ [0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110],
+  /* m     */ [0b00000, 0b00000, 0b11010, 0b10101, 0b10101, 0b10101, 0b10101],
+  /* n     */ [0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b10001, 0b10001],
+  /* o     */ [0b00000, 0b00000, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110],
+  /* p     */ [0b00000, 0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000],
+  /* q     */ [0b00000, 0b01111, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001],
+  /* r     */ [0b00000, 0b00000, 0b10110, 0b11001, 0b10000, 0b10000, 0b10000],
+  /* s     */ [0b00000, 0b00000, 0b01111, 0b10000, 0b01110, 0b00001, 0b11110],
+  /* t     */ [0b01000, 0b01000, 0b11100, 0b01000, 0b01000, 0b01001, 0b00110],
+  /* u     */ [0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b10011, 0b01101],
+  /* v     */ [0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100],
+  /* w     */ [0b00000, 0b00000, 0b10001, 0b10101, 0b10101, 0b10101, 0b01010],
+  /* x     */ [0b00000, 0b00000, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001],
+  /* y     */ [0b00000, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b01110],
+  /* z     */ [0b00000, 0b00000, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111],
+  /* {     */ [0b00010, 0b00100, 0b00100, 0b01000, 0b00100, 0b00100, 0b00010],
+  /* |     */ [0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100],
+  /* }     */ [0b01000, 0b00100, 0b00100, 0b00010, 0b00100, 0b00100, 0b01000],
+  /* ~     */ [0b00000, 0b01000, 0b10101, 0b00010, 0b00000, 0b00000, 0b00000],
+  /* DEL   */ [0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111],
+];
+
+/**
+ * "TRS-80" styled font: the Model III character generator drew chunkier
+ * 5x7 glyphs and gave lowercase true descenders (two rows below the
+ * baseline — the cell is 12 rows tall, so there's room). Entries here
+ * override the base font; each override is 9 rows (7 + 2 descender).
+ */
+// prettier-ignore
+const FONT_TRS80_OVERRIDES = {
+  // Lowercase with true descenders
+  g: [0b00000, 0b00000, 0b01111, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b01110],
+  j: [0b00010, 0b00000, 0b00010, 0b00010, 0b00010, 0b00010, 0b00010, 0b10010, 0b01100],
+  p: [0b00000, 0b00000, 0b11110, 0b10001, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000],
+  q: [0b00000, 0b00000, 0b01111, 0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001],
+  y: [0b00000, 0b00000, 0b10001, 0b10001, 0b10001, 0b10011, 0b01101, 0b00001, 0b01110],
+  // Squared, full-height forms the CG ROM used
+  M: [0b10001, 0b11011, 0b10101, 0b10101, 0b10101, 0b10001, 0b10001],
+  W: [0b10001, 0b10001, 0b10001, 0b10101, 0b10101, 0b11011, 0b10001],
+  S: [0b01110, 0b10001, 0b10000, 0b01110, 0b00001, 0b10001, 0b01110],
+  J: [0b00001, 0b00001, 0b00001, 0b00001, 0b00001, 0b10001, 0b01110],
+  "0": [0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110],
+  "1": [0b00100, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110],
+  "2": [0b01110, 0b10001, 0b00001, 0b00010, 0b00100, 0b01000, 0b11111],
+  "3": [0b11111, 0b00010, 0b00100, 0b00010, 0b00001, 0b10001, 0b01110],
+  "5": [0b11111, 0b10000, 0b11110, 0b00001, 0b00001, 0b10001, 0b01110],
+  "6": [0b00111, 0b01000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110],
+  "7": [0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b01000],
+  "9": [0b01110, 0b10001, 0b10001, 0b01111, 0b00001, 0b00010, 0b11100],
+  "?": [0b01110, 0b10001, 0b00010, 0b00100, 0b00100, 0b00000, 0b00100],
+  "$": [0b00100, 0b01111, 0b10100, 0b01110, 0b00101, 0b11110, 0b00100],
+  "&": [0b01000, 0b10100, 0b10100, 0b01000, 0b10101, 0b10010, 0b01101],
+  ",": [0b00000, 0b00000, 0b00000, 0b00000, 0b00110, 0b00110, 0b01000],
+  ";": [0b00000, 0b01100, 0b01100, 0b00000, 0b01100, 0b01100, 0b01000],
+};
+
+const FONTS = {
+  modern: { base: FONT_5X7, overrides: null },
+  trs80: { base: FONT_5X7, overrides: FONT_TRS80_OVERRIDES },
+};
+
 export class VideoSystem {
   constructor(canvasElement = null) {
     this.canvas = canvasElement;
@@ -25,6 +168,7 @@ export class VideoSystem {
     this.graphicsHeight = 48;
 
     this.textMode = true;
+    this.fontName = "trs80";
     this.charRom = this.loadCharacterROM();
 
     // Canvas size (if canvas provided)
@@ -43,84 +187,65 @@ export class VideoSystem {
   }
 
   /**
-   * Load character ROM with ASCII and graphics characters
+   * Load character ROM: real 5x7 glyphs for ASCII (drawn into the 8x12
+   * cell), the 2x3 block-graphics set for 128-191, hardware-style folds
+   * elsewhere (0x00-0x1F show as 0x40-0x5F; 0xC0-0xFF show as spaces on
+   * a machine without the alternate character set).
    */
   loadCharacterROM() {
+    const font = FONTS[this.fontName] || FONTS.trs80;
     const charRom = new Array(256);
 
-    // Initialize all characters
     for (let i = 0; i < 256; i++) {
       charRom[i] = new Array(12).fill(0x00);
     }
 
-    // Basic ASCII characters (0-127)
-    // Space (0x20)
-    charRom[0x20] = new Array(12).fill(0x00);
-
-    // 'A' (0x41)
-    charRom[0x41] = [
-      0b00011000, 0b00111100, 0b01100110, 0b01100110, 0b01111110, 0b01100110,
-      0b01100110, 0b01100110, 0b00000000, 0b00000000, 0b00000000, 0b00000000,
-    ];
-
-    // '0' (0x30)
-    charRom[0x30] = [
-      0b00111100, 0b01100110, 0b01100110, 0b01100110, 0b01100110, 0b01100110,
-      0b01100110, 0b00111100, 0b00000000, 0b00000000, 0b00000000, 0b00000000,
-    ];
-
-    // Generate basic ASCII set (simplified - just key characters)
-    // In a full implementation, all 128 ASCII chars would be defined
-    for (let i = 0x20; i <= 0x7e; i++) {
-      if (!charRom[i] || charRom[i].every((b) => b === 0)) {
-        // Generate a simple pattern for undefined chars
-        charRom[i] = this.generateSimpleChar(i);
+    // Printable ASCII: glyph rows land in cell rows 2-8, descender rows
+    // (entries longer than 7) continue into rows 9-10. Bits 6-2 center
+    // the 5-wide glyph in the 8-wide cell.
+    for (let code = 0x20; code <= 0x7f; code++) {
+      const ch = String.fromCharCode(code);
+      const glyph =
+        (font.overrides && font.overrides[ch]) || font.base[code - 0x20];
+      if (!glyph) continue;
+      const charData = new Array(12).fill(0x00);
+      for (let row = 0; row < glyph.length && row < 9; row++) {
+        charData[row + 2] = (glyph[row] & 0x1f) << 2;
       }
+      charRom[code] = charData;
     }
 
-    // Graphics characters (128-191)
-    // Each represents a 2×3 pixel block with 64 possible patterns
+    // Control codes display as their 0x40-0x5F fold (Model III char gen)
+    for (let code = 0x00; code <= 0x1f; code++) {
+      charRom[code] = charRom[code + 0x40].slice();
+    }
+
+    // Graphics characters (128-191): 2x3 pixel blocks
     for (let i = 128; i < 192; i++) {
-      const pattern = i - 128;
-      charRom[i] = this.generateGraphicsChar(pattern);
+      charRom[i] = this.generateGraphicsChar(i - 128);
     }
 
     return charRom;
   }
 
   /**
-   * Generate a simple character pattern for undefined ASCII chars
-   */
-  generateSimpleChar(code) {
-    const charData = new Array(12).fill(0x00);
-    // Create a simple pattern based on character code
-    const pattern = code & 0x7f;
-    for (let row = 0; row < 8; row++) {
-      charData[row] = (pattern << row % 3) & 0xff;
-    }
-    return charData;
-  }
-
-  /**
    * Generate graphics character bitmap for a 2×3 pixel block
    *
-   * TRS-80 Model III graphics use characters 128-191 to represent all 64
-   * possible combinations of on/off pixels in a 2×3 block.
+   * TRS-80 graphics characters 128-191 encode a 2×3 pixel block using the
+   * Level II manual's bit values — CHR$(128 + sum of lit pixels):
    *
-   * Pattern encoding (6 bits, bits 0-5):
-   *
-   *   Bit 5  Bit 4    ┌─┬─┐
-   *   Bit 3  Bit 2    │5│4│  Top row
-   *   Bit 1  Bit 0    ├─┼─┤
-   *                   │3│2│  Middle row
+   *      +1   +2      ┌─┬─┐
+   *      +4   +8      │0│1│  Top row
+   *     +16  +32      ├─┼─┤
+   *                   │2│3│  Middle row
    *                   ├─┼─┤
-   *                   │1│0│  Bottom row
+   *                   │4│5│  Bottom row
    *                   └─┴─┘
    *
-   * Example patterns:
-   * - pattern 0  (000000) = all pixels off   → char 128
-   * - pattern 1  (000001) = bottom-right on  → char 129
-   * - pattern 63 (111111) = all pixels on    → char 191
+   * - CHR$(129) = top-left pixel on
+   * - CHR$(176) = 0xB0 = both bottom pixels — the ROM's blinking cursor,
+   *   which is why the real Model III cursor is a low underline block
+   * - CHR$(191) = all pixels on
    *
    * @param {number} pattern - 6-bit pattern (0-63)
    * @returns {Array<number>} 12-byte character bitmap
@@ -128,23 +253,23 @@ export class VideoSystem {
   generateGraphicsChar(pattern) {
     const charData = new Array(12).fill(0x00);
 
-    // Top row (bits 5,4) - rows 0-3
-    if (pattern & 0x20) charData[0] |= 0xf0; // Top-left pixel (bit 5)
-    if (pattern & 0x10) charData[0] |= 0x0f; // Top-right pixel (bit 4)
+    // Top row (bits 0,1) - rows 0-3
+    if (pattern & 0x01) charData[0] |= 0xf0; // Top-left pixel
+    if (pattern & 0x02) charData[0] |= 0x0f; // Top-right pixel
     charData[1] = charData[0];
     charData[2] = charData[0];
     charData[3] = charData[0];
 
-    // Middle row (bits 3,2) - rows 4-7
-    if (pattern & 0x08) charData[4] |= 0xf0; // Middle-left pixel (bit 3)
-    if (pattern & 0x04) charData[4] |= 0x0f; // Middle-right pixel (bit 2)
+    // Middle row (bits 2,3) - rows 4-7
+    if (pattern & 0x04) charData[4] |= 0xf0; // Middle-left pixel
+    if (pattern & 0x08) charData[4] |= 0x0f; // Middle-right pixel
     charData[5] = charData[4];
     charData[6] = charData[4];
     charData[7] = charData[4];
 
-    // Bottom row (bits 1,0) - rows 8-11
-    if (pattern & 0x02) charData[8] |= 0xf0; // Bottom-left pixel (bit 1)
-    if (pattern & 0x01) charData[8] |= 0x0f; // Bottom-right pixel (bit 0)
+    // Bottom row (bits 4,5) - rows 8-11
+    if (pattern & 0x10) charData[8] |= 0xf0; // Bottom-left pixel
+    if (pattern & 0x20) charData[8] |= 0x0f; // Bottom-right pixel
     charData[9] = charData[8];
     charData[10] = charData[8];
     charData[11] = charData[8];
@@ -153,19 +278,57 @@ export class VideoSystem {
   }
 
   /**
-   * Render the screen from video memory
+   * Render the screen from video memory.
+   *
+   * Builds one ImageData for the whole 512x192 frame in a typed loop —
+   * far cheaper than per-pixel fillRect at 60 fps.
    * @param {MemorySystem} memorySystem - Memory system to read from
    */
   renderScreen(memorySystem) {
     if (!this.canvas || !this.ctx) return;
 
-    // Clear screen
-    this.ctx.fillStyle = this.bgColor;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    const width = this.columns * this.charWidth;
+    const height = this.rows * this.charHeight;
 
-    if (this.textMode) {
-      this.renderTextMode(memorySystem);
+    if (!this._frame || this._frame.width !== width) {
+      this._frame = this.ctx.createImageData(width, height);
+      // Pre-parse colors once: "#RRGGBB" -> [r,g,b]
+      const hex = (c) => [
+        parseInt(c.slice(1, 3), 16),
+        parseInt(c.slice(3, 5), 16),
+        parseInt(c.slice(5, 7), 16),
+      ];
+      this._fgRGB = hex(this.fgColor);
+      this._bgRGB = hex(this.bgColor);
     }
+
+    const data = this._frame.data;
+    const [fr, fg, fb] = this._fgRGB;
+    const [br, bg, bb] = this._bgRGB;
+
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.columns; col++) {
+        const charCode = memorySystem.readByte(
+          this.videoMemoryStart + row * this.columns + col
+        );
+        const charData = this.charRom[charCode] || this.charRom[0x20];
+        for (let y = 0; y < this.charHeight; y++) {
+          const rowBits = charData[y] || 0;
+          let offset =
+            ((row * this.charHeight + y) * width + col * this.charWidth) * 4;
+          for (let x = 0; x < this.charWidth; x++) {
+            const on = rowBits & (1 << (7 - x));
+            data[offset] = on ? fr : br;
+            data[offset + 1] = on ? fg : bg;
+            data[offset + 2] = on ? fb : bb;
+            data[offset + 3] = 255;
+            offset += 4;
+          }
+        }
+      }
+    }
+
+    this.ctx.putImageData(this._frame, 0, 0);
   }
 
   /**
@@ -249,7 +412,7 @@ export class VideoSystem {
     // Top row: bit 5 (left), bit 4 (right)
     // Middle row: bit 3 (left), bit 2 (right)
     // Bottom row: bit 1 (left), bit 0 (right)
-    const bitPos = 5 - (pixelY * 2 + pixelX);
+    const bitPos = pixelY * 2 + pixelX; // +1/+2 top, +4/+8 mid, +16/+32 bottom
 
     // Set the bit (turn pixel on)
     const pattern = currentChar - 128;
@@ -284,7 +447,7 @@ export class VideoSystem {
     // Only modify if it's already a graphics character
     if (currentChar < 128 || currentChar > 191) return false;
 
-    const bitPos = 5 - (pixelY * 2 + pixelX);
+    const bitPos = pixelY * 2 + pixelX; // +1/+2 top, +4/+8 mid, +16/+32 bottom
 
     // Clear the bit (turn pixel off)
     const pattern = currentChar - 128;
@@ -319,7 +482,7 @@ export class VideoSystem {
     // Not a graphics character = pixel is off
     if (currentChar < 128 || currentChar > 191) return 0;
 
-    const bitPos = 5 - (pixelY * 2 + pixelX);
+    const bitPos = pixelY * 2 + pixelX; // +1/+2 top, +4/+8 mid, +16/+32 bottom
     const pattern = currentChar - 128;
 
     // Test the bit and return -1 (on) or 0 (off)
@@ -382,6 +545,19 @@ export class VideoSystem {
       pixels.push(row);
     }
     return pixels;
+  }
+
+  /**
+   * Switch the screen glyph set: "trs80" (chunky, true descenders — the
+   * default) or "modern" (crisp). Caller repaints via renderScreen.
+   */
+  setFont(name) {
+    if (!FONTS[name] || name === this.fontName) {
+      return false;
+    }
+    this.fontName = name;
+    this.charRom = this.loadCharacterROM();
+    return true;
   }
 
   /**

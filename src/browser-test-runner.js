@@ -1597,14 +1597,15 @@ export async function runAllPhase1Tests(logFn) {
         expect(cpu.registers.A).toBe(0xff);
         expect(cpu.registers.B).toBe(0xaa);
         expect(cpu.flagS).toBe(1);
-        expect(cpu.flagH).toBe(1);
+        // 0x5 + 0xA = 0xF: no carry out of bit 3, so H stays clear
+        expect(cpu.flagH).toBe(0);
         expect(cpu.halted).toBe(true);
       },
       {
         assembly: "LD A, 0x55; LD B, 0xAA; ADD A, B; HALT",
         opcode: "0x3E 0x55, 0x06 0xAA, 0x80, 0x76",
         description:
-          "Complete program: loads two values, adds them (0x55 + 0xAA = 0xFF), sets flags (S=sign, H=half-carry), then halts - demonstrates instruction sequencing",
+          "Complete program: loads two values, adds them (0x55 + 0xAA = 0xFF, S set, H clear - no nibble carry), then halts - demonstrates instruction sequencing",
       }
     );
 

@@ -271,7 +271,6 @@ export async function runAllPhase4Tests(logFn) {
   function setupCPU(io = null) {
     const memory = setupMemory();
     const cpu = new Z80CPU();
-    cpu.memory = memory;
     // Connect CPU to memory system
     cpu.readMemory = (address) => memory.readByte(address);
     cpu.writeMemory = (address, value) => memory.writeByte(address, value);

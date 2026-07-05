@@ -22,7 +22,7 @@
     "phase:3": "node scripts/phase-workflow.js 3 \"tests/unit/cassette-tests.js tests/unit/io-tests.js\"",
     "phase:4": "node scripts/phase-workflow.js 4 tests/unit/basic-program-tests.js",
     "phase:5": "node scripts/phase-workflow.js 5 tests/unit/video-tests.js",
-    "phase:6": "node scripts/phase-workflow.js 6 tests/integration/cpu-memory-integration.js",
+    "phase:6": "node scripts/phase-workflow.js 6 tests/integration/rom-boot-tests.js",
     "phase:7": "node scripts/phase-workflow.js 7 tests/unit/program-loader-tests.js",
     "phase:8": "node scripts/phase-workflow.js 8 tests/unit/assembler-tests.js"
   },

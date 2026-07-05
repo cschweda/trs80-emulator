@@ -1,10 +1,18 @@
 /**
- * I/O System Unit Tests
- * Tests port handling and keyboard buffer
+ * I/O System Unit Tests — Model III port map
+ *
+ * Real Model III ports (non-disk machine):
+ *   0xE0-0xE3  read: interrupt latch (pending bits read as 0, i.e. ~latch)
+ *              write: interrupt mask (bit set = source enabled)
+ *   0xEC-0xEF  read: acknowledge/clear the RTC interrupt
+ *              write: mode register (bit 1 = cassette motor)
+ *   0xF0-0xF3  floppy controller — absent, reads float to 0xFF
+ *   0xFF       cassette data port
+ * The keyboard is memory-mapped at 0x3800-0x3BFF, NOT an I/O port.
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { IOSystem } from "@core/io.js";
+import { IOSystem, RTC_IRQ_BIT } from "@core/io.js";
 
 describe("IOSystem - Initialization", () => {
   let io;
@@ -18,101 +26,129 @@ describe("IOSystem - Initialization", () => {
     expect(io.cassette.motorOn).toBe(false);
   });
 
-  it("should initialize keyboard buffer", () => {
-    expect(io.keyboardBuffer).toEqual([]);
-  });
-
   it("should initialize port handlers", () => {
     expect(io.portHandlers).toBeDefined();
     expect(io.portHandlers.size).toBeGreaterThan(0);
   });
+
+  it("should start with no pending interrupts and an empty mask", () => {
+    expect(io.intLatch).toBe(0);
+    expect(io.intMask).toBe(0);
+    expect(io.pendingInterrupt()).toBe(false);
+  });
 });
 
-describe("IOSystem - Port Operations (Test 3.5)", () => {
+describe("IOSystem - Interrupt latch and mask (ports 0xE0/0xEC)", () => {
   let io;
 
   beforeEach(() => {
     io = new IOSystem();
   });
 
-  it("should write to cassette port (0xFE)", () => {
-    io.writePort(0xfe, 0x01);
+  it("raiseRTC sets the RTC latch bit; 0xE0 reads it active-low", () => {
+    expect(io.readPort(0xe0)).toBe(0xff); // nothing pending
 
+    io.raiseRTC();
+
+    expect(io.readPort(0xe0)).toBe((~RTC_IRQ_BIT) & 0xff); // 0xFB
+  });
+
+  it("pendingInterrupt requires both latch and mask bits", () => {
+    io.raiseRTC();
+    expect(io.pendingInterrupt()).toBe(false); // masked off
+
+    io.writePort(0xe0, RTC_IRQ_BIT); // enable RTC interrupts
+
+    expect(io.pendingInterrupt()).toBe(true);
+  });
+
+  it("reading 0xEC acknowledges the RTC interrupt", () => {
+    io.writePort(0xe0, RTC_IRQ_BIT);
+    io.raiseRTC();
+    expect(io.pendingInterrupt()).toBe(true);
+
+    io.readPort(0xec);
+
+    expect(io.pendingInterrupt()).toBe(false);
+    expect(io.readPort(0xe0)).toBe(0xff);
+  });
+
+  it("latch reads identically across the 0xE0-0xE3 mirror", () => {
+    io.raiseRTC();
+
+    expect(io.readPort(0xe1)).toBe((~RTC_IRQ_BIT) & 0xff);
+    expect(io.readPort(0xe3)).toBe((~RTC_IRQ_BIT) & 0xff);
+  });
+});
+
+describe("IOSystem - Mode register (port 0xEC write)", () => {
+  let io;
+
+  beforeEach(() => {
+    io = new IOSystem();
+  });
+
+  it("bit 1 controls the cassette motor", () => {
+    io.writePort(0xec, 0x02);
     expect(io.cassette.motorOn).toBe(true);
+
+    io.writePort(0xec, 0x00);
+    expect(io.cassette.motorOn).toBe(false);
   });
 
-  it("should read cassette status from port 0xFE", () => {
-    io.cassette.loadTape([0x10]);
-    io.cassette.control(0x01);
+  it("stores the full mode value for later use", () => {
+    io.writePort(0xec, 0x0e);
 
-    const status = io.readPort(0xfe);
-
-    expect(status & 0x01).toBe(0x01); // Motor on
-  });
-
-  it("should return 0xFF for undefined ports", () => {
-    const value = io.readPort(0x99);
-
-    expect(value).toBe(0xff);
+    expect(io.modeRegister).toBe(0x0e);
   });
 });
 
-describe("IOSystem - Keyboard Buffer", () => {
+describe("IOSystem - Absent hardware floats high", () => {
   let io;
 
   beforeEach(() => {
     io = new IOSystem();
   });
 
-  it("should add key to buffer", () => {
-    io.addKey(0x41); // 'A'
-    io.addKey(0x42); // 'B'
-
-    expect(io.keyboardBuffer.length).toBe(2);
+  it("FDC ports 0xF0-0xF3 read 0xFF (no disk controller)", () => {
+    expect(io.readPort(0xf0)).toBe(0xff);
+    expect(io.readPort(0xf1)).toBe(0xff);
+    expect(io.readPort(0xf3)).toBe(0xff);
   });
 
-  it("should read from keyboard port (0xFF)", () => {
-    io.addKey(0x41);
-
-    const key = io.readPort(0xff);
-
-    expect(key).toBe(0x41);
-    expect(io.keyboardBuffer.length).toBe(0); // Consumed
+  it("unmapped ports read 0xFF", () => {
+    expect(io.readPort(0x99)).toBe(0xff);
   });
 
-  it("should return 0 when buffer is empty", () => {
-    const key = io.readPort(0xff);
+  it("writes to absent hardware are ignored without error", () => {
+    expect(() => io.writePort(0xf0, 0x55)).not.toThrow();
+    expect(() => io.writePort(0x99, 0x55)).not.toThrow();
+  });
+});
 
-    expect(key).toBe(0x00);
+describe("IOSystem - Legacy keyboard buffer (internal API only)", () => {
+  let io;
+
+  beforeEach(() => {
+    io = new IOSystem();
   });
 
-  it("should process keys in FIFO order", () => {
-    io.addKey(0x41);
-    io.addKey(0x42);
-    io.addKey(0x43);
-
-    expect(io.readPort(0xff)).toBe(0x41);
-    expect(io.readPort(0xff)).toBe(0x42);
-    expect(io.readPort(0xff)).toBe(0x43);
-  });
-
-  it("should clear keyboard buffer", () => {
+  it("buffers and consumes keys in FIFO order", () => {
     io.addKey(0x41);
     io.addKey(0x42);
 
-    io.clearKeyboardBuffer();
-
-    expect(io.keyboardBuffer.length).toBe(0);
+    expect(io.readKeyboard()).toBe(0x41);
+    expect(io.readKeyboard()).toBe(0x42);
+    expect(io.readKeyboard()).toBe(0x00);
   });
 
-  it("should limit buffer size to 256", () => {
+  it("clears and caps the buffer", () => {
     for (let i = 0; i < 300; i++) {
       io.addKey(i & 0xff);
     }
-
     expect(io.keyboardBuffer.length).toBeLessThanOrEqual(256);
+
+    io.clearKeyboardBuffer();
+    expect(io.keyboardBuffer.length).toBe(0);
   });
 });
-
-
-

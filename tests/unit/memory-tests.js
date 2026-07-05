@@ -57,6 +57,22 @@ describe("MemorySystem - ROM Loading", () => {
     expect(() => memory.loadROM(invalidRom)).toThrow();
   });
 
+  it("should accept the real 14K Model III ROM size", () => {
+    const romData = new Uint8Array(0x3800);
+    romData[0x1234] = 0x42;
+
+    const result = memory.loadROM(romData);
+
+    expect(result).toBe(true);
+    expect(memory.readByte(0x1234)).toBe(0x42);
+  });
+
+  it("should reject oversized ROM images instead of silently truncating", () => {
+    const oversized = new Uint8Array(0x4001);
+
+    expect(() => memory.loadROM(oversized)).toThrow();
+  });
+
   it("should copy ROM data correctly", () => {
     const romData = new Uint8Array(0x4000);
     romData[0] = 0x3e;
@@ -83,12 +99,36 @@ describe("MemorySystem - Memory Reading", () => {
     memory.loadROM(romData);
   });
 
-  it("should read from ROM (0x0000-0x3FFF)", () => {
+  it("should read from ROM (0x0000-0x37FF)", () => {
     memory.rom[0x1000] = 0x42;
 
     const value = memory.readByte(0x1000);
 
     expect(value).toBe(0x42);
+  });
+
+  it("should map 0x3800-0x3BFF to the keyboard matrix, not ROM", () => {
+    // The Model III keyboard is memory-mapped here; with no keyboard
+    // attached and no keys pressed the bus reads 0x00.
+    memory.rom[0x3900] = 0x42; // stale ROM image content must not leak
+
+    expect(memory.readByte(0x3900)).toBe(0x00);
+  });
+
+  it("should delegate keyboard-region reads to the attached keyboard", () => {
+    memory.keyboard = {
+      read: (sel) => (sel === 0x01 ? 0x40 : 0x00),
+    };
+
+    expect(memory.readByte(0x3801)).toBe(0x40);
+    expect(memory.readByte(0x3901)).toBe(0x40); // A8/A9 undecoded mirror
+    expect(memory.readByte(0x3802)).toBe(0x00);
+  });
+
+  it("should ignore writes to the keyboard region", () => {
+    memory.writeByte(0x3801, 0xff);
+
+    expect(memory.readByte(0x3801)).toBe(0x00);
   });
 
   it("should read from RAM (0x4000-0xFFFF)", () => {
@@ -164,7 +204,15 @@ describe("MemorySystem - ROM Protection", () => {
     memory.writeByte(0x3c00, 0x55);
 
     expect(memory.readByte(0x3c00)).toBe(0x55);
-    expect(memory.rom[0x3c00]).toBe(0x55);
+    expect(memory.videoRam[0]).toBe(0x55);
+  });
+
+  it("should flag video writes for the renderer", () => {
+    memory.videoDirty = false;
+
+    memory.writeByte(0x3d00, 0xbf);
+
+    expect(memory.videoDirty).toBe(true);
   });
 
   it("should allow writes throughout video RAM range", () => {

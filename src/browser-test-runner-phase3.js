@@ -811,52 +811,50 @@ export async function runAllPhase3Tests(logFn) {
   // TEST SUITE 9: Port Operations (Test 3.5)
   runSuite("IOSystem - Port Operations (Test 3.5)", () => {
     runTest(
-      "should write to cassette port (0xFE)",
+      "should switch cassette motor via mode register (0xEC bit 1)",
       () => {
         const io = setupIO();
 
-        io.writePort(0xfe, 0x01);
+        io.writePort(0xec, 0x02);
 
         expect(io.cassette.motorOn).toBe(true);
         if (verboseLogging) {
           logFn(
-            `        🔌 Port write: ${hex(0xfe)} = ${hex(0x01)} (motor ON)`,
+            `        🔌 Port write: ${hex(0xec)} = ${hex(0x02)} (motor ON)`,
             "info"
           );
         }
       },
       {
-        assembly: "OUT (0xFE), A",
-        opcode: "0xD3 0xFE",
+        assembly: "OUT (0xEC), A",
+        opcode: "0xD3 0xEC",
         description:
-          "Writes to cassette control port 0xFE - Z80 OUT instruction sends byte to I/O port, bit 0 controls cassette motor",
+          "Writes the Model III mode register at port 0xEC - bit 1 drives the cassette motor relay",
       }
     );
 
     runTest(
-      "should read cassette status from port 0xFE",
+      "should report cassette status with motor running",
       () => {
         const io = setupIO();
         io.cassette.loadTape([0x10]);
-        io.cassette.control(0x01);
+        io.writePort(0xec, 0x02);
 
-        const status = io.readPort(0xfe);
+        const status = io.cassette.getStatus();
 
         expect(status & 0x01).toBe(0x01); // Motor on
         if (verboseLogging) {
           logFn(
-            `        🔌 Port read: ${hex(0xfe)} = ${hex(
-              status
-            )} (motor bit set)`,
+            `        🔌 Cassette status: ${hex(status)} (motor bit set)`,
             "info"
           );
         }
       },
       {
-        assembly: "IN A, (0xFE)",
-        opcode: "0xDB 0xFE",
+        assembly: "OUT (0xEC), A",
+        opcode: "0xD3 0xEC",
         description:
-          "Reads cassette status from port 0xFE - Z80 IN instruction reads byte from I/O port, returns status flags (motor, play, data available)",
+          "Motor switched through the mode register is visible in cassette status flags (motor, play, data available)",
       }
     );
 
@@ -913,29 +911,25 @@ export async function runAllPhase3Tests(logFn) {
     );
 
     runTest(
-      "should read from keyboard port (0xFF)",
+      "should read buffered key (internal FIFO)",
       () => {
         const io = setupIO();
         io.addKey(0x41);
 
-        const key = io.readPort(0xff);
+        const key = io.readKeyboard();
 
         expect(key).toBe(0x41);
         expect(io.keyboardBuffer.length).toBe(0); // Consumed
         if (verboseLogging) {
           logFn(
-            `        ⌨️  Port read: ${hex(0xff)} = ${hex(
-              key
-            )} ('A'), buffer consumed`,
+            `        ⌨️  Buffer read: ${hex(key)} ('A'), buffer consumed`,
             "info"
           );
         }
       },
       {
-        assembly: "IN A, (0xFF)",
-        opcode: "0xDB 0xFF",
         description:
-          "Reads key from keyboard port 0xFF - Z80 IN instruction retrieves keystroke from buffer, removes key from queue (FIFO)",
+          "Reads a keystroke from the internal buffer (the real Model III keyboard is memory-mapped at 0x3800-0x3BFF, not an I/O port)",
       }
     );
 
@@ -944,19 +938,14 @@ export async function runAllPhase3Tests(logFn) {
       () => {
         const io = setupIO();
 
-        const key = io.readPort(0xff);
+        const key = io.readKeyboard();
 
         expect(key).toBe(0x00);
         if (verboseLogging) {
-          logFn(
-            `        ⌨️  Port read: ${hex(0xff)} = ${hex(0x00)} (empty buffer)`,
-            "info"
-          );
+          logFn(`        ⌨️  Buffer read: ${hex(0x00)} (empty buffer)`, "info");
         }
       },
       {
-        assembly: "IN A, (0xFF)",
-        opcode: "0xDB 0xFF",
         description:
           "Returns 0 when keyboard buffer is empty - indicates no key pressed, allows polling for input without blocking",
       }
@@ -970,9 +959,9 @@ export async function runAllPhase3Tests(logFn) {
         io.addKey(0x42);
         io.addKey(0x43);
 
-        expect(io.readPort(0xff)).toBe(0x41);
-        expect(io.readPort(0xff)).toBe(0x42);
-        expect(io.readPort(0xff)).toBe(0x43);
+        expect(io.readKeyboard()).toBe(0x41);
+        expect(io.readKeyboard()).toBe(0x42);
+        expect(io.readKeyboard()).toBe(0x43);
         if (verboseLogging) {
           logFn(
             `        ⌨️  FIFO order verified: ${hex(0x41)}, ${hex(0x42)}, ${hex(
