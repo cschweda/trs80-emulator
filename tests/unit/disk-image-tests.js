@@ -30,7 +30,7 @@ export function buildJV3({ tracks = 3, spt = 10 } = {}) {
     }
   }
   const bytes = new Uint8Array(headerSize + sectors.length * 256);
-  bytes.fill(0xff, 0, headerSize); // free entries + write-prot byte 0xff=writable? (unused)
+  bytes.fill(0xff, 0, headerSize); // free entries; write-prot byte 0xff = writable
   sectors.forEach((sec, i) => {
     bytes[i * 3] = sec.track;
     bytes[i * 3 + 1] = sec.sector;
@@ -131,5 +131,24 @@ describe("DiskImage - JV3", () => {
     const disk = new DiskImage(buildJV3());
 
     expect(disk.readSector(50, 0, 1)).toBeNull();
+  });
+
+  it("honors the write-protect byte (non-0xff = protected)", () => {
+    const bytes = buildJV3();
+    bytes[2901 * 3] = 0x00; // last header byte: 0xff = writable, else protected
+
+    const disk = new DiskImage(bytes, "protected");
+
+    expect(disk.writeProtected).toBe(true);
+    expect(disk.writeSector(0, 0, 0, new Uint8Array(256))).toBe(false);
+  });
+
+  it("leaves the disk writable when the write-protect byte is 0xff", () => {
+    const disk = new DiskImage(buildJV3());
+
+    expect(disk.writeProtected).toBe(false);
+    expect(disk.writeSector(0, 0, 0, new Uint8Array(256).fill(0xaa))).toBe(
+      true
+    );
   });
 });

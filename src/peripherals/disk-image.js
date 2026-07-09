@@ -79,7 +79,8 @@ export class DiskImage {
     if (used < 10) return false; // a real disk has many sectors
 
     this.jv3Map = map;
-    this.writeProtected = this.bytes[JV3_HEADER_SIZE - 1] !== 0xff ? false : false;
+    // Last header byte: 0xff = writable, anything else = write-protected
+    this.writeProtected = this.bytes[JV3_HEADER_SIZE - 1] !== 0xff;
     return true;
   }
 
