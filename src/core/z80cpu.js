@@ -1347,10 +1347,11 @@ export class Z80CPU {
       return 4;
     };
 
-    // CCF (0x3F) - Complement Carry Flag
+    // CCF (0x3F) - Complement Carry Flag; H receives the previous carry
     this.opcodeHandlers[0x3f] = () => {
-      this.flagC = !this.flagC;
-      this.flagH = this.flagC;
+      const oldCarry = this.flagC;
+      this.flagC = !oldCarry;
+      this.flagH = oldCarry;
       this.flagN = false;
       return 4;
     };

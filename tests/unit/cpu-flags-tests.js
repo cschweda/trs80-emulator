@@ -99,3 +99,31 @@ describe("DAA", () => {
     expect(cpu.flagC).toBe(1);
   });
 });
+
+describe("CCF", () => {
+  let cpu;
+
+  beforeEach(() => {
+    cpu = new Z80CPU();
+  });
+
+  function ccf() {
+    cpu.opcodeHandlers[0x3f].call(cpu);
+  }
+
+  it("copies the PREVIOUS carry into H when clearing C", () => {
+    cpu.flagC = 1;
+    ccf();
+    expect(cpu.flagC).toBe(0);
+    expect(cpu.flagH).toBe(1); // H = old C, not the new one
+    expect(cpu.flagN).toBe(0);
+  });
+
+  it("leaves H clear when setting C from a clear carry", () => {
+    cpu.flagC = 0;
+    cpu.flagH = 1; // must be overwritten by old C = 0
+    ccf();
+    expect(cpu.flagC).toBe(1);
+    expect(cpu.flagH).toBe(0);
+  });
+});
