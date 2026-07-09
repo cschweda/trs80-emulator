@@ -974,3 +974,85 @@ describe("LEVEL 13: Complete Program Execution", () => {
     expect(cpu.registers.SP).toBe(0xffff);
   });
 });
+
+describe("LEVEL 12: RLD/RRD nibble rotation (ED 6F / ED 67)", () => {
+  let cpu;
+  let memory;
+
+  beforeEach(() => {
+    cpu = new Z80CPU();
+    memory = new Uint8Array(65536);
+    cpu.readMemory = (address) => memory[address];
+    cpu.writeMemory = (address, value) => {
+      memory[address] = value & 0xff;
+    };
+  });
+
+  it("12.1 - RLD rotates the three nibbles left through A (Zilog example)", () => {
+    // A=0x7A, (HL)=0x31 -> A=0x73, (HL)=0x1A
+    memory[0x0000] = 0xed;
+    memory[0x0001] = 0x6f;
+    cpu.registers.A = 0x7a;
+    cpu.HL = 0x5000;
+    memory[0x5000] = 0x31;
+
+    const cycles = cpu.executeInstruction();
+
+    expect(cpu.registers.A).toBe(0x73);
+    expect(memory[0x5000]).toBe(0x1a);
+    expect(cpu.registers.PC).toBe(0x0002);
+    expect(cycles).toBe(18);
+  });
+
+  it("12.2 - RRD rotates the three nibbles right through A (Zilog example)", () => {
+    // A=0x84, (HL)=0x20 -> A=0x80, (HL)=0x42
+    memory[0x0000] = 0xed;
+    memory[0x0001] = 0x67;
+    cpu.registers.A = 0x84;
+    cpu.HL = 0x5000;
+    memory[0x5000] = 0x20;
+
+    const cycles = cpu.executeInstruction();
+
+    expect(cpu.registers.A).toBe(0x80);
+    expect(memory[0x5000]).toBe(0x42);
+    expect(cycles).toBe(18);
+  });
+
+  it("12.3 - RLD sets Z and parity from the resulting A, preserves C", () => {
+    // A=0x00, (HL)=0x0F -> A stays 0x00 (high nibble of 0x0F is 0), (HL)=0xF0
+    memory[0x0000] = 0xed;
+    memory[0x0001] = 0x6f;
+    cpu.registers.A = 0x00;
+    cpu.HL = 0x5000;
+    memory[0x5000] = 0x0f;
+    cpu.flagC = 1;
+
+    cpu.executeInstruction();
+
+    expect(cpu.registers.A).toBe(0x00);
+    expect(memory[0x5000]).toBe(0xf0);
+    expect(cpu.flagZ).toBe(1);
+    expect(cpu.flagPV).toBe(1); // parity of 0x00 is even
+    expect(cpu.flagS).toBe(0);
+    expect(cpu.flagH).toBe(0);
+    expect(cpu.flagN).toBe(0);
+    expect(cpu.flagC).toBe(1); // carry untouched
+  });
+
+  it("12.4 - RRD sets S from the resulting A and computes odd parity", () => {
+    // A=0x9A, (HL)=0x34 -> A=0x94 (S set), (HL)=0xA3
+    memory[0x0000] = 0xed;
+    memory[0x0001] = 0x67;
+    cpu.registers.A = 0x9a;
+    cpu.HL = 0x5000;
+    memory[0x5000] = 0x34;
+
+    cpu.executeInstruction();
+
+    expect(cpu.registers.A).toBe(0x94);
+    expect(memory[0x5000]).toBe(0xa3);
+    expect(cpu.flagS).toBe(1);
+    expect(cpu.flagPV).toBe(0); // 0x94 has three set bits -> odd parity
+  });
+});

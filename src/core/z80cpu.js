@@ -1736,6 +1736,12 @@ export class Z80CPU {
       case 0xb8: // LDDR
         return this.lddr();
 
+      // Nibble Rotation Instructions
+      case 0x6f: // RLD
+        return this.rld();
+      case 0x67: // RRD
+        return this.rrd();
+
       // Block Compare Instructions
       case 0xa1: // CPI
         return this.cpi();
@@ -3118,5 +3124,44 @@ export class Z80CPU {
     // IFF2 is copied to IFF1 on RETN
     this.IFF1 = this.IFF2;
     return 14;
+  }
+
+  /**
+   * RLD - Rotate the three low nibbles left: A.low -> (HL).low,
+   * (HL).low -> (HL).high, (HL).high -> A.low. C is unaffected.
+   */
+  rld() {
+    const value = this.readMemory(this.HL);
+    this.writeMemory(
+      this.HL,
+      ((value << 4) & 0xf0) | (this.registers.A & 0x0f)
+    );
+    this.registers.A = (this.registers.A & 0xf0) | (value >> 4);
+    this._nibbleRotateFlags();
+    return 18;
+  }
+
+  /**
+   * RRD - Rotate the three low nibbles right: A.low -> (HL).high,
+   * (HL).high -> (HL).low, (HL).low -> A.low. C is unaffected.
+   */
+  rrd() {
+    const value = this.readMemory(this.HL);
+    this.writeMemory(
+      this.HL,
+      ((this.registers.A & 0x0f) << 4) | (value >> 4)
+    );
+    this.registers.A = (this.registers.A & 0xf0) | (value & 0x0f);
+    this._nibbleRotateFlags();
+    return 18;
+  }
+
+  _nibbleRotateFlags() {
+    const a = this.registers.A;
+    this.flagS = (a & 0x80) !== 0;
+    this.flagZ = a === 0;
+    this.flagH = false;
+    this.flagPV = this.parity(a);
+    this.flagN = false;
   }
 }
