@@ -28,6 +28,7 @@ const emulator = {
   lastFrameTime: 0,
   keydownHandler: null,
   keyupHandler: null,
+  blurHandler: null,
   intervalId: null,
   holds: new Map(), // physical code -> { pressedAt, timer, key }
 };
@@ -65,6 +66,18 @@ function matrixRelease(key, code) {
     hold.timer = setTimeout(release, MIN_KEY_HOLD_MS - heldFor);
   }
   return true;
+}
+
+// Release every held matrix key and cancel pending minimum-hold timers.
+// Used when leaving the emulator and when the window loses focus: the
+// browser won't deliver keyup events we miss while unfocused/hidden, so
+// anything still down would stay stuck in the matrix.
+function releaseAllMatrixKeys() {
+  for (const hold of emulator.holds.values()) {
+    if (hold.timer) clearTimeout(hold.timer);
+  }
+  emulator.holds.clear();
+  emulator.system.keyboard.reset();
 }
 
 async function initEmulator() {
@@ -375,6 +388,14 @@ function startEmulatorLoop() {
   };
   window.addEventListener("keydown", emulator.keydownHandler);
   window.addEventListener("keyup", emulator.keyupHandler);
+
+  emulator.blurHandler = () => {
+    if (document.visibilityState === "hidden" || !document.hasFocus()) {
+      releaseAllMatrixKeys();
+    }
+  };
+  window.addEventListener("blur", emulator.blurHandler);
+  document.addEventListener("visibilitychange", emulator.blurHandler);
 }
 
 function stopEmulatorLoop() {
@@ -392,11 +413,9 @@ function stopEmulatorLoop() {
   }
   window.removeEventListener("keydown", emulator.keydownHandler);
   window.removeEventListener("keyup", emulator.keyupHandler);
-  for (const hold of emulator.holds.values()) {
-    if (hold.timer) clearTimeout(hold.timer);
-  }
-  emulator.holds.clear();
-  emulator.system.keyboard.reset(); // no stuck keys on return
+  window.removeEventListener("blur", emulator.blurHandler);
+  document.removeEventListener("visibilitychange", emulator.blurHandler);
+  releaseAllMatrixKeys(); // no stuck keys on return
 }
 
 window.showEmulatorTab = async function () {
