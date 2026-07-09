@@ -134,6 +134,44 @@ describe("NMI", () => {
   });
 });
 
+describe("RETN / RETI flip-flop restore", () => {
+  // Per measured hardware (The Undocumented Z80 Documented §interrupts),
+  // EVERY ED-block return — RETI included — copies IFF2 into IFF1; on
+  // silicon RETI is RETN with different bus signaling. The classic Zilog
+  // manual claims RETI leaves the flip-flops alone; the silicon wins.
+  function makeReturnScenario(edOpcode) {
+    const { cpu, ram } = makeCpuWithRam();
+    ram[0x0000] = 0xed;
+    ram[0x0001] = edOpcode;
+    cpu.registers.SP = 0x8000;
+    ram[0x8000] = 0x34;
+    ram[0x8001] = 0x12;
+    // Post-NMI state: IFF1 cleared by acceptance, IFF2 remembers "enabled"
+    cpu.IFF1 = false;
+    cpu.IFF2 = true;
+    return { cpu, ram };
+  }
+
+  it("RETN pops PC and restores IFF1 from IFF2", () => {
+    const { cpu } = makeReturnScenario(0x45);
+
+    cpu.executeInstruction();
+
+    expect(cpu.registers.PC).toBe(0x1234);
+    expect(cpu.IFF1).toBe(true);
+    expect(cpu.IFF2).toBe(true);
+  });
+
+  it("RETI also restores IFF1 from IFF2 (silicon behavior)", () => {
+    const { cpu } = makeReturnScenario(0x4d);
+
+    cpu.executeInstruction();
+
+    expect(cpu.registers.PC).toBe(0x1234);
+    expect(cpu.IFF1).toBe(true);
+  });
+});
+
 describe("Strict mode", () => {
   it("throws on unimplemented opcodes instead of silently NOPing", () => {
     const { cpu, ram } = makeCpuWithRam();
