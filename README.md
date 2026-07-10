@@ -26,7 +26,8 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 
 - **.cas cassette loading**: BASIC and SYSTEM (machine-code) tapes fast-load from the MACHINE menu — drop in your own game tapes (e.g. Big Five titles from bigfivesoftware.com)
 - **Dual disk drives**: WD1793 FDC emulation (ports 0xF0-0xF4, NMI via 0xE4) with JV1/JV3 `.dsk` mounting — mount LDOS/TRSDOS in drive 0, games/data in drive 1, press RESET to boot the DOS
-- **Program Library**: built-in public-domain BASIC classics (Hammurabi, Lunar Lander, Hurkle, Number Guess) turbo-typed into the real ROM, plus paste-BASIC-from-clipboard
+- **Program Library**: eight classic games from [trsjs.48k.ca](https://trsjs.48k.ca/) (Super Nova, Galaxy Invasion, Flying Saucers, Sea Dragon, Time Trek, Invasion Force, City Defence, OPUS-1 — see the LICENSE exceptions) loaded through a native /CMD, .cas and .3bn loader, plus built-in public-domain BASIC classics (Hammurabi, Lunar Lander, Hurkle, Number Guess) turbo-typed into the real ROM, and paste-BASIC-from-clipboard
+- **Full-window display**: the screen IS the page — Fill window, Original ratio (authentic 4:3 CRT proportion), or fixed 1×–4× sizes from the dev bar; the classic Tandy cabinet look survives as a MACHINE-menu toggle
 - See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the implementation map and extension guide
 
 ### 🚧 Planned Features (Future Phases)
@@ -76,10 +77,14 @@ The app launches straight into the Model III. From a cold start:
 
 Your keyboard is the TRS-80's keyboard: ESC is BREAK, Backspace deletes,
 and typing is authentically Model III (the machine boots caps-locked;
-SHIFT+0 unlocks lowercase). The **MACHINE** menu has reset, full-screen
-theater mode, cassette (.cas) loading, dual disk (.dsk) mounting, the
-built-in program library, and paste-BASIC-from-clipboard. Font and
-screen-size selectors persist between visits.
+SHIFT+0 unlocks lowercase). By default the screen fills the browser
+window; the Size selector switches between **Fill window**, **Original
+ratio** (the real 12" CRT's 4:3 proportion), and fixed 1×–4× sizes. The
+**MACHINE** menu has reset, a "Show machine case" toggle that brings
+back the Tandy cabinet, cassette (.cas) loading, dual disk (.dsk)
+mounting, the game/program library (pick a title, **Load & run**), and
+paste-BASIC-from-clipboard. Font, size, and case preferences persist
+between visits.
 
 Mount a JV1/JV3 disk image in drive 0 and press RESET to boot it; with
 no disk mounted the machine boots straight to cassette BASIC.

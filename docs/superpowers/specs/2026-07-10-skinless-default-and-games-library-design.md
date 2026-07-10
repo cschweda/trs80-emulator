@@ -140,3 +140,18 @@ Super Nova and Galaxy Invasion running from the Library menu.
 - trsjs's keystroke-injection mini-language, disk-image games
   (TRSDOS/Hires demos), WebGL/CRT shader effects.
 - Re-rendering glyphs at 8×24 in video.js (CSS achieves the same pixels).
+
+## Deviations discovered during implementation (2026-07-10)
+
+- Retro-Zap is not bundled: its .cas uses a custom encoding (0xAA leader,
+  no BASIC/SYSTEM structure at any bit alignment). Eight titles ship.
+- cas-format.js needed no changes: seadrag.3bn, timetrek.3bn and
+  invade.cas all parse with the existing leader handling (verified
+  against the real files).
+- City Defence loads as a fetched "bas"-format file entry rather than an
+  inline text entry — same turbo-type mechanism, single source of truth
+  in public/programs/m2.bas.
+- typeText gained an optional enterTStates parameter (default unchanged,
+  400k): typing City Defence's 5.7 KB listing proved the fixed
+  post-ENTER allowance starves as the stored program grows, mangling
+  line numbers. The bas loader and the games test pass 1.5M.
