@@ -10,6 +10,7 @@ import {
   fastLoadBasic,
   fastLoadSystem,
 } from "./peripherals/cas-format.js";
+import { parseCmd, fastLoadCmd } from "./peripherals/cmd-format.js";
 import { DiskImage } from "./peripherals/disk-image.js";
 import { LIBRARY } from "./data/library.js";
 import { normalizeScale, wellLayout } from "./ui/screen-layout.js";
@@ -129,14 +130,22 @@ async function initEmulator() {
     );
   });
 
-  // Populate the library picker
+  // Populate the library picker: games first, then the BASIC classics
   const librarySelect = document.getElementById("library-select");
   if (librarySelect && librarySelect.childElementCount === 0) {
+    const groups = new Map(); // label -> <optgroup>
     for (const entry of LIBRARY) {
+      const label = entry.group || "BASIC classics";
+      if (!groups.has(label)) {
+        const optgroup = document.createElement("optgroup");
+        optgroup.label = label;
+        librarySelect.appendChild(optgroup);
+        groups.set(label, optgroup);
+      }
       const option = document.createElement("option");
       option.value = entry.id;
       option.textContent = entry.title;
-      librarySelect.appendChild(option);
+      groups.get(label).appendChild(option);
     }
   }
 
@@ -276,6 +285,10 @@ window.menuLoadLibrary = async function () {
   const select = document.getElementById("library-select");
   const entry = LIBRARY.find((e) => e.id === select?.value);
   if (!entry) return;
+  if (entry.kind === "file") {
+    await loadLibraryFile(entry);
+    return;
+  }
   setEmulatorStatus(`Typing "${entry.title}" into BASIC…`);
   await new Promise((r) => setTimeout(r, 30)); // let the status paint
   emulator.system.typeText("NEW\n");
@@ -283,6 +296,53 @@ window.menuLoadLibrary = async function () {
   emulator.system.typeText("RUN\n");
   setEmulatorStatus(`${entry.title} — running`);
 };
+
+// Fetch a public/programs file and load it by format. ML programs jump
+// straight to their entry; BASIC ones get an auto-RUN.
+async function loadLibraryFile(entry) {
+  setEmulatorStatus(`Fetching ${entry.title}…`);
+  let bytes;
+  try {
+    const response = await fetch(entry.file);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    bytes = new Uint8Array(await response.arrayBuffer());
+  } catch (err) {
+    setEmulatorStatus(`Could not fetch ${entry.title}: ${err.message}`);
+    return;
+  }
+  try {
+    if (entry.format === "cmd") {
+      fastLoadCmd(emulator.system, parseCmd(bytes));
+      setEmulatorStatus(
+        `${entry.title} — running${entry.note ? ` (${entry.note})` : ""}`
+      );
+    } else if (entry.format === "cas") {
+      const parsed = parseCas(bytes);
+      if (parsed.kind === "basic") {
+        fastLoadBasic(emulator.system, parsed);
+        emulator.system.typeText("RUN\n");
+      } else {
+        fastLoadSystem(emulator.system, parsed);
+      }
+      const warn = parsed.checksumErrors
+        ? ` (${parsed.checksumErrors} checksum errors)`
+        : "";
+      setEmulatorStatus(`${entry.title} — running${warn}`);
+    } else if (entry.format === "bas") {
+      const text = new TextDecoder().decode(bytes).replace(/\r\n?/g, "\n");
+      setEmulatorStatus(`Typing ${entry.title}… (the tab freezes while it types)`);
+      await new Promise((r) => setTimeout(r, 30)); // let the status paint
+      emulator.system.typeText("NEW\n");
+      emulator.system.typeText(text.endsWith("\n") ? text : text + "\n");
+      emulator.system.typeText("RUN\n");
+      setEmulatorStatus(`${entry.title} — running`);
+    } else {
+      setEmulatorStatus(`Unknown library format "${entry.format}"`);
+    }
+  } catch (err) {
+    setEmulatorStatus(`Could not load ${entry.title}: ${err.message}`);
+  }
+}
 
 window.menuPasteBasic = async function () {
   window.toggleMachineMenu(true);

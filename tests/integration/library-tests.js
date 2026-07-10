@@ -40,7 +40,7 @@ describe("Built-in library programs run on the real ROM", () => {
     bootToReady(system);
   });
 
-  for (const entry of LIBRARY) {
+  for (const entry of LIBRARY.filter((e) => e.kind !== "file")) {
     it(`${entry.title} loads and runs`, () => {
       system.typeText("NEW\n");
       const skipped = system.typeText(entry.text);

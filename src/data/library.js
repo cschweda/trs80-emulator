@@ -1,15 +1,90 @@
 /**
- * Built-in program library: public-domain classics in Level II-safe
- * BASIC (no ELSE, uppercase, RND(n) integer form), compact adaptations
- * in the spirit of David Ahl's "BASIC Computer Games" (Ahl released his
- * books to the public domain). Each entry is plain text that gets
- * turbo-typed into the real ROM — the machine tokenizes it itself.
+ * Built-in program library.
+ *
+ * Two entry kinds:
+ *   kind "file" — a binary/text program under public/programs/ fetched on
+ *   demand: format "cmd" (DOS executable), "cas" (cassette image, BASIC
+ *   or SYSTEM — .3bn SYSTEM-block images parse the same way), or "bas"
+ *   (ASCII source that gets turbo-typed). These are the trsjs.48k.ca
+ *   games; see the LICENSE exception about their copyright status.
+ *
+ *   kind absent (text) — public-domain classics in Level II-safe BASIC
+ *   (no ELSE, uppercase, RND(n) integer form), compact adaptations in
+ *   the spirit of David Ahl's "BASIC Computer Games" (Ahl released his
+ *   books to the public domain). Each entry is plain text that gets
+ *   turbo-typed into the real ROM — the machine tokenizes it itself.
  *
  * `expect` is a string the program prints early, used by the headless
  * library test to prove the program loads and runs.
  */
 
 export const LIBRARY = [
+  // ---- Games from trsjs.48k.ca (see LICENSE exception) ----
+  {
+    id: "supernova",
+    title: "Super Nova (Big Five, 1980)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/nova-m3.cmd",
+    format: "cmd",
+    note: "Press CLEAR (Home key) to start",
+  },
+  {
+    id: "galaxy-invasion",
+    title: "Galaxy Invasion (Big Five, 1980)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/galaxy.cmd",
+    format: "cmd",
+  },
+  {
+    id: "flying-saucers",
+    title: "Flying Saucers (1980)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/flysauc1.cmd",
+    format: "cmd",
+  },
+  {
+    id: "sea-dragon",
+    title: "Sea Dragon (Adventure Intl, 1982)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/seadrag.3bn",
+    format: "cas",
+  },
+  {
+    id: "time-trek",
+    title: "Time Trek (1980)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/timetrek.3bn",
+    format: "cas",
+  },
+  {
+    id: "invasion-force",
+    title: "Invasion Force (1979)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/invade.cas",
+    format: "cas",
+  },
+  {
+    id: "city-defence",
+    title: "City Defence (BASIC, ~20 s to type in)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/m2.bas",
+    format: "bas",
+  },
+  {
+    id: "opus1",
+    title: "OPUS-1 (cassette music — silent: no sound yet)",
+    group: "Games",
+    kind: "file",
+    file: "/programs/opus1msg.cmd",
+    format: "cmd",
+  },
   {
     id: "hammurabi",
     title: "Hammurabi (city-state sim)",
