@@ -38,3 +38,17 @@ remains with its rights holders.
 
 
 
+
+EXCEPTION - Program library game files
+
+The files under public/programs/ are classic TRS-80 software obtained from
+George Phillips's trsjs site (https://trsjs.48k.ca/), where they are hosted
+for in-browser play: Super Nova and Galaxy Invasion (Big Five Software),
+Sea Dragon (Adventure International), Time Trek, Flying Saucers, City
+Defence, Invasion Force, and OPUS-1. They are NOT covered by the MIT
+license above. These titles circulate freely in the TRS-80 preservation
+community, but the emulator contributors claim no rights over them and
+cannot grant any; rights remain with their respective holders. They are
+included solely so the emulator has period software to run. (Retro-Zap,
+also on trsjs, is deliberately not included: its cassette image uses a
+custom encoding this emulator's fast-loader does not support.)
