@@ -525,6 +525,11 @@ trs80-emulator/
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
+**Exception:** the Model III ROM image (`public/assets/model3.rom`) is
+Tandy/Radio Shack's copyrighted firmware, included for interoperability
+only — it is not MIT-licensed and the contributors can grant no rights to
+it. See the exception notice at the bottom of [LICENSE](LICENSE).
+
 ## Documentation
 
 - **[Complete Design Document](docs/TRS80-COMPLETE-BUILD-PROMPT.md)** - Full specification and implementation guide
