@@ -185,115 +185,52 @@
         padding: 4px 6px;
       }
 
-      /* ------------------------- Theater mode ---------------------------
-         Full-screen for real work: the nav/status bar stays pinned at the
-         top, the screen fills everything below it, and the case chrome
-         gets out of the way. Esc remains BREAK, so leaving theater mode
-         happens through the MACHINE menu (or F11 for true fullscreen). */
-      body.theater #drive-column,
-      body.theater #badge-row,
-      body.theater #machine-hint {
-        display: none;
-      }
-      body.theater #machine-stage {
-        padding: 0;
-        overflow: hidden;
-      }
-      body.theater #machine-case {
-        background: #000;
-        border: none;
-        border-radius: 0;
-        box-shadow: none;
-        padding: 0;
-        max-width: none;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      body.theater #machine-face {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-      }
-      body.theater #crt-bezel {
-        background: #000;
-        border-radius: 0;
-        box-shadow: none;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-      }
-      body.theater #crt-well {
-        border-radius: 0;
-        /* Largest 8:3 rectangle that fits under the 42px nav bar;
-           a fixed Size selection overrides this via inline style. */
-        width: min(100vw, calc((100vh - 42px) * 2.6667));
-      }
-      /* Fixed-scale screens center inside whichever mode is active */
-      #crt-well[data-fixed-scale] {
-        margin: 0 auto;
-      }
-
-      /* --------------------------- The machine --------------------------- */
+      /* --------------------------- The screen ---------------------------
+         Default view: the screen IS the page. The stage is black, the
+         dev bar stays pinned on top, and the case wrappers (#machine-case,
+         #machine-face, #crt-bezel) are size-transparent flex pass-throughs.
+         body.case (MACHINE menu → Show machine case) restores the cabinet. */
       #machine-stage {
         flex: 1 1 0;
         min-height: 0;
         overflow: auto;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 22px 12px 12px;
+        background: #000;
         box-sizing: border-box;
       }
-      #machine-case {
-        background: linear-gradient(
-          172deg,
-          var(--tandy-gray-hi) 0%,
-          var(--tandy-gray) 38%,
-          var(--tandy-gray-lo) 100%
-        );
-        border-radius: 18px 18px 10px 10px;
-        border: 1px solid #5d574e;
-        box-shadow:
-          0 30px 60px rgba(0, 0, 0, 0.65),
-          inset 0 2px 3px rgba(255, 255, 255, 0.35);
-        padding: 26px 28px 20px;
-        max-width: 1160px;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      #machine-face {
-        display: grid;
-        grid-template-columns: minmax(0, 2.2fr) minmax(140px, 1fr);
-        gap: 22px;
-        align-items: stretch;
-      }
+      #machine-case,
+      #machine-face,
       #crt-bezel {
-        background: linear-gradient(180deg, #26282b 0%, var(--bezel) 60%);
-        border-radius: 14px;
-        padding: clamp(14px, 3vw, 30px);
-        box-shadow:
-          inset 0 0 0 2px #000,
-          inset 0 4px 10px rgba(0, 0, 0, 0.8),
-          0 1px 0 rgba(255, 255, 255, 0.25);
+        display: flex;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
       }
       #crt-well {
         position: relative;
-        border-radius: 10px;
         overflow: hidden;
         background: #020402;
+        margin: auto; /* centers fixed/ratio sizes; lets oversize scroll */
+      }
+      /* Size select → data-scale on the well (set by setScreenScale) */
+      #crt-well[data-scale="fill"] {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      #crt-well[data-scale="ratio"] {
+        /* Largest 4:3 rectangle under the ~42px dev bar */
+        aspect-ratio: 4 / 3;
+        width: min(100%, calc((100vh - 42px) * 1.3333));
+      }
+      #crt-well[data-scale="fixed"] {
+        width: var(--scale-w);
+        height: var(--scale-h);
       }
       #emulator-screen {
         display: block;
         width: 100%;
-        height: auto;
+        height: 100%;
         image-rendering: pixelated;
         image-rendering: crisp-edges;
         background: #020402;
@@ -318,9 +255,82 @@
             rgba(255, 255, 255, 0.10) 0%,
             transparent 42%
           );
+      }
+      #drive-column,
+      #badge-row,
+      #machine-hint {
+        display: none;
+      }
+
+      /* ------------------------ The machine case ------------------------
+         Everything below only applies when the user opts back into the
+         cabinet. It reproduces the pre-skinless look. */
+      body.case #machine-stage {
+        flex-direction: column;
+        align-items: center;
+        padding: 22px 12px 12px;
+        background: none;
+      }
+      body.case #machine-case {
+        display: block;
+        flex: none;
+        background: linear-gradient(
+          172deg,
+          var(--tandy-gray-hi) 0%,
+          var(--tandy-gray) 38%,
+          var(--tandy-gray-lo) 100%
+        );
+        border-radius: 18px 18px 10px 10px;
+        border: 1px solid #5d574e;
+        box-shadow:
+          0 30px 60px rgba(0, 0, 0, 0.65),
+          inset 0 2px 3px rgba(255, 255, 255, 0.35);
+        padding: 26px 28px 20px;
+        max-width: 1160px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      body.case #machine-face {
+        display: grid;
+        grid-template-columns: minmax(0, 2.2fr) minmax(140px, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+      body.case #crt-bezel {
+        display: block;
+        flex: none;
+        background: linear-gradient(180deg, #26282b 0%, var(--bezel) 60%);
+        border-radius: 14px;
+        padding: clamp(14px, 3vw, 30px);
+        box-shadow:
+          inset 0 0 0 2px #000,
+          inset 0 4px 10px rgba(0, 0, 0, 0.8),
+          0 1px 0 rgba(255, 255, 255, 0.25);
+      }
+      body.case #crt-well {
+        border-radius: 10px;
+        margin: 0;
+      }
+      body.case #crt-glass {
         border-radius: 10px;
       }
-      #drive-column {
+      /* In the cabinet the well spans the bezel and the canvas keeps its
+         natural 8:3; a numeric size pins the width as before. */
+      body.case #crt-well[data-scale="fill"],
+      body.case #crt-well[data-scale="ratio"] {
+        width: 100%;
+        height: auto;
+        aspect-ratio: auto;
+      }
+      body.case #crt-well[data-scale="fixed"] {
+        width: min(var(--scale-w), 100%);
+        height: auto;
+        margin: 0 auto;
+      }
+      body.case #emulator-screen {
+        height: auto;
+      }
+      body.case #drive-column {
         display: flex;
         flex-direction: column;
         gap: 14px;
@@ -342,7 +352,7 @@
         border: 2px solid #4c463e;
         box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
       }
-      #case-vents {
+      body.case #case-vents {
         margin-top: auto;
         display: flex;
         flex-direction: column;
@@ -356,7 +366,7 @@
         background: rgba(0, 0, 0, 0.28);
         box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
       }
-      #badge-row {
+      body.case #badge-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -420,7 +430,8 @@
         outline: 3px solid #0ff;
         outline-offset: 2px;
       }
-      #machine-hint {
+      body.case #machine-hint {
+        display: block;
         color: #6d675e;
         font-size: 12px;
         max-width: 960px;
@@ -428,18 +439,18 @@
       }
 
       @media (max-width: 720px) {
-        #machine-face {
+        body.case #machine-face {
           grid-template-columns: 1fr;
         }
-        #drive-column {
+        body.case #drive-column {
           flex-direction: row;
           align-items: center;
         }
-        .drive-blank {
+        body.case .drive-blank {
           flex: 1 1 0;
           height: 40px;
         }
-        #case-vents {
+        body.case #case-vents {
           display: none;
         }
       }
@@ -758,8 +769,8 @@
             MACHINE ▾
           </button>
           <div id="machine-menu-panel" role="menu" hidden>
-            <button role="menuitem" onclick="toggleTheaterMode()">
-              <span id="menu-theater-label">Full screen</span>
+            <button role="menuitem" onclick="toggleMachineCase()">
+              <span id="menu-case-label">Show machine case</span>
             </button>
             <button role="menuitem" onclick="menuReset()">
               Reset (reboot)
@@ -800,6 +811,13 @@
             <button role="menuitem" onclick="menuPasteBasic()">
               Paste BASIC from clipboard
             </button>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-heading">Keyboard</div>
+            <div class="menu-note">
+              ENTER at Cass? and Memory Size? reaches READY. ESC is BREAK,
+              Backspace deletes. Boots in caps mode — SHIFT+0 unlocks
+              lowercase.
+            </div>
           </div>
         </div>
         <label>
@@ -820,7 +838,8 @@
             onchange="setScreenScale(this.value)"
             aria-label="Screen size"
           >
-            <option value="fit" selected>Fit</option>
+            <option value="fill" selected>Fill window</option>
+            <option value="ratio">Original ratio</option>
             <option value="1">1×</option>
             <option value="1.5">1.5×</option>
             <option value="2">2×</option>
@@ -855,7 +874,7 @@
       <div id="machine-case">
         <div id="machine-face">
           <div id="crt-bezel">
-            <div id="crt-well">
+            <div id="crt-well" data-scale="fill">
               <canvas
                 id="emulator-screen"
                 width="512"
@@ -889,7 +908,8 @@
         Memory Size? to reach READY, then type BASIC. ESC is BREAK,
         Backspace deletes. Typing is Model III style: the machine boots in
         caps mode — press SHIFT+0 to unlock lowercase, then SHIFT+letter
-        types lowercase. Full screen lives in the MACHINE menu.
+        types lowercase. The machine case can be hidden from the MACHINE
+        menu.
       </p>
     </div>
 

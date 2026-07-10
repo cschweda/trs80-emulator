@@ -12,6 +12,7 @@ import {
 } from "./peripherals/cas-format.js";
 import { DiskImage } from "./peripherals/disk-image.js";
 import { LIBRARY } from "./data/library.js";
+import { normalizeScale, wellLayout } from "./ui/screen-layout.js";
 
 // Console output helper
 const consoleDiv = document.getElementById("console");
@@ -110,20 +111,14 @@ async function initEmulator() {
     fontSelect.value = emulator.video.fontName;
   }
 
-  // Apply the saved screen size
+  // Apply the saved screen size ("fit" from older builds means "fill")
   let savedScale = null;
   try {
     savedScale = localStorage.getItem("trs80-scale");
   } catch {
     savedScale = null;
   }
-  if (savedScale) {
-    window.setScreenScale(savedScale);
-    const scaleSelect = document.getElementById("scale-select");
-    if (scaleSelect) {
-      scaleSelect.value = savedScale;
-    }
-  }
+  window.setScreenScale(savedScale);
 
   document.getElementById("emulator-reset").addEventListener("click", () => {
     emulator.system.reset();
@@ -179,11 +174,16 @@ document.addEventListener("click", (e) => {
   }
 });
 
-window.toggleTheaterMode = function () {
-  const on = document.body.classList.toggle("theater");
-  const label = document.getElementById("menu-theater-label");
+window.toggleMachineCase = function () {
+  const on = document.body.classList.toggle("case");
+  try {
+    localStorage.setItem("trs80-case", on ? "1" : "0");
+  } catch {
+    // preference just won't persist
+  }
+  const label = document.getElementById("menu-case-label");
   if (label) {
-    label.textContent = on ? "Exit full screen" : "Full screen";
+    label.textContent = on ? "Hide machine case" : "Show machine case";
   }
   window.toggleMachineMenu(true);
 };
@@ -440,24 +440,30 @@ window.setScreenFont = function (name) {
   }
 };
 
-// Screen size: "fit" scales to the available space; a numeric scale pins
-// the 512x192 screen to that multiple (1x reads like a real 12" CRT).
+// Screen size: "fill" stretches to the window, "ratio" letterboxes at the
+// authentic 4:3 CRT proportion, and a numeric scale pins a fixed 4:3 size
+// (1× = 512×384 CSS px). Legacy saved "fit" means "fill".
 window.setScreenScale = function (value) {
+  const scale = normalizeScale(value);
   try {
-    localStorage.setItem("trs80-scale", value);
+    localStorage.setItem("trs80-scale", scale);
   } catch {
-    // preference just won't persist
+    // private browsing — preference just won't persist
   }
   const well = document.getElementById("crt-well");
   if (!well) return;
-  if (value === "fit") {
-    well.style.width = "";
-    well.removeAttribute("data-fixed-scale");
+  const layout = wellLayout(scale);
+  well.dataset.scale = layout.mode;
+  if (layout.mode === "fixed") {
+    well.style.setProperty("--scale-w", layout.width);
+    well.style.setProperty("--scale-h", layout.height);
   } else {
-    const scale = parseFloat(value);
-    if (!Number.isFinite(scale) || scale <= 0) return;
-    well.style.width = `min(${Math.round(512 * scale)}px, 100%)`;
-    well.setAttribute("data-fixed-scale", value);
+    well.style.removeProperty("--scale-w");
+    well.style.removeProperty("--scale-h");
+  }
+  const select = document.getElementById("scale-select");
+  if (select && select.value !== scale) {
+    select.value = scale;
   }
 };
 
@@ -1693,6 +1699,17 @@ log(
 // Dev/debug hook: lets the console (and automated checks) inspect the
 // live machine — e.g. __trs80.system.screenText().
 window.__trs80 = emulator;
+
+// Restore the machine-case preference (default: skinless full-window view)
+try {
+  if (localStorage.getItem("trs80-case") === "1") {
+    document.body.classList.add("case");
+    const caseLabel = document.getElementById("menu-case-label");
+    if (caseLabel) caseLabel.textContent = "Hide machine case";
+  }
+} catch {
+  // default skinless
+}
 
 // Launch straight into the machine: a 48K cassette Model III, powered on.
 window.showEmulatorTab();
