@@ -93,6 +93,7 @@ async function initEmulator() {
 
   emulator.system = new TRS80System({ romData });
   emulator.video = new VideoSystem(document.getElementById("emulator-screen"));
+  window.__trs80 = emulator; // debug/inspection handle (console + tooling)
 
   // Apply the saved font preference (default is the TRS-80 style)
   let savedFont = null;
@@ -389,13 +390,11 @@ function startEmulatorLoop() {
   window.addEventListener("keydown", emulator.keydownHandler);
   window.addEventListener("keyup", emulator.keyupHandler);
 
-  emulator.blurHandler = () => {
-    if (document.visibilityState === "hidden" || !document.hasFocus()) {
-      releaseAllMatrixKeys();
-    }
-  };
+  // Window blur only (alt-tab, cmd-tab, clicking another window): a
+  // hidden-but-automated tab can still legitimately receive key events,
+  // so visibilitychange must NOT wipe the matrix.
+  emulator.blurHandler = () => releaseAllMatrixKeys();
   window.addEventListener("blur", emulator.blurHandler);
-  document.addEventListener("visibilitychange", emulator.blurHandler);
 }
 
 function stopEmulatorLoop() {
@@ -414,7 +413,6 @@ function stopEmulatorLoop() {
   window.removeEventListener("keydown", emulator.keydownHandler);
   window.removeEventListener("keyup", emulator.keyupHandler);
   window.removeEventListener("blur", emulator.blurHandler);
-  document.removeEventListener("visibilitychange", emulator.blurHandler);
   releaseAllMatrixKeys(); // no stuck keys on return
 }
 
