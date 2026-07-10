@@ -12,7 +12,6 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "rom:embed": "node scripts/rom-to-base64.js",
     "deploy": "yarn test:run && yarn build && npx netlify deploy --prod",
     "deploy:build": "yarn build && npx netlify deploy --prod",
     "netlify:build": "npx netlify build",

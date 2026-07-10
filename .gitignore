@@ -33,9 +33,6 @@ coverage/
 .env.local
 .env.*.local
 
-# Generated ROM file
-src/data/model3-rom.js
-
 # OS files
 Thumbs.db
 
