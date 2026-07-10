@@ -107,8 +107,14 @@ export class TRS80System {
    * but the wall-clock cost is only the emulation time (~3 ms/char).
    * '\n' presses ENTER. Returns the number of characters that had no
    * matrix mapping and were skipped.
+   *
+   * After ENTER the ROM tokenizes and stores the line (cost grows with
+   * program size) before it scans the keyboard again — give it room or
+   * the first character of the next line gets eaten. The default suits
+   * the small built-in classics; pass a larger `enterTStates` for
+   * multi-KB listings (a 5.7 KB program needs ~1M).
    */
-  typeText(text) {
+  typeText(text, { enterTStates = 400000 } = {}) {
     let skipped = 0;
     let seq = 0;
     for (const ch of text) {
@@ -120,10 +126,7 @@ export class TRS80System {
       }
       this.runTStates(70000); // held across several scans + debounce
       this.keyboard.keyUp(code);
-      // After ENTER the ROM tokenizes and stores the line (cost grows
-      // with program size) before it scans the keyboard again — give it
-      // room or the first character of the next line gets eaten.
-      this.runTStates(ch === "\n" ? 400000 : 50000);
+      this.runTStates(ch === "\n" ? enterTStates : 50000);
     }
     return skipped;
   }

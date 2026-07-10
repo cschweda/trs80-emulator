@@ -333,7 +333,11 @@ async function loadLibraryFile(entry) {
       setEmulatorStatus(`Typing ${entry.title}… (the tab freezes while it types)`);
       await new Promise((r) => setTimeout(r, 30)); // let the status paint
       emulator.system.typeText("NEW\n");
-      emulator.system.typeText(text.endsWith("\n") ? text : text + "\n");
+      // Big listing: the ROM needs extra post-ENTER time per line or it
+      // eats the next line's first characters (see typeText).
+      emulator.system.typeText(text.endsWith("\n") ? text : text + "\n", {
+        enterTStates: 1500000,
+      });
       emulator.system.typeText("RUN\n");
       setEmulatorStatus(`${entry.title} — running`);
     } else {
