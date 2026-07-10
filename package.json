@@ -1,6 +1,6 @@
 {
   "name": "trs80-model3-emulator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Browser-based TRS-80 Model III emulator with cassette interface, graphics, and integrated Z80 assembler",
   "type": "module",
   "scripts": {
