@@ -1,0 +1,78 @@
+# Changelog
+
+All notable changes to the TRS-80 Model III emulator are documented here.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and versions follow [semver](https://semver.org/).
+
+## [1.3.0] - 2026-07-12
+
+### Added
+
+- Games library grows from 12 to 26 titles: arcade classics (Scarfman,
+  Robot Attack, Meteor Mission 2, Defense Command, Penetrator), text
+  adventures (Adventureland, Pirate Adventure, Bedlam), Super Star Trek,
+  and five more BASIC type-ins (Hunt the Wumpus, Acey Ducey, Bagels,
+  Camel, Hangman)
+- Library menu groups titles into Arcade, Adventures, BASIC type-ins,
+  and Extras
+- Super Star Trek ships as a pre-tokenized cassette built by the real
+  ROM (`scripts/build-cas.js`)
+- `scripts/probe-program.js`: headless loader probe for vetting game
+  images before they join the library
+- Bottom status bar: version, this changelog in an in-app modal, GitHub
+  link
+- This changelog
+
+### Changed
+
+- Default screen size is 2× for fresh visitors (a saved Size preference
+  still wins)
+
+## [1.2.0] - 2026-07-12
+
+### Added
+
+- Cassette-port sound through WebAudio, with a MACHINE-menu toggle
+  (preference persisted)
+- Save states: quick save/load in the browser plus JSON export/import
+- 32-column wide-character mode
+- Touch input: soft-keyboard bridge and on-screen special keys
+
+### Changed
+
+- Z80 core roughly 7× faster (about 83× realtime headless)
+
+## [1.1.0] - 2026-07-10
+
+### Added
+
+- Games library: eight classics from trsjs.48k.ca (Super Nova, Galaxy
+  Invasion, Flying Saucers, Sea Dragon, Time Trek, Invasion Force, City
+  Defence, OPUS-1) with a native /CMD parser and fast-loader, cassette
+  format dispatch, and headless real-ROM acceptance tests
+- Skinless full-window screen as the default view; the machine case is
+  opt-in from the MACHINE menu; Size select backed by a pure
+  screen-layout mapping
+- CI: the vitest suite runs on push and pull request
+
+### Fixed
+
+- CCF takes half-carry from the previous carry, not the new one
+- RETN/RETI interrupt flip-flop restore semantics pinned by tests
+- RLD/RRD (ED 6F/67) implemented
+- JV3 write-protect byte honored
+- Held keys release when the window loses focus
+
+## [1.0.0] - 2026-07-05
+
+### Added
+
+- Boots the real 14K Model III ROM into Level II BASIC on an emulated
+  Z80 at 2.03 MHz
+- Dual WD1793 floppy controller with JV1/JV3 `.dsk` mounting
+- Cassette `.cas` loading and a built-in program library with
+  public-domain BASIC classics (Hammurabi, Lunar Lander, Hurkle, Number
+  Guess), plus paste-BASIC-from-clipboard
+- Authentic keyboard matrix and 64-column video; phased test suite
+  covering CPU, memory, I/O, cassette, BASIC, and video (work back to
+  2025-12-13 folds into this release)
