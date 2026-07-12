@@ -1,8 +1,15 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import { readFileSync } from "fs";
+
+const pkg = JSON.parse(readFileSync(resolve(__dirname, "package.json"), "utf8"));
 
 export default defineConfig({
   base: "./",
+
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
 
   build: {
     outDir: "dist",

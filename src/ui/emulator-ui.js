@@ -180,6 +180,8 @@ export function setEmulatorStatus(text) {
   if (status) {
     status.textContent = text;
   }
+  const versionEl = document.getElementById("status-bar-version");
+  if (versionEl) versionEl.textContent = `v${__APP_VERSION__}`;
   const barStatus = document.getElementById("dev-bar-status");
   if (barStatus) {
     barStatus.textContent = text;
