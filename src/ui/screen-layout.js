@@ -2,7 +2,7 @@
  * Screen layout for the skinless view.
  *
  * The Size select stores one token in localStorage["trs80-scale"]:
- *   "fill"   stretch to the whole stage (default)
+ *   "fill"   stretch to the whole stage
  *   "ratio"  largest 4:3 rectangle that fits — the real Model III CRT
  *            showed the 512×192 raster with double-height pixels, so
  *            4:3 is the authentic proportion
@@ -12,9 +12,10 @@
 
 export const SCALE_VALUES = ["fill", "ratio", "1", "1.5", "2", "3", "4"];
 
+// Unset/unknown values fall back to "2" — the default for fresh visitors.
 export function normalizeScale(value) {
   if (value === "fit") return "fill"; // legacy saved preference
-  return SCALE_VALUES.includes(value) ? value : "fill";
+  return SCALE_VALUES.includes(value) ? value : "2";
 }
 
 /**

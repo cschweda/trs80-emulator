@@ -15,11 +15,11 @@ describe("normalizeScale", () => {
       expect(normalizeScale(v)).toBe(v);
     }
   });
-  it("defaults null/undefined/junk to fill", () => {
-    expect(normalizeScale(null)).toBe("fill");
-    expect(normalizeScale(undefined)).toBe("fill");
-    expect(normalizeScale("9")).toBe("fill");
-    expect(normalizeScale("banana")).toBe("fill");
+  it("defaults null/undefined/junk to 2x", () => {
+    expect(normalizeScale(null)).toBe("2");
+    expect(normalizeScale(undefined)).toBe("2");
+    expect(normalizeScale("9")).toBe("2");
+    expect(normalizeScale("banana")).toBe("2");
   });
 });
 
