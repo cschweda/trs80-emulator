@@ -1,6 +1,6 @@
 {
   "name": "trs80-model3-emulator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Browser-based TRS-80 Model III emulator: boots the real ROM, with cassette/disk loading, a games library, sound, and save states",
   "type": "module",
   "scripts": {
