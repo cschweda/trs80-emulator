@@ -282,9 +282,14 @@ export class VideoSystem {
    *
    * Builds one ImageData for the whole 512x192 frame in a typed loop —
    * far cheaper than per-pixel fillRect at 60 fps.
+   *
+   * In 32-column mode (mode register bit 2 — CHR$(23)) the hardware
+   * displays the characters at EVEN video addresses double-wide, 32 per
+   * row; the frame geometry is unchanged.
    * @param {MemorySystem} memorySystem - Memory system to read from
+   * @param {boolean} columns32 - render in 32-character mode
    */
-  renderScreen(memorySystem) {
+  renderScreen(memorySystem, columns32 = false) {
     if (!this.canvas || !this.ctx) return;
 
     const width = this.columns * this.charWidth;
@@ -306,23 +311,37 @@ export class VideoSystem {
     const [fr, fg, fb] = this._fgRGB;
     const [br, bg, bb] = this._bgRGB;
 
+    const cols = columns32 ? 32 : this.columns;
+    const step = columns32 ? 2 : 1; // source address stride
+    const cellWidth = columns32 ? this.charWidth * 2 : this.charWidth;
+
     for (let row = 0; row < this.rows; row++) {
-      for (let col = 0; col < this.columns; col++) {
+      for (let col = 0; col < cols; col++) {
         const charCode = memorySystem.readByte(
-          this.videoMemoryStart + row * this.columns + col
+          this.videoMemoryStart + row * this.columns + col * step
         );
         const charData = this.charRom[charCode] || this.charRom[0x20];
         for (let y = 0; y < this.charHeight; y++) {
           const rowBits = charData[y] || 0;
           let offset =
-            ((row * this.charHeight + y) * width + col * this.charWidth) * 4;
+            ((row * this.charHeight + y) * width + col * cellWidth) * 4;
           for (let x = 0; x < this.charWidth; x++) {
             const on = rowBits & (1 << (7 - x));
-            data[offset] = on ? fr : br;
-            data[offset + 1] = on ? fg : bg;
-            data[offset + 2] = on ? fb : bb;
+            const r = on ? fr : br;
+            const g = on ? fg : bg;
+            const b = on ? fb : bb;
+            data[offset] = r;
+            data[offset + 1] = g;
+            data[offset + 2] = b;
             data[offset + 3] = 255;
             offset += 4;
+            if (columns32) {
+              data[offset] = r;
+              data[offset + 1] = g;
+              data[offset + 2] = b;
+              data[offset + 3] = 255;
+              offset += 4;
+            }
           }
         }
       }

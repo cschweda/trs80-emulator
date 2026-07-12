@@ -904,3 +904,64 @@ describe("VideoSystem - selectable fonts", () => {
     expect(video.charRom[191].join(",")).toBe(block);
   });
 });
+
+describe("VideoSystem - 32-column rendering", () => {
+  function makeFakeCanvas() {
+    const calls = { frame: null };
+    const ctx = {
+      createImageData: (w, h) => ({
+        width: w,
+        height: h,
+        data: new Uint8ClampedArray(w * h * 4),
+      }),
+      putImageData: (frame) => {
+        calls.frame = frame;
+      },
+    };
+    return { canvas: { getContext: () => ctx }, calls };
+  }
+
+  it("draws even-address characters double-wide, 32 per row", () => {
+    const { canvas, calls } = makeFakeCanvas();
+    const video = new VideoSystem(canvas);
+    const memory = new MemorySystem();
+    memory.writeByte(0x3c00, 0x41); // 'A' at even address 0
+    memory.writeByte(0x3c01, 0x42); // 'B' at odd address 1 - not displayed
+    memory.writeByte(0x3c02, 0x43); // 'C' at even address 2 - cell 1
+
+    video.renderScreen(memory, false);
+    const narrow = calls.frame.data.slice(); // 64-col reference frame
+
+    video.renderScreen(memory, true);
+    const wide = calls.frame;
+
+    expect(wide.width).toBe(512); // frame geometry is unchanged
+
+    // Every glyph pixel of 'A' must appear doubled in cell 0
+    const width = 512;
+    for (let y = 0; y < 12; y++) {
+      for (let x = 0; x < 8; x++) {
+        const src = (y * width + x) * 4;
+        const dst = (y * width + x * 2) * 4;
+        for (let c = 0; c < 3; c++) {
+          expect(wide.data[dst + c]).toBe(narrow[src + c]);
+          expect(wide.data[dst + 4 + c]).toBe(narrow[src + c]);
+        }
+      }
+    }
+
+    // Cell 1 in 32-col mode shows the char from address 2 ('C'), i.e. the
+    // doubled version of the 64-col cell-2 rendering - never the 'B' at
+    // the odd address.
+    for (let y = 0; y < 12; y++) {
+      for (let x = 0; x < 8; x++) {
+        const src = (y * width + (2 * 8 + x)) * 4; // 64-col cell 2 ('C')
+        const dst = (y * width + (16 + x * 2)) * 4; // 32-col cell 1
+        for (let c = 0; c < 3; c++) {
+          expect(wide.data[dst + c]).toBe(narrow[src + c]);
+          expect(wide.data[dst + 4 + c]).toBe(narrow[src + c]);
+        }
+      }
+    }
+  });
+});

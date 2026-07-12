@@ -189,3 +189,116 @@ describe("Instruction stream integrity after indexed ops", () => {
     expect(cpu.registers.PC).toBe(0x0004);
   });
 });
+
+describe("DD/FD CB timing and undocumented register copy", () => {
+  let cpu, ram;
+
+  beforeEach(() => {
+    ({ cpu, ram } = makeCpuWithRam());
+  });
+
+  it("DD CB d 06 - RLC (IX+d) takes 23 T-states", () => {
+    ram[0x0000] = 0xdd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x01;
+    ram[0x0003] = 0x06; // RLC (IX+d), memory-only form
+    cpu.IX = 0x5000;
+    ram[0x5001] = 0x81;
+
+    const cycles = cpu.executeInstruction();
+
+    expect(ram[0x5001]).toBe(0x03);
+    expect(cycles).toBe(23);
+    expect(cpu.registers.PC).toBe(0x0004);
+  });
+
+  it("DD CB d 46 - BIT 0,(IX+d) takes 20 T-states", () => {
+    ram[0x0000] = 0xdd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x00;
+    ram[0x0003] = 0x46; // BIT 0,(IX+d)
+    cpu.IX = 0x5000;
+    ram[0x5000] = 0x01;
+
+    const cycles = cpu.executeInstruction();
+
+    expect(cycles).toBe(20);
+    expect(cpu.flagZ ? 1 : 0).toBe(0);
+  });
+
+  it("FD CB d C6 - SET 0,(IY+d) takes 23 T-states and writes memory", () => {
+    ram[0x0000] = 0xfd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x02;
+    ram[0x0003] = 0xc6; // SET 0,(IY+d)
+    cpu.IY = 0x6000;
+    ram[0x6002] = 0x00;
+
+    const cycles = cpu.executeInstruction();
+
+    expect(ram[0x6002]).toBe(0x01);
+    expect(cycles).toBe(23);
+  });
+
+  it("DD CB d 00 - RLC (IX+d),B also copies the result into B (undocumented)", () => {
+    ram[0x0000] = 0xdd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x01;
+    ram[0x0003] = 0x00; // RLC (IX+d) with register field B
+    cpu.IX = 0x5000;
+    cpu.registers.B = 0xee;
+    ram[0x5001] = 0x81;
+
+    cpu.executeInstruction();
+
+    expect(ram[0x5001]).toBe(0x03); // memory gets the rotated value
+    expect(cpu.registers.B).toBe(0x03); // ...and so does B
+  });
+
+  it("FD CB d C7 - SET 0,(IY+d),A copies the result into A (undocumented)", () => {
+    ram[0x0000] = 0xfd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x00;
+    ram[0x0003] = 0xc7; // SET 0,(IY+d) with register field A
+    cpu.IY = 0x6000;
+    cpu.registers.A = 0x00;
+    ram[0x6000] = 0x10;
+
+    cpu.executeInstruction();
+
+    expect(ram[0x6000]).toBe(0x11);
+    expect(cpu.registers.A).toBe(0x11);
+  });
+
+  it("DD CB d 8E - RES 1,(IX+d) memory-only form leaves registers alone", () => {
+    ram[0x0000] = 0xdd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x00;
+    ram[0x0003] = 0x8e; // RES 1,(IX+d), register field 6 = memory only
+    cpu.IX = 0x5000;
+    ram[0x5000] = 0xff;
+    cpu.registers.B = 0x42;
+    cpu.registers.A = 0x24;
+
+    cpu.executeInstruction();
+
+    expect(ram[0x5000]).toBe(0xfd);
+    expect(cpu.registers.B).toBe(0x42);
+    expect(cpu.registers.A).toBe(0x24);
+  });
+
+  it("BIT (IX+d) never writes a register even with a register field", () => {
+    ram[0x0000] = 0xdd;
+    ram[0x0001] = 0xcb;
+    ram[0x0002] = 0x00;
+    ram[0x0003] = 0x47; // BIT 0,(IX+d) with register field A
+    cpu.IX = 0x5000;
+    ram[0x5000] = 0x01;
+    cpu.registers.A = 0x55;
+
+    cpu.executeInstruction();
+
+    expect(cpu.registers.A).toBe(0x55);
+    expect(ram[0x5000]).toBe(0x01);
+  });
+});

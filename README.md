@@ -1,6 +1,6 @@
 # TRS-80 Model III Emulator
 
-A web-based TRS-80 Model III emulator, built with JavaScript and Vite, that boots the real 14K Model III ROM into genuine Level II BASIC on an emulated Z80 at 2.03 MHz — with cassette (.cas) loading, dual WD1793 disk drives (.dsk), a built-in program library, and authentic keyboard and video behavior.
+A web-based TRS-80 Model III emulator, built with JavaScript and Vite, that boots the real 14K Model III ROM into genuine Level II BASIC on an emulated Z80 at 2.03 MHz — with cassette (.cas) loading, dual WD1793 disk drives (.dsk), a games/program library, cassette-port sound, save states, touch input, and authentic keyboard and video behavior (64- and 32-column modes).
 
 🌐 **Live Demo**: [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
@@ -20,7 +20,18 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 - **BASIC Program Execution**: ROM loading, program storage, CPU execution with ROM, CLOAD integration
 - **Video Display System**: 64×16 character text display with 128×48 pixel graphics mode, SET/RESET/POINT commands, CHR$() graphics characters
 - **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, BASIC source code, and graphics display
-- **Comprehensive Test Suite**: 346 vitest tests across 19 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, library programs)
+- **Comprehensive Test Suite**: 423 vitest tests across 27 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, library programs, 32-column mode, save states)
+
+**July 2026 performance & platform pass** ✅ **COMPLETE**
+
+- **~7x faster core**: the Z80 register file's `Proxy` wrapper was replaced with masked accessor properties (identical semantics, measured ~80x real time headless) — snappier turbo-typing, cooler laptops, mobile headroom
+- **Sound**: the cassette-port trick (port 0xFF bit toggling) now feeds WebAudio — the bundled Big Five games beep and zap like the real machine; MACHINE menu toggle, preference persisted
+- **Save states**: Quick save/load (browser storage) and Export/Import (.json file) capture the whole machine — CPU, RAM, screen, I/O, FDC, cassette, and mounted disk contents — mid-game
+- **Disk export**: download the in-memory .dsk of either drive, session writes included
+- **Touch/mobile input**: tap the screen for the soft keyboard, plus an on-screen BREAK/CLEAR/arrows/ENTER strip on coarse-pointer devices
+- **32-column mode**: `PRINT CHR$(23)` renders authentically double-wide (ROM-verified even-address layout); CLS restores 64 columns
+- **Z80 fidelity**: DD/FD CB instructions now take their real 23/20 T-states and perform the undocumented result-copy-to-register; INT/NMI acknowledge bumps R
+- **Leaner app**: the emulator UI and the legacy phase consoles are separate modules (consoles load on demand); generated docs are no longer tracked in git
 
 **Phase 7: Storage & Library** ✅ **COMPLETE**
 
@@ -32,9 +43,9 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 
 ### 🚧 Planned Features (Future Phases)
 
-- **DOS FORMAT support** (WD1793 WRITE TRACK), disk-image export, DMK format
-- **Authentic cassette audio** (bit-level port 0xFF playback) and cassette-out sound
-- **Printer** (0x37E8), **RS-232** (0xE8-0xEB), **Z80 Assembler** (later phases)
+- **DOS FORMAT support** (WD1793 WRITE TRACK), DMK format
+- **Bit-level cassette input** (real CLOAD/CSAVE through port 0xFF; output/sound side is done)
+- **Printer** (0x37E8), **RS-232** (0xE8-0xEB)
 
 ## Technology Stack
 

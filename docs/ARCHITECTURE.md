@@ -1,6 +1,6 @@
 # TRS-80 Model III Emulator — Architecture & Extension Guide
 
-*Last updated: 2026-07-05. This document describes how the emulator works today and where new features plug in.*
+*Last updated: 2026-07-12. This document describes how the emulator works today and where new features plug in.*
 
 ## The one-paragraph version
 
@@ -22,15 +22,26 @@ src/
                      SET/RESET/POINT graphics helpers
     cassette.js      Motor/tape state (legacy high-level simulation)
     cas-format.js    .cas parser + BASIC/SYSTEM fast-loaders
+    cmd-format.js    TRSDOS /CMD executable parser + fast-loader
     disk-image.js    .dsk containers: JV1-linear + JV3
     fdc-wd1793.js    WD1793 floppy controller state machine
+    sound.js         Cassette-port audio: pure sample synthesis (tested)
+                     + WebAudio chunk scheduler (SoundDriver)
   system/
     trs80-system.js  The machine: wiring, timing, RTC, NMI edge, typeText,
-                     mountDisk/ejectDisk, screenText
+                     mountDisk/ejectDisk, screenText, columns32
+    state.js         Save states: serialize/restore the whole machine
+                     (CPU, RAM, IO, FDC, cassette, mounted disk bytes)
   data/
-    library.js       Built-in public-domain BASIC programs
-  main.js            Browser shell: boot, rAF loop + occlusion heartbeat,
-                     MACHINE menu, fonts/sizes, theater mode, phase consoles
+    library.js       Games + built-in public-domain BASIC programs
+  ui/
+    emulator-ui.js   The emulator view: boot, rAF loop + occlusion
+                     heartbeat, MACHINE menu (media, state, sound),
+                     fonts/sizes, view switching (showTab)
+    legacy-console.js Phase 0-6 dev consoles behind ONE dynamic import
+    touch-input.js   Soft-keyboard bridge + on-screen key strip pacing
+    screen-layout.js Screen scale math (fill/ratio/fixed)
+  main.js            Thin entry: eager emulator, lazy legacy consoles
 tests/
   unit/              Per-module tests (CPU, memory, io, fdc, disk, cas, ...)
   integration/       Acceptance: ROM boot, cassette fast-load, disk boot,
@@ -44,6 +55,7 @@ tests/
 - `interrupt(dataBus)` implements IM1 (RST 38) and IM2 vectoring; `nmi()` → 0x0066. `EI` enables after the following instruction (`pendingEI` countdown). An accepted interrupt clears `HALT`.
 - `strictMode = true` makes unimplemented opcodes throw with PC — every acceptance test sets it, so instruction-set gaps cannot hide behind the NOP fallback.
 - `cycles` accumulates T-states; every timing feature (RTC, FDC delays, typeText pacing) is derived from it.
+- The register file is a plain object whose 8-bit registers are `defineProperty` accessors over a closure-private backing store (writes mask to 8 bits; reads are pre-masked). It replaced a `Proxy` with identical semantics — the Proxy's trap-per-access cost was measured at 7x overall emulation speed. Don't reintroduce dynamic wrappers here; this is the hottest path in the emulator.
 
 ### Memory map (`core/memory.js`)
 | Range | What | Notes |
@@ -58,21 +70,22 @@ tests/
 |---|---|---|
 | 0xE0-0xE3 | interrupt latch, **active-low** (`~latch`) | interrupt mask (RTC bit = 0x04) |
 | 0xE4-0xE7 | NMI status, active-low (bit 7 = FDC INTRQ) | NMI mask (bit 7 enables FDC INTRQ→NMI) |
-| 0xEC-0xEF | acknowledge RTC interrupt | mode register (bit 1 cassette motor) |
+| 0xEC-0xEF | acknowledge RTC interrupt | mode register (bit 1 cassette motor, bit 2 32-column mode; changes fire `onModeWrite` so the renderer repaints) |
 | 0xF0-0xF3 | WD1793 status/track/sector/data | command/track/sector/data |
 | 0xF4 | — | drive select (bits 0-3), side (bit 4) |
-| 0xFF | cassette input (stub 0x00) | cassette output level |
+| 0xFF | cassette input (stub 0x00) | cassette output level (bits 0-1); level *changes* are timestamped into `soundLog` for the sound driver |
 | everything else | 0xFF (floating bus) | ignored |
 
 **FDC presence rule:** ports 0xF0-0xF4/0xE4 present as *absent* (floating 0xFF) until a disk is mounted. That float is what makes the boot ROM fall through to cassette BASIC; mounting a disk and pressing RESET is what makes it boot the DOS. If you ever want "disk controller present but no disk," change `fdcPresent()` in `io.js` — the ROM will then wait for a diskette on boot, like real disk-equipped hardware.
 
 ### Timing (`system/trs80-system.js`)
 - `runTStates(budget)` executes instructions until the budget is spent. Between instructions it: raises the RTC latch every 67,584 T-states (30 Hz), delivers a maskable interrupt when `(latch & mask) != 0`, delivers an **edge-triggered** NMI when the FDC's INTRQ is enabled by the 0xE4 mask, and ticks the FDC with the consumed cycles.
-- The browser loop (`main.js`) budgets `elapsed-wall-time × 2.03 MHz` per animation frame (capped at 66 ms of catch-up), and a 100 ms `setInterval` heartbeat keeps the machine alive when Chrome suspends rAF (hidden/occluded windows).
+- The browser loop (`ui/emulator-ui.js`) budgets `elapsed-wall-time × 2.03 MHz` per animation frame (capped at 66 ms of catch-up), and a 100 ms `setInterval` heartbeat keeps the machine alive when Chrome suspends rAF (hidden/occluded windows).
 - `typeText(text)` feeds the keyboard matrix in **emulated** time (~3 ms wall per character): 70k T-states held, 50k released, 400k after ENTER (the ROM tokenizes and stores the line before it scans again — shortchanging this eats the next line's first character).
 
 ### Video (`peripherals/video.js`)
-- `renderScreen(memory)` builds one 512×192 ImageData per frame from video RAM + the character generator.
+- `renderScreen(memory, columns32)` builds one 512×192 ImageData per frame from video RAM + the character generator.
+- 32-column mode (`columns32`, from mode-register bit 2): the ROM lays text at EVEN video addresses and the renderer draws those bytes double-wide, 32 per row — verified against the real ROM's CHR$(23)/CLS behavior in `tests/integration/32col-tests.js`.
 - Two glyph sets: `trs80` (chunky 5×7 with true lowercase descenders, default) and `modern`; `setFont(name)` switches, UI persists the choice in `localStorage`.
 - Graphics characters 128-191 use the Level II manual's encoding — CHR$(128 + Σ): **+1 top-left, +2 top-right, +4 mid-left, +8 mid-right, +16 bottom-left, +32 bottom-right**. Do not "fix" this to the reversed order: the ROM's blinking cursor is CHR$(176) = both bottom pixels = the authentic underline.
 
@@ -92,13 +105,11 @@ tests/
 - Containers: **JV1** (headerless 256-byte-sector linear; geometry inferred from size; 18-sector images are 1-based/TRSDOS-style, 10-sector are 0-based/Model I-style, with automatic fallback) and **JV3** (2901 sector headers + data).
 - WD1793: Type I (restore/seek/step), Type II (read/write sector with a DRQ byte pump), Type III (read address; read/write track accepted as no-ops — **DOS FORMAT does not work yet**), Type IV (force interrupt). Commands complete after a T-state delay via `tick()`; completion raises INTRQ; reading status clears it.
 - Boot: the ROM loads track 0's first sector to **0x4300** and jumps to it. `tests/integration/disk-boot-tests.js` proves the whole handshake with a synthesized boot floppy — a real LDOS/TRSDOS image follows the identical path.
-- Writes go to the in-memory image only (nothing touches the user's file).
+- Writes go to the in-memory image only; MACHINE menu → "Export drive N" downloads the live image (writes included), and save states embed the full disk bytes.
 
 ## Adding features — where things plug in
 
 **More disk drives (2 & 3).** The FDC already models four drives (`drives[4]`, select bits 0-3). Add menu items calling `system.mountDisk(2|3, image)` — that's all.
-
-**Export modified disks.** `DiskImage.bytes` is the live image. Add a menu item that wraps it in a `Blob` and triggers a download. (JV3 write-back works because writes go through `_locate` offsets.)
 
 **DOS FORMAT support.** Implement WRITE TRACK in `fdc-wd1793.js`: parse the format stream for 0xFE ID address marks to learn the sector layout, allocate sectors in the image (JV3 makes this natural), and complete with INTRQ. The command already parks in the `"noop"` branch.
 
@@ -109,8 +120,6 @@ tests/
 **Printer.** Model III line printer is memory-mapped at 0x37E8-0x37EB (read = status 0x30 ready; write = character). Intercept that range in `memory.js` (it's inside the ROM region — add a hook like `this.printer` beside `this.keyboard`) and append to a UI log. LPRINT/LLIST then work.
 
 **RS-232.** Ports 0xE8-0xEB (UART) — add handlers in `io.js`; a WebSocket bridge makes a fun terminal.
-
-**Sound.** The cassette output port (0xFF write, bits 0-1) *is* the Model III sound trick. `io.cassetteOut` changes are the signal: timestamp transitions with `cpu.cycles`, feed a WebAudio buffer.
 
 **Hi-res graphics board.** Grafyx-style boards map a separate framebuffer via ports; add a peripheral + a second render path in `video.js`.
 
@@ -125,6 +134,7 @@ tests/
 ## Known limitations
 
 - DOS FORMAT (WRITE TRACK) is a no-op; double-sided and >40-track operation is untested; JV1 side 1 reads fail by design.
-- No cassette bit-level I/O (CLOAD from the `Cass?` prompt won't read a tape — use Load .cas from the menu).
+- No cassette bit-level INPUT (CLOAD from the `Cass?` prompt won't read a tape — use Load .cas from the menu). Cassette OUTPUT is modeled for sound.
 - Multi-sector READ/WRITE commands transfer one sector (LDOS/TRSDOS use single-sector transfers).
-- Disk writes are session-only until an export feature is added.
+- The alternate-character-set mode bit is latched but not rendered (codes 0xC0-0xFF display as blanks either way).
+- Undocumented Z80 tier: X/Y flags (F bits 3/5), MEMPTR, and refined block-I/O flags are not modeled — running real software doesn't need them; passing ZEXALL would.

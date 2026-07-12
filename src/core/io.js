@@ -25,6 +25,9 @@ export const RTC_IRQ_BIT = 0x04;
 // NMI mask/status bits (port 0xE4)
 export const NMI_INTRQ_BIT = 0x80;
 
+// Mode register (port 0xEC write) bits
+export const MODE_32COL_BIT = 0x04; // 32-character display mode
+
 export class IOSystem {
   constructor() {
     this.cassette = new CassetteSystem();
@@ -42,8 +45,21 @@ export class IOSystem {
     // Mode register (port 0xEC write)
     this.modeRegister = 0;
 
+    // Fired when a mode-register write changes the value (the display
+    // reads bit 2, so the renderer must repaint even though video RAM
+    // itself didn't change). Wired by TRS80System.
+    this.onModeWrite = null;
+
     // Cassette output level (port 0xFF write, bits 0-1)
     this.cassetteOut = 0;
+
+    // Cassette-out transitions for the sound driver: {t, level} stamped
+    // in CPU T-states. getCycles is wired by TRS80System; the driver
+    // drains the log every frame. Capped so an undrained log (sound off,
+    // headless run) cannot grow without bound.
+    this.getCycles = null;
+    this.soundLog = [];
+    this.SOUND_LOG_LIMIT = 100000;
 
     this.initializeModelIIIPorts();
   }
@@ -67,10 +83,14 @@ export class IOSystem {
           return 0xff;
         },
         write: (value) => {
+          const changed = this.modeRegister !== (value & 0xff);
           this.modeRegister = value & 0xff;
           // Mode register bit 1 drives the cassette motor relay;
           // CassetteSystem.control expects the motor state in bit 0.
           this.cassette.control((value >> 1) & 0x01);
+          if (changed && this.onModeWrite) {
+            this.onModeWrite(this.modeRegister);
+          }
         },
       });
     }
@@ -128,11 +148,18 @@ export class IOSystem {
       },
     });
 
-    // 0xFF: cassette data port
+    // 0xFF: cassette data port. Level changes are the Model III's only
+    // sound source, so they're logged for the audio driver.
     this.portHandlers.set(0xff, {
       read: () => 0x00, // bit 7 = tape input; no signal without a tape playing
       write: (value) => {
-        this.cassetteOut = value & 0x03;
+        const level = value & 0x03;
+        if (level !== this.cassetteOut) {
+          this.cassetteOut = level;
+          if (this.getCycles && this.soundLog.length < this.SOUND_LOG_LIMIT) {
+            this.soundLog.push({ t: this.getCycles(), level });
+          }
+        }
       },
     });
   }
@@ -167,6 +194,14 @@ export class IOSystem {
     return this.fdc.intrq && (this.nmiMask & NMI_INTRQ_BIT) !== 0;
   }
 
+  /** Hand the accumulated cassette-out transitions to the sound driver. */
+  drainSound() {
+    if (this.soundLog.length === 0) return this.soundLog;
+    const log = this.soundLog;
+    this.soundLog = [];
+    return log;
+  }
+
   /** Clear interrupt state (system reset). Mounted disks stay mounted. */
   reset() {
     this.intLatch = 0;
@@ -174,6 +209,7 @@ export class IOSystem {
     this.nmiMask = 0;
     this.modeRegister = 0;
     this.cassetteOut = 0;
+    this.soundLog = [];
     this.fdc.intrq = false;
     this.fdc.pending = null;
     this.fdc.buffer = null;

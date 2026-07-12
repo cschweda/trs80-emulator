@@ -197,6 +197,51 @@
         display: flex;
         background: #000;
         box-sizing: border-box;
+        touch-action: manipulation; /* no double-tap zoom while playing */
+      }
+
+      /* Soft-keyboard bridge: must stay renderable (iOS refuses to open
+         the keyboard for display:none inputs), but invisible. */
+      #touch-input {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        border: 0;
+        padding: 0;
+        z-index: -1;
+      }
+
+      /* On-screen keys for what soft keyboards lack. Hidden on
+         fine-pointer (mouse) machines. */
+      #touch-keys {
+        display: none;
+        gap: 6px;
+        padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+        background: #101010;
+        border-top: 1px solid #2a2a2a;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      #touch-keys button {
+        font: inherit;
+        color: #9ce69c;
+        background: #1c1c1c;
+        border: 1px solid #333;
+        border-radius: 6px;
+        padding: 10px 14px;
+        min-width: 44px;
+        touch-action: none; /* press-and-hold, no scroll/zoom gestures */
+      }
+      #touch-keys button:active {
+        background: #294029;
+      }
+      @media (pointer: coarse) {
+        #touch-keys {
+          display: flex;
+        }
       }
       #machine-case,
       #machine-face,
@@ -800,6 +845,12 @@
             <button role="menuitem" onclick="menuEjectDisks()">
               Eject all
             </button>
+            <button role="menuitem" onclick="menuExportDisk(0)">
+              Export drive 0 (.dsk)
+            </button>
+            <button role="menuitem" onclick="menuExportDisk(1)">
+              Export drive 1 (.dsk)
+            </button>
             <div id="menu-disk0-status" class="menu-note">0: empty</div>
             <div id="menu-disk1-status" class="menu-note">1: empty</div>
             <div class="menu-separator" role="separator"></div>
@@ -810,6 +861,24 @@
             </button>
             <button role="menuitem" onclick="menuPasteBasic()">
               Paste BASIC from clipboard
+            </button>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-heading">State</div>
+            <button role="menuitem" onclick="menuQuickSave()">
+              Quick save (browser)
+            </button>
+            <button role="menuitem" onclick="menuQuickLoad()">
+              Quick load
+            </button>
+            <button role="menuitem" onclick="menuExportState()">
+              Export state…
+            </button>
+            <button role="menuitem" onclick="menuImportState()">
+              Import state…
+            </button>
+            <div class="menu-separator" role="separator"></div>
+            <button role="menuitem" onclick="toggleSound()">
+              <span id="menu-sound-label">Sound: on (cassette port)</span>
             </button>
             <div class="menu-separator" role="separator"></div>
             <div class="menu-heading">Keyboard</div>
@@ -869,6 +938,7 @@
 
     <input type="file" id="cas-file" accept=".cas" hidden />
     <input type="file" id="dsk-file" accept=".dsk,.jv1,.jv3" hidden />
+    <input type="file" id="state-file" accept=".json" hidden />
 
     <div id="machine-stage" role="group" aria-label="TRS-80 Model III">
       <div id="machine-case">
@@ -912,6 +982,28 @@
         menu.
       </p>
     </div>
+
+    <!-- Touch devices: tap the screen to open the soft keyboard; this
+         strip covers the keys it doesn't have. -->
+    <div id="touch-keys" role="group" aria-label="TRS-80 special keys">
+      <button type="button" data-tkey="Escape">BREAK</button>
+      <button type="button" data-tkey="Home">CLEAR</button>
+      <button type="button" data-tkey="ArrowLeft" aria-label="Left arrow">←</button>
+      <button type="button" data-tkey="ArrowUp" aria-label="Up arrow">↑</button>
+      <button type="button" data-tkey="ArrowDown" aria-label="Down arrow">↓</button>
+      <button type="button" data-tkey="ArrowRight" aria-label="Right arrow">→</button>
+      <button type="button" data-tkey="Enter">ENTER</button>
+      <button type="button" data-summon-keyboard aria-label="Open keyboard">⌨</button>
+    </div>
+    <input
+      type="text"
+      id="touch-input"
+      autocomplete="off"
+      autocapitalize="characters"
+      autocorrect="off"
+      spellcheck="false"
+      aria-label="Type into the TRS-80"
+    />
 
     <div id="console" tabindex="0" style="display: none"></div>
     <div id="design-doc-container" style="display: none">

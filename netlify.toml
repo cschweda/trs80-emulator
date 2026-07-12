@@ -21,11 +21,24 @@ X-Content-Type-Options = "nosniff"
 Referrer-Policy = "no-referrer"
 X-XSS-Protection = "1; mode=block"
 
-# Cache static assets
+# Cache static assets (Vite's hashed bundles — safe to pin forever)
 [[headers]]
 for = "/assets/*"
 [headers.values]
 Cache-Control = "public, max-age=31536000, immutable"
+
+# The ROM is copied verbatim (no content hash), so it must never be
+# immutable: a swapped ROM would otherwise stay stale for a year.
+[[headers]]
+for = "/assets/model3.rom"
+[headers.values]
+Cache-Control = "public, max-age=3600, must-revalidate"
+
+# Library programs are also unhashed
+[[headers]]
+for = "/programs/*"
+[headers.values]
+Cache-Control = "public, max-age=3600, must-revalidate"
 
 # Don't cache HTML
 [[headers]]

@@ -1,10 +1,10 @@
 {
   "name": "trs80-model3-emulator",
   "version": "1.1.0",
-  "description": "Browser-based TRS-80 Model III emulator with cassette interface, graphics, and integrated Z80 assembler",
+  "description": "Browser-based TRS-80 Model III emulator: boots the real ROM, with cassette/disk loading, a games library, sound, and save states",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/render-docs.js && vite",
     "build": "node scripts/render-docs.js && vite build && node scripts/postbuild.js",
     "build:serve": "vite build && node scripts/postbuild.js --serve",
     "preview": "vite preview",
@@ -21,9 +21,7 @@
     "phase:3": "node scripts/phase-workflow.js 3 \"tests/unit/cassette-tests.js tests/unit/io-tests.js\"",
     "phase:4": "node scripts/phase-workflow.js 4 tests/unit/basic-program-tests.js",
     "phase:5": "node scripts/phase-workflow.js 5 tests/unit/video-tests.js",
-    "phase:6": "node scripts/phase-workflow.js 6 tests/integration/rom-boot-tests.js",
-    "phase:7": "node scripts/phase-workflow.js 7 tests/unit/program-loader-tests.js",
-    "phase:8": "node scripts/phase-workflow.js 8 tests/unit/assembler-tests.js"
+    "phase:6": "node scripts/phase-workflow.js 6 tests/integration/rom-boot-tests.js"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.0",
@@ -45,8 +43,7 @@
     "z80",
     "retro-computing",
     "model-iii",
-    "graphics",
-    "assembler"
+    "graphics"
   ],
   "author": "cschweda",
   "license": "MIT"

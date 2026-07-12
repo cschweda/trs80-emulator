@@ -183,3 +183,37 @@ describe("Strict mode", () => {
     expect(() => cpu.executeInstruction()).toThrow(/[Uu]nimplemented/);
   });
 });
+
+describe("R register on interrupt acknowledge", () => {
+  it("accepted INT increments R (acknowledge M1 cycle)", () => {
+    const { cpu } = makeCpuWithRam();
+    cpu.interruptMode = 1;
+    cpu.IFF1 = true;
+    cpu.registers.SP = 0x8000;
+    cpu.registers.R = 0x00;
+
+    cpu.interrupt();
+
+    expect(cpu.registers.R).toBe(0x01);
+  });
+
+  it("refused INT leaves R alone", () => {
+    const { cpu } = makeCpuWithRam();
+    cpu.IFF1 = false;
+    cpu.registers.R = 0x00;
+
+    cpu.interrupt();
+
+    expect(cpu.registers.R).toBe(0x00);
+  });
+
+  it("NMI increments R and preserves R bit 7", () => {
+    const { cpu } = makeCpuWithRam();
+    cpu.registers.SP = 0x8000;
+    cpu.registers.R = 0xff; // bit 7 set, low bits at wrap point
+
+    cpu.nmi();
+
+    expect(cpu.registers.R).toBe(0x80); // low 7 bits wrap, bit 7 sticks
+  });
+});

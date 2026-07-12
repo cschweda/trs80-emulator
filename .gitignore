@@ -49,3 +49,7 @@ Thumbs.db
 
 # Copyrighted book scan — reference material, must not be published
 docs/trs80basicandothermysteries_OCR.txt
+
+# Build-rendered docs (generated from docs/*.md by scripts/render-docs.js)
+public/*.html
+public/docs/

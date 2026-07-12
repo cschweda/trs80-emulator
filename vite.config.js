@@ -19,30 +19,6 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
       },
-      // manualChunks removed - files don't exist yet
-      // Will be re-enabled as modules are added
-      // output: {
-      //   manualChunks: {
-      //     core: [
-      //       "./src/core/z80cpu.js",
-      //       "./src/core/memory.js",
-      //       "./src/core/io.js",
-      //     ],
-      //     peripherals: [
-      //       "./src/peripherals/video.js",
-      //       "./src/peripherals/cassette.js",
-      //       "./src/peripherals/keyboard.js",
-      //     ],
-      //     assembler: [
-      //       "./src/assembler/assembler.js",
-      //       "./src/assembler/lexer.js",
-      //       "./src/assembler/parser.js",
-      //       "./src/assembler/codegen.js",
-      //       "./src/assembler/evaluator.js",
-      //       "./src/assembler/opcodes.js",
-      //     ],
-      //   },
-      // },
     },
     target: "es2020",
     chunkSizeWarningLimit: 1000,
@@ -69,9 +45,7 @@ export default defineConfig({
       "@peripherals": resolve(__dirname, "./src/peripherals"),
       "@system": resolve(__dirname, "./src/system"),
       "@ui": resolve(__dirname, "./src/ui"),
-      "@utils": resolve(__dirname, "./src/utils"),
       "@data": resolve(__dirname, "./src/data"),
-      "@assembler": resolve(__dirname, "./src/assembler"),
     },
   },
 

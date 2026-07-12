@@ -13,7 +13,7 @@
 
 import { Z80CPU } from "@core/z80cpu.js";
 import { MemorySystem } from "@core/memory.js";
-import { IOSystem } from "@core/io.js";
+import { IOSystem, MODE_32COL_BIT } from "@core/io.js";
 import { KeyboardMatrix } from "@peripherals/keyboard.js";
 
 export const CPU_CLOCK_HZ = 2027520;
@@ -33,6 +33,15 @@ export class TRS80System {
     this.cpu.writeMemory = (addr, value) => this.memory.writeByte(addr, value);
     this.cpu.readPort = (port) => this.io.readPort(port);
     this.cpu.writePort = (port, value) => this.io.writePort(port, value);
+
+    // A mode-register change (e.g. the ROM handling CHR$(23)) redraws
+    // the same video RAM in a different layout — force a repaint.
+    this.io.onModeWrite = () => {
+      this.memory.videoDirty = true;
+    };
+
+    // Cassette-out sound transitions are stamped in CPU T-states
+    this.io.getCycles = () => this.cpu.cycles;
 
     this.memory.loadROM(romData);
 
@@ -85,6 +94,15 @@ export class TRS80System {
     }
 
     return this.cpu.cycles - start;
+  }
+
+  /**
+   * True when the machine is in 32-character mode (mode register bit 2,
+   * set by the ROM for CHR$(23), cleared by CLS). The ROM lays 32-column
+   * text at even video addresses; hardware shows them double-wide.
+   */
+  get columns32() {
+    return (this.io.modeRegister & MODE_32COL_BIT) !== 0;
   }
 
   /** Mount a .dsk image (DiskImage) in drive 0-3. */
