@@ -9,10 +9,10 @@ and versions follow [semver](https://semver.org/).
 ### Added
 
 - Games library grows from 12 to 26 titles: arcade classics (Scarfman,
-  Robot Attack, Meteor Mission 2, Defense Command, Penetrator), text
-  adventures (Adventureland, Pirate Adventure, Bedlam), Super Star Trek,
-  and five more BASIC type-ins (Hunt the Wumpus, Acey Ducey, Bagels,
-  Camel, Hangman)
+  Cosmic Fighter, Meteor Mission 2, Defense Command, Armored Patrol),
+  text adventures (Adventureland, Pirate Adventure, Bedlam), Super Star
+  Trek, and five more BASIC type-ins (Hunt the Wumpus, Acey Ducey,
+  Bagels, Camel, Hangman)
 - Library menu groups titles into Arcade, Adventures, BASIC type-ins,
   and Extras
 - Super Star Trek ships as a pre-tokenized cassette built by the real

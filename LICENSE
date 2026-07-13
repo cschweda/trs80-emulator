@@ -41,14 +41,44 @@ remains with its rights holders.
 
 EXCEPTION - Program library game files
 
-The files under public/programs/ are classic TRS-80 software obtained from
-George Phillips's trsjs site (https://trsjs.48k.ca/), where they are hosted
-for in-browser play: Super Nova and Galaxy Invasion (Big Five Software),
-Sea Dragon (Adventure International), Time Trek, Flying Saucers, City
-Defence, Invasion Force, and OPUS-1. They are NOT covered by the MIT
-license above. These titles circulate freely in the TRS-80 preservation
-community, but the emulator contributors claim no rights over them and
-cannot grant any; rights remain with their respective holders. They are
-included solely so the emulator has period software to run. (Retro-Zap,
-also on trsjs, is deliberately not included: its cassette image uses a
-custom encoding this emulator's fast-loader does not support.)
+The files under public/programs/ are classic TRS-80 software included
+solely so the emulator has period software to run. They are NOT covered
+by the MIT license above. These titles circulate freely in the TRS-80
+preservation community, but the emulator contributors claim no rights
+over them and cannot grant any; rights remain with their respective
+holders, and any rights holder's removal request will be honored.
+
+From George Phillips's trsjs site (https://trsjs.48k.ca/), where they
+are hosted for in-browser play: Super Nova and Galaxy Invasion (Big Five
+Software), Sea Dragon (Adventure International), Time Trek, Flying
+Saucers, City Defence, Invasion Force, and OPUS-1. (Retro-Zap, also on
+trsjs, is deliberately not included: its cassette image uses a custom
+encoding this emulator's fast-loader does not support.)
+
+From trs-80.com, Ira Goldklang's TRS-80 software site, added for this
+release: Scarfman (Cornsoft, 1981; down-sw-model1.pl?scrfmant.zip),
+Defense Command (Big Five, 1982; down-sw-model1.pl?defcmndc.zip), Cosmic
+Fighter (Big Five, 1980; down-sw-model3.pl?cosfitr3.zip), Meteor Mission
+2 (Big Five, 1981; down-sw-model3.pl?metmiss3.zip), Armored Patrol
+(Adventure Intl, 1981; down-sw-model3.pl?armpatl3.zip), Adventureland
+(Scott Adams, 1978; down-sw-model3.pl?sa1411c3.zip), and Pirate
+Adventure (Scott Adams, 1979; down-sw-model3.pl?sac02408.zip). Bedlam
+(Tandy, 1982) is also from trs-80.com, but from the Model 4 GO-EXEC
+distribution (down-sw-model4.pl?bedlamau.zip): BEDLAM.III, the
+self-contained Model III payload inside that archive, is the only
+digitized copy of Bedlam found, and is what ships here.
+
+Two titles considered for this release are not included in
+public/programs/. Penetrator (Melbourne House) is on trs-80.com, but
+every download of it there has been disabled at the author's request,
+which this project honors. Robot Attack has circulating dumps, but no
+Model III-compatible copy could be verified running: the Model I
+cassette release's protection loader is specific to the Model I ROM,
+and the Model III 1500-baud cassette images use an encoding this
+emulator's loader does not parse.
+
+Generated locally: sstrek.cas is Super Star Trek from David Ahl's
+"BASIC Computer Games" (1978), which Ahl released to the public domain;
+the cassette image is built from src/data/super-star-trek.bas by
+scripts/build-cas.js. It IS covered by the MIT license above, as are the
+BASIC type-in adaptations embedded in src/data/library.js.

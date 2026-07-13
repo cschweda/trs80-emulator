@@ -5,8 +5,9 @@
  *   kind "file" — a binary/text program under public/programs/ fetched on
  *   demand: format "cmd" (DOS executable), "cas" (cassette image, BASIC
  *   or SYSTEM — .3bn SYSTEM-block images parse the same way), or "bas"
- *   (ASCII source that gets turbo-typed). These are the trsjs.48k.ca
- *   games; see the LICENSE exception about their copyright status.
+ *   (ASCII source that gets turbo-typed). Sourced from trsjs.48k.ca or
+ *   trs-80.com, or generated locally by scripts/build-cas.js; see the
+ *   LICENSE exception about their copyright status.
  *
  *   kind absent (text) — public-domain classics in Level II-safe BASIC
  *   (no ELSE, uppercase, RND(n) integer form), compact adaptations in
@@ -14,16 +15,21 @@
  *   books to the public domain). Each entry is plain text that gets
  *   turbo-typed into the real ROM — the machine tokenizes it itself.
  *
+ * Each entry's `group` shelves it under one of four library optgroups,
+ * and entries below are ordered to match (the UI's optgroup builder
+ * appends in encounter order — src/ui/emulator-ui.js): Arcade,
+ * Adventures, BASIC type-ins, Extras.
+ *
  * `expect` is a string the program prints early, used by the headless
  * library test to prove the program loads and runs.
  */
 
 export const LIBRARY = [
-  // ---- Games from trsjs.48k.ca (see LICENSE exception) ----
+  // ---- Arcade: trsjs.48k.ca originals (see LICENSE exception) ----
   {
     id: "supernova",
     title: "Super Nova (Big Five, 1980)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/nova-m3.cmd",
     format: "cmd",
@@ -32,7 +38,7 @@ export const LIBRARY = [
   {
     id: "galaxy-invasion",
     title: "Galaxy Invasion (Big Five, 1980)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/galaxy.cmd",
     format: "cmd",
@@ -40,7 +46,7 @@ export const LIBRARY = [
   {
     id: "flying-saucers",
     title: "Flying Saucers (1980)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/flysauc1.cmd",
     format: "cmd",
@@ -48,7 +54,7 @@ export const LIBRARY = [
   {
     id: "sea-dragon",
     title: "Sea Dragon (Adventure Intl, 1982)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/seadrag.3bn",
     format: "cas",
@@ -56,7 +62,7 @@ export const LIBRARY = [
   {
     id: "time-trek",
     title: "Time Trek (1980)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/timetrek.3bn",
     format: "cas",
@@ -64,7 +70,7 @@ export const LIBRARY = [
   {
     id: "invasion-force",
     title: "Invasion Force (1979)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/invade.cas",
     format: "cas",
@@ -72,20 +78,12 @@ export const LIBRARY = [
   {
     id: "city-defence",
     title: "City Defence (BASIC, ~20 s to type in)",
-    group: "Games",
+    group: "Arcade",
     kind: "file",
     file: "/programs/m2.bas",
     format: "bas",
   },
-  {
-    id: "opus1",
-    title: "OPUS-1 (cassette music — silent: no sound yet)",
-    group: "Games",
-    kind: "file",
-    file: "/programs/opus1msg.cmd",
-    format: "cmd",
-  },
-  // ---- v1.3.0 arcade classics (see LICENSE exception) ----
+  // ---- Arcade: v1.3.0 additions from trs-80.com (see LICENSE exception) ----
   {
     id: "scarfman",
     title: "Scarfman (Cornsoft, 1981)",
@@ -122,14 +120,14 @@ export const LIBRARY = [
   },
   {
     id: "armored-patrol",
-    title: "Armored Patrol (Adventure International, 1981)",
+    title: "Armored Patrol (Adventure Intl, 1981)",
     group: "Arcade",
     kind: "file",
     file: "/programs/armored.cmd",
     format: "cmd",
     note: "Press 1 or 2 to select players and start",
   },
-  // ---- v1.3.0 text adventures (see LICENSE exception) ----
+  // ---- Adventures: v1.3.0 additions from trs-80.com (see LICENSE exception) ----
   {
     id: "adventureland",
     title: "Adventureland (Scott Adams, 1978)",
@@ -156,9 +154,11 @@ export const LIBRARY = [
     file: "/programs/bedlam.cmd",
     format: "cmd",
   },
+  // ---- BASIC type-ins: public-domain classics (MIT-covered) ----
   {
     id: "hammurabi",
     title: "Hammurabi (city-state sim)",
+    group: "BASIC type-ins",
     expect: "HAMURABI",
     text: `10 PRINT "HAMURABI - RULE ANCIENT SUMERIA"
 20 P=100: S=2800: L=1000: Y=3: D=0: I=5
@@ -195,6 +195,7 @@ export const LIBRARY = [
   {
     id: "lunar",
     title: "Lunar Lander",
+    group: "BASIC type-ins",
     expect: "LUNAR",
     text: `10 PRINT "LUNAR LANDER"
 20 PRINT "LAND SOFTLY: SPEED UNDER 5 M/S"
@@ -215,6 +216,7 @@ export const LIBRARY = [
   {
     id: "hurkle",
     title: "Hurkle (grid hunt)",
+    group: "BASIC type-ins",
     expect: "HURKLE",
     text: `10 PRINT "FIND THE HURKLE ON A 10X10 GRID"
 20 X=RND(10)-1: Y=RND(10)-1
@@ -236,6 +238,7 @@ export const LIBRARY = [
   {
     id: "guess",
     title: "Number Guess",
+    group: "BASIC type-ins",
     expect: "GUESS",
     text: `10 PRINT "GUESS MY NUMBER (1-100)"
 20 N=RND(100): G=0
@@ -245,7 +248,7 @@ export const LIBRARY = [
 60 PRINT "GOT IT IN";G;"TRIES!"
 `,
   },
-  // ---- v1.3.0 BASIC type-in classics ----
+  // ---- BASIC type-ins: v1.3.0 additions ----
   {
     id: "wumpus",
     title: "Hunt the Wumpus (cave hunt)",
@@ -419,7 +422,15 @@ export const LIBRARY = [
 290 PRINT "GAME OVER"
 `,
   },
-  // ---- v1.3.0 Extras ----
+  // ---- Extras: big BASIC and curiosities (see LICENSE exception) ----
+  {
+    id: "opus1",
+    title: "OPUS-1 (cassette music — silent: no sound yet)",
+    group: "Extras",
+    kind: "file",
+    file: "/programs/opus1msg.cmd",
+    format: "cmd",
+  },
   {
     id: "super-star-trek",
     title: "Super Star Trek (Ahl, 1978 — public domain)",
