@@ -4,6 +4,24 @@ All notable changes to the TRS-80 Model III emulator are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow [semver](https://semver.org/).
 
+## [1.4.1] - 2026-07-13
+
+### Fixed
+
+- **The machine case is a proper Model III again.** The cabinet was
+  shrink-wrapping the screen at its raw 512×192 pixel shape — 8:3 — which
+  squashed the whole machine flat at roughly 2.7:1 and left the characters
+  wide and stubby. The real Model III drove that same raster onto a 4:3
+  tube with double-height pixels, which is what the rest of the emulator
+  already assumed: the Size menu's numeric steps are 512×384 per unit, and
+  the case was throwing that height away. The tube is now 4:3 everywhere,
+  and the cabinet stands at about 1.7:1.
+- The cabinet no longer runs off the bottom of a short window. Its width is
+  bounded by the height actually left over, so a small screen gets a smaller
+  machine instead of a scrollbar reaching for RESET.
+- The blank drive bays scale with the cabinet rather than staying 64px tall,
+  which left them as two chips at the top of the taller right column.
+
 ## [1.4.0] - 2026-07-13
 
 ### Added

@@ -399,9 +399,16 @@
           0 30px 60px rgba(0, 0, 0, 0.65),
           inset 0 2px 3px rgba(255, 255, 255, 0.35);
         padding: 26px 28px 20px;
-        max-width: 1160px;
         width: 100%;
         box-sizing: border-box;
+        /* The cabinet grows from its width — a 4:3 tube makes it roughly
+           1.6:1 — so a wide, short window would push RESET off the bottom.
+           Bound the width by the height that's actually left: ~166px goes to
+           the dev bar, status bar, stage padding and hint, and what remains
+           relates to the width by case_h ≈ (case_w + 155) / 1.94, which is
+           the 2.2fr/1fr face split and the bezel padding solved for height.
+           Short windows get a smaller machine rather than a scrollbar. */
+        max-width: min(1160px, max(360px, calc(100svh * 1.94 - 477px)));
       }
       body.case #machine-face {
         display: grid;
@@ -427,21 +434,21 @@
       body.case #crt-glass {
         border-radius: 10px;
       }
-      /* In the cabinet the well spans the bezel and the canvas keeps its
-         natural 8:3; a numeric size pins the width as before. */
+      /* In the cabinet the well is a tube, not a bitmap: the 512×192 raster
+         stretches onto 4:3 with double-height pixels, the way the real Model
+         III drove its CRT. The well spans the bezel; a numeric size pins the
+         width and the height follows from the ratio. */
       body.case #crt-well[data-scale="fill"],
       body.case #crt-well[data-scale="ratio"] {
         width: 100%;
         height: auto;
-        aspect-ratio: auto;
+        aspect-ratio: 4 / 3;
       }
       body.case #crt-well[data-scale="fixed"] {
         width: min(var(--scale-w), 100%);
         height: auto;
+        aspect-ratio: 4 / 3;
         margin: 0 auto;
-      }
-      body.case #emulator-screen {
-        height: auto;
       }
       body.case #drive-column {
         display: flex;
@@ -450,9 +457,12 @@
         justify-content: flex-start;
         padding-top: 6px;
       }
-      /* Blank plates where the disk drives would be: this is the cassette model */
+      /* Blank plates where the disk drives would be: this is the cassette model.
+         Height tracks the column so the bays stay in proportion as the tube
+         grows, instead of shrinking into two chips at the top. */
       .drive-blank {
-        height: 64px;
+        flex: 0 0 auto;
+        height: clamp(64px, 17%, 104px);
         border-radius: 8px;
         background:
           repeating-linear-gradient(
