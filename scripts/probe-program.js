@@ -9,7 +9,6 @@
  *   node scripts/probe-program.js <file.cmd|file.cas|file.3bn> [seconds]
  */
 import { register } from "node:module";
-import { pathToFileURL } from "node:url";
 
 // Register module alias loader
 const loaderPath = new URL("./module-loader.js", import.meta.url);
@@ -40,7 +39,13 @@ if (!file) {
 const romData = new Uint8Array(
   readFileSync(join(__dirname, "../public/assets/model3.rom"))
 );
-const bytes = new Uint8Array(readFileSync(file));
+let bytes;
+try {
+  bytes = new Uint8Array(readFileSync(file));
+} catch (err) {
+  console.error(`FAIL: cannot read ${file}: ${err.message}`);
+  process.exit(1);
+}
 
 const system = new TRS80System({ romData });
 system.cpu.strictMode = true;
