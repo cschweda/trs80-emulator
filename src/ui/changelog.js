@@ -2,8 +2,9 @@
  * The in-app changelog: CHANGELOG.md is the single source (also what
  * GitHub shows). Vite inlines it at build time via ?raw; a deliberately
  * tiny renderer handles just the markdown that file uses — headings,
- * bullet lists (with wrapped lines), links, bold. Anything fancier
- * belongs in the file only if this renderer learns it first.
+ * bullet lists (with wrapped lines), paragraphs (with wrapped lines),
+ * links, bold, code spans. Anything fancier belongs in the file only if
+ * this renderer learns it first.
  */
 import changelogText from "../../CHANGELOG.md?raw";
 
@@ -17,9 +18,10 @@ function escapeHtml(s) {
 
 function inline(s) {
   return s
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(
-      /\[([^\]]+)\]\(([^)\s]+)\)/g,
+      /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
       '<a href="$2" target="_blank" rel="noopener">$1</a>'
     );
 }
@@ -27,11 +29,19 @@ function inline(s) {
 export function renderChangelogHtml(md) {
   const out = [];
   let items = null; // open <ul> item list, last entry may absorb wraps
+  let para = null; // open <p> lines, joined with a space on close
+  let atStart = true; // true until the first non-blank line is seen
 
   const closeList = () => {
     if (items) {
       out.push("<ul>" + items.map((i) => `<li>${i}</li>`).join("") + "</ul>");
       items = null;
+    }
+  };
+  const closePara = () => {
+    if (para) {
+      out.push(`<p>${para.join(" ")}</p>`);
+      para = null;
     }
   };
 
@@ -41,21 +51,37 @@ export function renderChangelogHtml(md) {
     const li = line.match(/^- (.*)$/);
     if (h) {
       closeList();
-      const level = h[1].length + 1; // # -> h2 ... ### -> h4 (modal owns h1)
-      out.push(`<h${level}>${inline(escapeHtml(h[2]))}</h${level}>`);
+      closePara();
+      // The modal chrome already renders its own <h2> title, so a single
+      // leading level-1 heading (CHANGELOG.md's own `# Changelog`) would
+      // otherwise double it up — skip just that one. Deeper headings (and
+      // any level-1 heading that isn't the document's very first line)
+      // keep the existing level+1 mapping.
+      const skipLeadingTitle = atStart && h[1] === "#";
+      atStart = false;
+      if (!skipLeadingTitle) {
+        const level = h[1].length + 1; // # -> h2 ... ### -> h4 (modal owns h1)
+        out.push(`<h${level}>${inline(escapeHtml(h[2]))}</h${level}>`);
+      }
     } else if (li) {
+      atStart = false;
+      closePara();
       if (!items) items = [];
       items.push(inline(escapeHtml(li[1])));
     } else if (items && /^\s+\S/.test(line)) {
       items[items.length - 1] += " " + inline(escapeHtml(line.trim()));
     } else if (line === "") {
       closeList();
+      closePara();
     } else {
+      atStart = false;
       closeList();
-      out.push(`<p>${inline(escapeHtml(line))}</p>`);
+      if (!para) para = [];
+      para.push(inline(escapeHtml(line.trim())));
     }
   }
   closeList();
+  closePara();
   return out.join("\n");
 }
 
