@@ -108,11 +108,19 @@ export class SoundDriver {
    * Feed the transitions of the just-emulated slice [fromCycle, toCycle).
    * Always drains the system's transition log, even when muted, so the
    * log can't grow without bound.
+   *
+   * `silent` is turbo's mute. Chunk length is derived from *emulated*
+   * duration, so at 10x a 16 ms frame would emit 160 ms of audio and the
+   * scheduled queue would run away from the wall clock for good. Muting
+   * takes the same drain-and-track-level path as a disabled driver, but
+   * without touching the user's preference or suspending the context —
+   * so sound returns, at the right DC level, the instant turbo drops.
    */
-  pump(system, fromCycle, toCycle, cpuHz) {
+  pump(system, fromCycle, toCycle, cpuHz, { silent = false } = {}) {
     const transitions = system.io.drainSound();
 
     if (
+      silent ||
       !this.enabled ||
       !this.ctx ||
       this.ctx.state !== "running" ||

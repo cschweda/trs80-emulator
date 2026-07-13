@@ -21,6 +21,12 @@ import { serializeState, restoreState } from "@system/state.js";
 import { LIBRARY } from "@data/library.js";
 import { normalizeScale, wellLayout } from "@ui/screen-layout.js";
 import { setupTouchInput } from "@ui/touch-input.js";
+import {
+  TURBO_SPEED,
+  TURBO_FRAME_MS,
+  frameBudgetTStates,
+  runSliced,
+} from "@ui/turbo.js";
 
 // ---------------------------------------------------------------------------
 // Emulator tab: a real Model III booting its real ROM
@@ -38,12 +44,68 @@ export const emulator = {
   blurHandler: null,
   intervalId: null,
   holds: new Map(), // physical code -> { pressedAt, timer, key }
+  turboHeld: false, // the turbo key is physically down (momentary)
+  turboLatched: false, // the status-bar pill was clicked (session only)
 };
 
 // The ROM scans and debounces the keyboard, so a key must stay down in
 // the matrix for a few scan passes to register. Synthetic key events and
 // very fast taps can release sooner than that — enforce a minimum hold.
 const MIN_KEY_HOLD_MS = 80;
+
+// The TRS-80 has no backtick key, so the matrix can never want it. Match
+// on e.code (physical position) — the matrix keys off e.key, so the two
+// cannot collide. F12 is not an option: browsers reserve it for DevTools
+// and preventDefault() does not suppress it, and on macOS the F-row is
+// media keys that never reach the page.
+const TURBO_KEY = "Backquote";
+
+/** Turbo is on if the key is held OR the status-bar pill is latched. */
+export function turboActive() {
+  return emulator.turboHeld || emulator.turboLatched;
+}
+
+function setTurboHeld(held) {
+  if (emulator.turboHeld === held) return;
+  emulator.turboHeld = held;
+  updateTurboIndicator();
+}
+
+function updateTurboIndicator() {
+  const pill = document.getElementById("status-bar-turbo");
+  if (!pill) return;
+  const on = turboActive();
+  pill.textContent = on ? `⏩ TURBO ${TURBO_SPEED}×` : "⏩ Turbo";
+  pill.classList.toggle("on", on);
+  // The question this control answers is "is turbo on?", so a held key
+  // reads as pressed too — not just the latch.
+  pill.setAttribute("aria-pressed", on ? "true" : "false");
+}
+
+/**
+ * Wire the status-bar turbo pill: a session-only latch. Touch has no key
+ * to hold, and nobody should be *required* to hold a key down, so the
+ * pill is how turbo stays reachable — but it is never persisted, because
+ * a turbo that survived a reload is exactly the silent 10x this design
+ * exists to prevent.
+ */
+export function initTurbo() {
+  const pill = document.getElementById("status-bar-turbo");
+  if (!pill || pill.dataset.turboWired) return;
+  pill.dataset.turboWired = "1";
+  pill.addEventListener("click", () => {
+    // The pill is the visible truth: if turbo is on by ANY route, clicking it
+    // turns it off. That keeps it a working off switch even when a keyup was
+    // lost (macOS swallows keyup for a key held with Command). If the key
+    // genuinely IS still down, its auto-repeat keydown re-engages turbo within
+    // ~30 ms, so this can't fight a real hold.
+    const on = turboActive();
+    emulator.turboHeld = false;
+    emulator.turboLatched = !on;
+    updateTurboIndicator();
+  });
+  updateTurboIndicator();
+}
 
 function matrixPress(key, code) {
   const pending = emulator.holds.get(code);
@@ -96,6 +158,7 @@ function releaseAllMatrixKeys() {
 // above directly.
 export function onUiModalOpen() {
   if (emulator.system) releaseAllMatrixKeys();
+  setTurboHeld(false); // the modal swallows keydown, so it'd swallow the keyup
 }
 
 async function initEmulator() {
@@ -586,13 +649,35 @@ function stepMachine(now) {
   // backgrounded tab doesn't come back with seconds of catch-up.
   const elapsedMs = Math.min(now - emulator.lastFrameTime || 16, 66);
   emulator.lastFrameTime = now;
+
+  const turbo = turboActive();
   const fromCycle = emulator.system.cpu.cycles;
-  emulator.system.runTStates(Math.round((elapsedMs / 1000) * CPU_CLOCK_HZ));
+  const budget = frameBudgetTStates(
+    elapsedMs,
+    CPU_CLOCK_HZ,
+    turbo ? TURBO_SPEED : 1
+  );
+
+  if (turbo) {
+    // 660 ms of emulated time in one blocking call would drop frames on a
+    // slow device. Slice it against a wall-clock deadline instead: what
+    // doesn't fit is simply time the machine doesn't experience.
+    runSliced(
+      budget,
+      (slice) => emulator.system.runTStates(slice),
+      () => performance.now(),
+      performance.now() + TURBO_FRAME_MS
+    );
+  } else {
+    emulator.system.runTStates(budget);
+  }
+
   emulator.sound.pump(
     emulator.system,
     fromCycle,
     emulator.system.cpu.cycles,
-    CPU_CLOCK_HZ
+    CPU_CLOCK_HZ,
+    { silent: turbo } // see sound.js: chunks are sized by emulated time
   );
 
   if (emulator.system.memory.videoDirty) {
@@ -650,6 +735,17 @@ export function startEmulatorLoop() {
     if (isFormField(e.target) || isUiModalOpen()) return;
     // Any keystroke is a user gesture: (re)start audio if it's enabled
     emulator.sound.ensureRunning();
+    // Turbo is momentary. Engaging it is gated by the guard above — in a
+    // form field you're typing a backtick, not driving the machine. This
+    // sits before the e.repeat check so a held key keeps re-affirming it.
+    // Cmd+` is macOS "cycle windows"; Ctrl/Alt+` aren't turbo either. Do NOT
+    // gate on shiftKey: Shift+` is the same physical key, and a player may be
+    // holding Shift in a game while reaching for turbo.
+    if (e.code === TURBO_KEY && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      setTurboHeld(true);
+      e.preventDefault();
+      return;
+    }
     if (e.repeat) {
       // Matrix key is already down; just swallow the auto-repeat
       if (emulator.holds.has(e.code)) e.preventDefault();
@@ -660,6 +756,14 @@ export function startEmulatorLoop() {
     }
   };
   emulator.keyupHandler = (e) => {
+    // Releasing the turbo key ALWAYS drops turbo, whatever has focus —
+    // deliberately NOT gated the way keydown is. If focus moved mid-hold,
+    // a gated keyup would strand the machine at 10x with no way back.
+    if (e.code === TURBO_KEY) {
+      setTurboHeld(false);
+      e.preventDefault();
+      return;
+    }
     if (isFormField(e.target) || isUiModalOpen()) return;
     if (matrixRelease(e.key, e.code)) {
       e.preventDefault();
@@ -671,7 +775,10 @@ export function startEmulatorLoop() {
   // Window blur only (alt-tab, cmd-tab, clicking another window): a
   // hidden-but-automated tab can still legitimately receive key events,
   // so visibilitychange must NOT wipe the matrix.
-  emulator.blurHandler = () => releaseAllMatrixKeys();
+  emulator.blurHandler = () => {
+    releaseAllMatrixKeys();
+    setTurboHeld(false); // alt-tab mid-hold: the keyup will never arrive
+  };
   window.addEventListener("blur", emulator.blurHandler);
 }
 
@@ -692,6 +799,7 @@ export function stopEmulatorLoop() {
   window.removeEventListener("keyup", emulator.keyupHandler);
   window.removeEventListener("blur", emulator.blurHandler);
   releaseAllMatrixKeys(); // no stuck keys on return
+  setTurboHeld(false); // ...and no stuck turbo: the listeners are gone
 }
 
 window.showEmulatorTab = async function () {

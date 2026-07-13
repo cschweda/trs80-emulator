@@ -20,7 +20,7 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 - **BASIC Program Execution**: ROM loading, program storage, CPU execution with ROM, CLOAD integration
 - **Video Display System**: 64×16 character text display with 128×48 pixel graphics mode, SET/RESET/POINT commands, CHR$() graphics characters
 - **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, BASIC source code, and graphics display
-- **Comprehensive Test Suite**: 448 vitest tests across 28 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, library programs, 32-column mode, save states)
+- **Comprehensive Test Suite**: 488 vitest tests across 30 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, library programs, 32-column mode, save states)
 
 **July 2026 performance & platform pass** ✅ **COMPLETE**
 
@@ -28,6 +28,7 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 - **Sound**: the cassette-port trick (port 0xFF bit toggling) now feeds WebAudio — the bundled Big Five games beep and zap like the real machine; MACHINE menu toggle, preference persisted
 - **Save states**: Quick save/load (browser storage) and Export/Import (.json file) capture the whole machine — CPU, RAM, screen, I/O, FDC, cassette, and mounted disk contents — mid-game
 - **Status bar & changelog**: slim bottom bar with the version, an in-app CHANGELOG.md viewer, and a GitHub link; default screen size is 2×
+- **Turbo (10×)**: hold the `` ` `` key to fast-forward the machine, or click the TURBO pill in the status bar to latch it — Super Star Trek's galaxy setup drops from ~1 minute to ~6 seconds; sound mutes while engaged, and turbo is never saved
 - **Disk export**: download the in-memory .dsk of either drive, session writes included
 - **Touch/mobile input**: tap the screen for the soft keyboard, plus an on-screen BREAK/CLEAR/arrows/ENTER strip on coarse-pointer devices
 - **32-column mode**: `PRINT CHR$(23)` renders authentically double-wide (ROM-verified even-address layout); CLS restores 64 columns

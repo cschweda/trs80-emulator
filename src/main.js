@@ -7,7 +7,7 @@
  * dropdown.
  */
 
-import { emulator } from "@ui/emulator-ui.js";
+import { emulator, initTurbo } from "@ui/emulator-ui.js";
 import { initChangelog } from "@ui/changelog.js";
 
 // The View dropdown: the emulator is the product; the phase consoles are
@@ -43,3 +43,4 @@ try {
 // Launch straight into the machine: a 48K cassette Model III, powered on.
 window.showEmulatorTab();
 initChangelog();
+initTurbo();

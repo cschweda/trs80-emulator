@@ -438,6 +438,6 @@ export const LIBRARY = [
     kind: "file",
     file: "/programs/sstrek.cas",
     format: "cas",
-    note: "Galaxy setup takes about a minute of real 2 MHz time - be patient",
+    note: "Galaxy setup takes about a minute at 2 MHz - hold the ` key (or click TURBO) to skip through it",
   },
 ];
