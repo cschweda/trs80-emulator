@@ -427,6 +427,6 @@ export const LIBRARY = [
     kind: "file",
     file: "/programs/sstrek.cas",
     format: "cas",
-    note: "Takes a few seconds to set up the galaxy",
+    note: "Galaxy setup takes about a minute of real 2 MHz time - be patient",
   },
 ];
