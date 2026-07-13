@@ -95,12 +95,13 @@ export const LIBRARY = [
     format: "cas",
   },
   {
-    id: "robot-attack",
-    title: "Robot Attack (Big Five, 1981)",
+    id: "cosmic-fighter",
+    title: "Cosmic Fighter (Big Five, 1980)",
     group: "Arcade",
     kind: "file",
-    file: "/programs/robotatk.cas",
-    format: "cas",
+    file: "/programs/cosmic.cmd",
+    format: "cmd",
+    note: "Press CLEAR (Home key) to start",
   },
   {
     id: "meteor-mission-2",

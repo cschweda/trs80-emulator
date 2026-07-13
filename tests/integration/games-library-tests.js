@@ -55,6 +55,13 @@ describe("Bundled games load and run on the real ROM", () => {
     bootToReady(system);
   });
 
+  // Legacy trsjs rows: [file, format, entry] — generic takeover assertions.
+  // v1.3.0 rows: [file, format, entry, expect, seconds] — after `seconds`
+  // of emulated time the screen must also contain `expect`, a string the
+  // real title screen / attract mode prints. A crashed loader that merely
+  // scribbles graphics over VRAM satisfies the generic assertions, so the
+  // newer rows pin visible proof-of-life text (strings taken from
+  // full-screen probe dumps of each title).
   const ML_GAMES = [
     ["nova-m3.cmd", "cmd", 0x6393],
     ["flysauc1.cmd", "cmd", 0x6c00],
@@ -65,14 +72,14 @@ describe("Bundled games load and run on the real ROM", () => {
     ["invade.cas", "cas", 0x5000],
 
     // v1.3.0 arcade classics (entries pinned from scripts/probe-program.js)
-    ["scarfman.cas", "cas", 0x6000],
-    ["robotatk.cas", "cas", 0x7fae],
-    ["meteor2.cmd", "cmd", 0x9e00],
-    ["defense.cas", "cas", 0x493e],
-    ["armored.cmd", "cmd", 0xf8ff],
+    ["scarfman.cas", "cas", 0x6000, "HIGH SCORE", 8],
+    ["cosmic.cmd", "cmd", 0x65d9, "to start game", 8],
+    ["meteor2.cmd", "cmd", 0x9e00, "Big Five Software", 8],
+    ["defense.cas", "cas", 0x493e, "Big Five Software", 8],
+    ["armored.cmd", "cmd", 0xf8ff, "1 or 2 Players?", 8],
   ];
 
-  for (const [file, format, entry] of ML_GAMES) {
+  for (const [file, format, entry, expectText, seconds] of ML_GAMES) {
     it(`${file} fast-loads and takes over the machine`, () => {
       const before = system.screenText().join("\n");
       const bytes = programBytes(file);
@@ -87,12 +94,15 @@ describe("Bundled games load and run on the real ROM", () => {
         expect(parsed.checksumErrors).toBe(0);
         fastLoadSystem(system, parsed);
       }
-      system.runSeconds(1);
+      system.runSeconds(expectText ? seconds : 1);
 
       expect(system.cpu.halted).toBe(false);
       const after = system.screenText().join("\n");
       expect(after).not.toBe(before); // the game drew something
       expect(after).not.toContain("READY"); // BASIC is gone
+      if (expectText) {
+        expect(after).toContain(expectText); // real title/attract text
+      }
     });
   }
 
