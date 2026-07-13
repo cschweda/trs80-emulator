@@ -129,6 +129,33 @@ export const LIBRARY = [
     format: "cmd",
     note: "Press 1 or 2 to select players and start",
   },
+  // ---- v1.3.0 text adventures (see LICENSE exception) ----
+  {
+    id: "adventureland",
+    title: "Adventureland (Scott Adams, 1978)",
+    group: "Adventures",
+    kind: "file",
+    file: "/programs/advland.cmd",
+    format: "cmd",
+    note: 'Decline "restore a saved game?", then Enter past the intro to start',
+  },
+  {
+    id: "pirate-adventure",
+    title: "Pirate Adventure (Scott Adams, 1979)",
+    group: "Adventures",
+    kind: "file",
+    file: "/programs/pirate.cmd",
+    format: "cmd",
+    note: 'Decline "restore a saved game?", then Enter past the intro to start',
+  },
+  {
+    id: "bedlam",
+    title: "Bedlam (Tandy, 1982)",
+    group: "Adventures",
+    kind: "file",
+    file: "/programs/bedlam.cmd",
+    format: "cmd",
+  },
   {
     id: "hammurabi",
     title: "Hammurabi (city-state sim)",

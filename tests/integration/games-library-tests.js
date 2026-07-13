@@ -77,6 +77,14 @@ describe("Bundled games load and run on the real ROM", () => {
     ["meteor2.cmd", "cmd", 0x9e00, "Big Five Software", 8],
     ["defense.cas", "cas", 0x493e, "Big Five Software", 8],
     ["armored.cmd", "cmd", 0xf8ff, "1 or 2 Players?", 8],
+
+    // v1.3.0 text adventures: Bedlam prints its opening prose the moment
+    // it takes over — no input needed, so a plain row suffices (unlike
+    // Adventureland/Pirate Adventure below, which idle at a "restore a
+    // saved game?" prompt shared by every Scott Adams title and need
+    // typed input to reach their distinct, title-identifying banners —
+    // see the dedicated tests after the BASIC games below).
+    ["bedlam.cmd", "cmd", 0xbd30, "YOU FEEL AS THOUGH YOU HAVE JUST AWAKENED", 8],
   ];
 
   for (const [file, format, entry, expectText, seconds] of ML_GAMES) {
@@ -124,4 +132,56 @@ describe("Bundled games load and run on the real ROM", () => {
     },
     240000
   );
+
+  // Scott Adams adventures (advland.cmd, pirate.cmd): the shipped /CMD is
+  // the interpreter plus its game database (parsed name is "ADVENT" for
+  // both — the interpreter's own module name, not the game title). Both
+  // idle at the same interpreter-wide "restore a saved game?" prompt, so
+  // that string alone can't distinguish the two titles or prove the right
+  // database loaded. Decline the restore, press Enter past the credits
+  // page, and require each title's own "Welcome to Adventure number: N"
+  // banner (real per-title prose, taken from full-screen probe dumps) —
+  // the ML_GAMES loop above has no input step, hence dedicated tests.
+  it("advland.cmd loads Scott Adams's Adventureland and reaches its opening room", () => {
+    const bytes = programBytes("advland.cmd");
+    const parsed = parseCmd(bytes);
+    expect(parsed.entry).toBe(0x9e00);
+    fastLoadCmd(system, parsed);
+    system.runSeconds(3);
+    expect(system.screenText().join("\n")).toContain(
+      "Want to restore a previously saved game?"
+    );
+
+    system.typeText("N\n", { enterTStates: 600000 }); // decline restore
+    system.runSeconds(3);
+    system.typeText("\n", { enterTStates: 600000 }); // past the credits page
+    system.runSeconds(3);
+
+    const screen = system.screenText().join("\n");
+    expect(system.cpu.halted).toBe(false);
+    expect(screen).not.toContain("READY");
+    expect(screen).toContain('Welcome to Adventure number: 1 "ADVENTURELAND"');
+  });
+
+  it("pirate.cmd loads Scott Adams's Pirate Adventure and reaches its opening room", () => {
+    const bytes = programBytes("pirate.cmd");
+    const parsed = parseCmd(bytes);
+    expect(parsed.name).toBe("ADVENT");
+    expect(parsed.entry).toBe(0xad00);
+    fastLoadCmd(system, parsed);
+    system.runSeconds(3);
+    expect(system.screenText().join("\n")).toContain(
+      "Want to restore a previously saved game?"
+    );
+
+    system.typeText("N\n", { enterTStates: 600000 }); // decline restore
+    system.runSeconds(3);
+    system.typeText("\n", { enterTStates: 600000 }); // past the credits page
+    system.runSeconds(3);
+
+    const screen = system.screenText().join("\n");
+    expect(system.cpu.halted).toBe(false);
+    expect(screen).not.toContain("READY");
+    expect(screen).toContain('Welcome to Adventure number 2: "pirate adventure"');
+  });
 });
