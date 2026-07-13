@@ -7,6 +7,7 @@
  * this renderer learns it first.
  */
 import changelogText from "../../CHANGELOG.md?raw";
+import { onUiModalOpen } from "@ui/emulator-ui.js";
 
 function escapeHtml(s) {
   return s
@@ -99,6 +100,11 @@ export function initChangelog() {
       rendered = true;
     }
     modal.style.display = "block";
+    // The emulator owns the key matrix; tell it a modal just covered
+    // the screen so a key the user was mid-holding doesn't stay stuck
+    // down for the rest of the session (same cleanup as losing window
+    // focus) — see onUiModalOpen in emulator-ui.js.
+    onUiModalOpen();
     closeBtn.focus();
   };
   const close = () => {

@@ -7,6 +7,11 @@
  * program image ending in the 0x0000 link).
  *
  *   node scripts/build-cas.js <in.bas> <out.cas> <NAME-char>
+ *
+ * Note: cassette (Level II) BASIC has no DEF FN — it throws ?L3 ERROR
+ * the instant one executes, even though disk/Model III BASIC accepts
+ * it. That's why src/data/super-star-trek.bas inlines its FND/FNR
+ * formulas at each call site instead of defining them once with DEF FN.
  */
 import { register } from "node:module";
 

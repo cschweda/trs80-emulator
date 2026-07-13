@@ -87,6 +87,17 @@ function releaseAllMatrixKeys() {
   emulator.system.keyboard.reset();
 }
 
+// Exposed for other in-page modals (currently just the changelog — see
+// src/ui/changelog.js) to call the instant they open: releases any
+// matrix key the user was mid-holding, the same cleanup already used
+// when the window loses focus (commit 0636b94), so a modal can't leave
+// a stuck key behind for the rest of the session. changelog.js calls
+// this one small hook instead of reaching into the key-hold machinery
+// above directly.
+export function onUiModalOpen() {
+  if (emulator.system) releaseAllMatrixKeys();
+}
+
 async function initEmulator() {
   if (emulator.system) {
     return emulator.system;
@@ -383,7 +394,9 @@ async function loadLibraryFile(entry) {
       const warn = parsed.checksumErrors
         ? ` (${parsed.checksumErrors} checksum errors)`
         : "";
-      setEmulatorStatus(`${entry.title} — running${warn}`);
+      setEmulatorStatus(
+        `${entry.title} — running${warn}${entry.note ? ` (${entry.note})` : ""}`
+      );
     } else if (entry.format === "bas") {
       const text = new TextDecoder().decode(bytes).replace(/\r\n?/g, "\n");
       setEmulatorStatus(`Typing ${entry.title}…`);
@@ -394,7 +407,9 @@ async function loadLibraryFile(entry) {
         enterTStates: 1500000,
       });
       emulator.system.typeText("RUN\n");
-      setEmulatorStatus(`${entry.title} — running`);
+      setEmulatorStatus(
+        `${entry.title} — running${entry.note ? ` (${entry.note})` : ""}`
+      );
     } else {
       setEmulatorStatus(`Unknown library format "${entry.format}"`);
     }
@@ -611,7 +626,7 @@ function emulatorHeartbeat() {
   }
 }
 
-function startEmulatorLoop() {
+export function startEmulatorLoop() {
   if (emulator.running) {
     return;
   }
@@ -622,11 +637,17 @@ function startEmulatorLoop() {
   emulator.intervalId = setInterval(emulatorHeartbeat, 100);
 
   // Keyboard: window-level so no element needs focus, but leave form
-  // fields (other tabs' inputs) alone.
+  // fields (other tabs' inputs) alone — and while an in-page modal (the
+  // changelog) is open, so reading it can't type into the machine or
+  // have Escape map to BREAK (see keyboard.js) and kill a running program.
   const isFormField = (el) =>
     el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
+  const isUiModalOpen = () => {
+    const modal = document.getElementById("changelog-modal");
+    return !!modal && modal.style.display === "block";
+  };
   emulator.keydownHandler = (e) => {
-    if (isFormField(e.target)) return;
+    if (isFormField(e.target) || isUiModalOpen()) return;
     // Any keystroke is a user gesture: (re)start audio if it's enabled
     emulator.sound.ensureRunning();
     if (e.repeat) {
@@ -639,7 +660,7 @@ function startEmulatorLoop() {
     }
   };
   emulator.keyupHandler = (e) => {
-    if (isFormField(e.target)) return;
+    if (isFormField(e.target) || isUiModalOpen()) return;
     if (matrixRelease(e.key, e.code)) {
       e.preventDefault();
     }
@@ -654,7 +675,7 @@ function startEmulatorLoop() {
   window.addEventListener("blur", emulator.blurHandler);
 }
 
-function stopEmulatorLoop() {
+export function stopEmulatorLoop() {
   if (!emulator.running) {
     return;
   }
