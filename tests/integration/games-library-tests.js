@@ -133,6 +133,39 @@ describe("Bundled games load and run on the real ROM", () => {
     240000
   );
 
+  // Super Star Trek (Ahl/Leedom, 1978): the galaxy setup runs nested
+  // 8x8 placement loops with random retries, so reaching the first
+  // interactive prompt takes far longer emulated time than the other
+  // BASIC type-ins above -- 60 emulated seconds, empirically confirmed
+  // stable and deterministic, well under a second of real wall-clock
+  // time in this headless harness. "STAR TREK" itself never reaches the
+  // screen (it only appears inside an unprinted REM banner), so the
+  // assertions below are pinned to real, on-screen proof of the short
+  // range sensor scan and command prompt instead.
+  it(
+    "sstrek.cas (Super Star Trek) fast-loads and reaches its short-range sensor scan",
+    () => {
+      const bytes = programBytes("sstrek.cas");
+      const parsed = parseCas(bytes);
+      expect(parsed.kind).toBe("basic");
+      expect(parsed.lines.length).toBeGreaterThan(300);
+      fastLoadBasic(system, parsed);
+      system.typeText("RUN\n");
+      system.runSeconds(70);
+
+      const screen = system.screenText().join("\n");
+      expect(system.cpu.halted).toBe(false);
+      expect(screen).not.toContain("?SN");
+      expect(screen).not.toContain("?OM");
+      expect(screen).not.toContain("?OS");
+      expect(screen).not.toContain("?L3");
+      expect(screen).toContain("STARDATE");
+      expect(screen).toContain("KLINGONS REMAINING");
+      expect(screen).toContain("COMMAND");
+    },
+    240000
+  );
+
   // Scott Adams adventures (advland.cmd, pirate.cmd): the shipped /CMD is
   // the interpreter plus its game database (parsed name is "ADVENT" for
   // both — the interpreter's own module name, not the game title). Both

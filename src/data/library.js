@@ -419,4 +419,14 @@ export const LIBRARY = [
 290 PRINT "GAME OVER"
 `,
   },
+  // ---- v1.3.0 Extras ----
+  {
+    id: "super-star-trek",
+    title: "Super Star Trek (Ahl, 1978 — public domain)",
+    group: "Extras",
+    kind: "file",
+    file: "/programs/sstrek.cas",
+    format: "cas",
+    note: "Takes a few seconds to set up the galaxy",
+  },
 ];
