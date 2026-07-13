@@ -185,10 +185,17 @@ describe("turbo mode", () => {
   });
 
   it("stays engaged across the auto-repeat of a held key", () => {
+    // The turbo check must sit BEFORE the e.repeat early-return in the
+    // keydown handler. Blur clears the hold while the key is still
+    // physically down; only a repeat keydown can arrive next, and it must
+    // still re-affirm turbo. Swap those two ifs and this goes false.
     emulator.system = fakeSystem();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
+    window.dispatchEvent(new Event("blur")); // hold cleared, key still down
+    expect(turboActive()).toBe(false);
+
     window.dispatchEvent(backtick("keydown", { repeat: true }));
 
     expect(turboActive()).toBe(true);
