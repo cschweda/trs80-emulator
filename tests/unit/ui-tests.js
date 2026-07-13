@@ -16,6 +16,7 @@ import {
   turboActive,
   initTurbo,
 } from "@ui/emulator-ui.js";
+import { KeyboardMatrix } from "@peripherals/keyboard.js";
 
 // A minimal stand-in for TRS80System: just enough surface for
 // startEmulatorLoop() and the matrix press/release path to run without
@@ -33,6 +34,14 @@ function fakeSystem() {
     },
     runTStates: vi.fn(() => 0),
   };
+}
+
+// stepMachine() paints through emulator.video, which only initEmulator()
+// ever assigns — and that needs a real ROM fetch. Without this stub the very
+// first frame dies on null.renderScreen(), because startEmulatorLoop() forces
+// videoDirty = true.
+function fakeVideo() {
+  return { renderScreen: vi.fn() };
 }
 
 describe("readPickedFile", () => {
@@ -85,6 +94,7 @@ describe("modal key isolation (changelog must not leak keys into the machine)", 
   afterEach(() => {
     stopEmulatorLoop(); // cancels rAF/interval, removes the window listeners
     emulator.system = null;
+    emulator.video = null;
     document.body.innerHTML = "";
   });
 
@@ -92,6 +102,7 @@ describe("modal key isolation (changelog must not leak keys into the machine)", 
     document.body.innerHTML =
       '<div id="changelog-modal" style="display: block;"></div>';
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     // Escape maps to BREAK (src/peripherals/keyboard.js) — exactly the
@@ -112,6 +123,7 @@ describe("modal key isolation (changelog must not leak keys into the machine)", 
     document.body.innerHTML =
       '<div id="changelog-modal" style="display: none;"></div>';
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(
@@ -126,6 +138,7 @@ describe("modal key isolation (changelog must not leak keys into the machine)", 
 
   it("onUiModalOpen releases any matrix key the user was mid-holding", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     emulator.holds.set("KeyA", { pressedAt: performance.now(), timer: null });
 
     onUiModalOpen();
@@ -161,6 +174,7 @@ describe("turbo mode", () => {
   afterEach(() => {
     stopEmulatorLoop();
     emulator.system = null;
+    emulator.video = null;
     emulator.turboHeld = false;
     emulator.turboLatched = false;
     document.body.innerHTML = "";
@@ -168,6 +182,7 @@ describe("turbo mode", () => {
 
   it("engages while the key is held and drops the moment it is released", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
@@ -179,6 +194,7 @@ describe("turbo mode", () => {
 
   it("never reaches the keyboard matrix (the TRS-80 has no backtick key)", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
@@ -188,12 +204,37 @@ describe("turbo mode", () => {
     expect(emulator.system.keyboard.keyUp).not.toHaveBeenCalled();
   });
 
+  it("a modified backtick (e.g. Cmd+`) also never reaches the keyboard matrix", () => {
+    // A modified backtick no longer returns early — it falls through to the
+    // matrix path. Safe only because KEY_MAP has no backtick entry. Pin it.
+    //
+    // This uses the REAL KeyboardMatrix instead of fakeSystem()'s keyboard
+    // stub: that stub's keyDown always returns true, so it can't tell us
+    // anything about KEY_MAP — it would report a hold was taken even though
+    // the real matrix takes none. Only the real class ties this test to the
+    // actual "no backtick entry" fact, so a future KEY_MAP change that added
+    // one would be caught here.
+    emulator.system = fakeSystem();
+    emulator.system.keyboard = new KeyboardMatrix();
+    const keyDownSpy = vi.spyOn(emulator.system.keyboard, "keyDown");
+    emulator.video = fakeVideo();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown", { metaKey: true }));
+    window.dispatchEvent(backtick("keyup", { metaKey: true }));
+
+    expect(keyDownSpy).toHaveBeenCalledWith("`", "Backquote");
+    expect(keyDownSpy.mock.results[0].value).toBe(false);
+    expect(emulator.holds.size).toBe(0);
+  });
+
   it("stays engaged across the auto-repeat of a held key", () => {
     // The turbo check must sit BEFORE the e.repeat early-return in the
     // keydown handler. Blur clears the hold while the key is still
     // physically down; only a repeat keydown can arrive next, and it must
     // still re-affirm turbo. Swap those two ifs and this goes false.
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
@@ -209,6 +250,7 @@ describe("turbo mode", () => {
   it("does not engage while a form field has focus", () => {
     document.body.innerHTML = '<input id="field" />';
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     document
@@ -222,6 +264,7 @@ describe("turbo mode", () => {
     document.body.innerHTML =
       '<div id="changelog-modal" style="display: block;"></div>';
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
@@ -231,6 +274,7 @@ describe("turbo mode", () => {
 
   it("does not engage when Cmd is held (macOS 'cycle windows' shortcut)", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown", { metaKey: true }));
@@ -240,6 +284,7 @@ describe("turbo mode", () => {
 
   it("does not engage when Ctrl is held", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown", { ctrlKey: true }));
@@ -249,6 +294,7 @@ describe("turbo mode", () => {
 
   it("does not engage when Alt is held", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown", { altKey: true }));
@@ -261,6 +307,7 @@ describe("turbo mode", () => {
     // physical key a player may reach while already holding Shift in a
     // game, and Shift has no OS-level meaning for backtick.
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown", { shiftKey: true }));
@@ -273,6 +320,7 @@ describe("turbo mode", () => {
     // mid-hold, a gated keyup would strand the machine at 10x forever.
     document.body.innerHTML = '<input id="field" />';
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
@@ -289,6 +337,7 @@ describe("turbo mode", () => {
     // Alt-tab mid-hold: the keyup never arrives, so the hold must be
     // dropped here — but a latch the user deliberately set must survive.
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
     emulator.turboLatched = true;
 
@@ -302,6 +351,7 @@ describe("turbo mode", () => {
 
   it("opening the changelog drops a held key but keeps an explicit latch", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
     emulator.turboLatched = true;
 
@@ -314,12 +364,27 @@ describe("turbo mode", () => {
 
   it("stopping the loop drops a held key (its keyup would never arrive)", () => {
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(backtick("keydown"));
     stopEmulatorLoop();
 
     expect(emulator.turboHeld).toBe(false);
+  });
+
+  it("survives a real frame of the loop (the fake machine is complete)", async () => {
+    // The other tests are synchronous, so afterEach cancels the rAF and the
+    // heartbeat before either can fire — which means an incomplete fake would
+    // never be caught. This one lets a tick actually land.
+    emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
+    startEmulatorLoop();
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(emulator.system.runTStates).toHaveBeenCalled();
+    expect(emulator.video.renderScreen).toHaveBeenCalled();
   });
 
   it("is off on a fresh load and persists nothing", () => {
@@ -341,6 +406,7 @@ describe("turbo pill (status bar)", () => {
   afterEach(() => {
     stopEmulatorLoop();
     emulator.system = null;
+    emulator.video = null;
     emulator.turboHeld = false;
     emulator.turboLatched = false;
     document.body.innerHTML = "";
@@ -378,6 +444,7 @@ describe("turbo pill (status bar)", () => {
   it("lights up for a held key too, not just the latch", () => {
     const pill = document.getElementById("status-bar-turbo");
     emulator.system = fakeSystem();
+    emulator.video = fakeVideo();
     startEmulatorLoop();
 
     window.dispatchEvent(
@@ -419,6 +486,26 @@ describe("turbo pill (status bar)", () => {
     expect(emulator.turboHeld).toBe(false);
     expect(pill.classList.contains("on")).toBe(false);
     expect(pill.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("clicking the pill turns turbo OFF even when it was engaged by the key", () => {
+    // Deliberate trade-off. From (held=true, latched=false) a single click
+    // cannot mean both "turn it off" (the hold is stuck because a keyup was
+    // lost) and "latch it on" (the user is really holding the key) — the two
+    // states are indistinguishable to the code. We chose OFF, because that
+    // keeps the pill a working escape hatch. A genuine hold is unharmed: its
+    // auto-repeat keydown re-engages turbo within ~30 ms.
+    // The casualty is hold-then-latch; the workaround (release, then click)
+    // is immediate. Do NOT "simplify" this back to `latched = !latched`.
+    const pill = document.getElementById("status-bar-turbo");
+    emulator.turboHeld = true;
+    emulator.turboLatched = false;
+
+    pill.click();
+
+    expect(emulator.turboHeld).toBe(false);
+    expect(emulator.turboLatched).toBe(false);
+    expect(turboActive()).toBe(false);
   });
 
   it("initTurbo() is idempotent: a second call does not attach a duplicate listener", () => {
