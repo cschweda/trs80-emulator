@@ -6,8 +6,12 @@
  * synthesizeSamples turns a time slice of transitions into PCM.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { synthesizeSamples, sliceIsSilent } from "@peripherals/sound.js";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  synthesizeSamples,
+  sliceIsSilent,
+  SoundDriver,
+} from "@peripherals/sound.js";
 import { IOSystem } from "@core/io.js";
 
 const CPU_HZ = 2027520;
@@ -147,5 +151,100 @@ describe("IOSystem cassette-out transition log", () => {
     io.writePort(0xff, 0x01);
     io.reset();
     expect(io.drainSound().length).toBe(0);
+  });
+});
+
+describe("SoundDriver.pump({ silent }) — turbo mutes", () => {
+  // A minimal AudioContext stand-in: enough for pump() to believe audio
+  // is live, and spied so a test can prove nothing was scheduled.
+  function liveDriver() {
+    const driver = new SoundDriver();
+    driver.enabled = true;
+    driver.supported = true;
+    driver.gain = {};
+    driver.ctx = {
+      state: "running",
+      sampleRate: RATE,
+      currentTime: 0,
+      createBuffer: vi.fn(() => ({
+        duration: 0.016,
+        copyToChannel: vi.fn(),
+      })),
+      createBufferSource: vi.fn(() => ({
+        buffer: null,
+        connect: vi.fn(),
+        start: vi.fn(),
+      })),
+    };
+    return driver;
+  }
+
+  const systemWith = (transitions) => ({
+    io: { drainSound: () => transitions },
+  });
+
+  it("schedules no audio at all while turbo is muting it", () => {
+    const driver = liveDriver();
+
+    driver.pump(systemWith([{ t: 10, level: 1 }]), 0, 100000, CPU_HZ, {
+      silent: true,
+    });
+
+    expect(driver.ctx.createBuffer).not.toHaveBeenCalled();
+    expect(driver.ctx.createBufferSource).not.toHaveBeenCalled();
+  });
+
+  it("still drains the transition log, so it cannot grow without bound", () => {
+    const driver = liveDriver();
+    const drainSound = vi.fn(() => []);
+
+    driver.pump({ io: { drainSound } }, 0, 100000, CPU_HZ, { silent: true });
+
+    expect(drainSound).toHaveBeenCalled();
+  });
+
+  it("tracks the DC level, so audio resumes correctly when turbo drops", () => {
+    const driver = liveDriver();
+
+    driver.pump(
+      systemWith([
+        { t: 10, level: 1 },
+        { t: 20, level: 2 },
+      ]),
+      0,
+      100000,
+      CPU_HZ,
+      { silent: true }
+    );
+
+    expect(driver.lastLevel).toBe(2);
+  });
+
+  it("leaves the user's sound preference and the AudioContext untouched", () => {
+    const driver = liveDriver();
+
+    driver.pump(systemWith([]), 0, 100000, CPU_HZ, { silent: true });
+
+    expect(driver.enabled).toBe(true);
+    expect(driver.ctx.state).toBe("running");
+  });
+
+  it("schedules audio again the moment silent is false (control case)", () => {
+    const driver = liveDriver();
+
+    driver.pump(systemWith([{ t: 10, level: 1 }]), 0, 100000, CPU_HZ, {
+      silent: false,
+    });
+
+    expect(driver.ctx.createBuffer).toHaveBeenCalled();
+    expect(driver.ctx.createBufferSource).toHaveBeenCalled();
+  });
+
+  it("defaults to audible when no options are passed (existing callers)", () => {
+    const driver = liveDriver();
+
+    driver.pump(systemWith([{ t: 10, level: 1 }]), 0, 100000, CPU_HZ);
+
+    expect(driver.ctx.createBuffer).toHaveBeenCalled();
   });
 });
