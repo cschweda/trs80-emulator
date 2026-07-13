@@ -13,7 +13,23 @@ import {
   startEmulatorLoop,
   stopEmulatorLoop,
   onUiModalOpen,
+  turboActive,
 } from "@ui/emulator-ui.js";
+
+// A minimal stand-in for TRS80System: just enough surface for
+// startEmulatorLoop() and the matrix press/release path to run without
+// booting the real ROM. keyDown/keyUp are spied so tests can assert on
+// whether a dispatched window keyboard event ever reached them.
+function fakeSystem() {
+  return {
+    memory: { videoDirty: false },
+    keyboard: {
+      keyDown: vi.fn(() => true),
+      keyUp: vi.fn(() => true),
+      reset: vi.fn(),
+    },
+  };
+}
 
 describe("readPickedFile", () => {
   beforeEach(() => {
@@ -62,21 +78,6 @@ describe("readPickedFile", () => {
 });
 
 describe("modal key isolation (changelog must not leak keys into the machine)", () => {
-  // A minimal stand-in for TRS80System: just enough surface for
-  // startEmulatorLoop() and the matrix press/release path to run without
-  // booting the real ROM. keyDown/keyUp are spied so the tests can assert
-  // on whether a dispatched window keyboard event ever reached them.
-  function fakeSystem() {
-    return {
-      memory: { videoDirty: false },
-      keyboard: {
-        keyDown: vi.fn(() => true),
-        keyUp: vi.fn(() => true),
-        reset: vi.fn(),
-      },
-    };
-  }
-
   afterEach(() => {
     stopEmulatorLoop(); // cancels rAF/interval, removes the window listeners
     emulator.system = null;
@@ -146,5 +147,134 @@ describe("legacy console module", () => {
     ]) {
       expect(typeof window[fn], `window.${fn}`).toBe("function");
     }
+  });
+});
+
+describe("turbo mode", () => {
+  const backtick = (type, opts = {}) =>
+    new KeyboardEvent(type, { key: "`", code: "Backquote", ...opts });
+
+  afterEach(() => {
+    stopEmulatorLoop();
+    emulator.system = null;
+    emulator.turboHeld = false;
+    emulator.turboLatched = false;
+    document.body.innerHTML = "";
+  });
+
+  it("engages while the key is held and drops the moment it is released", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown"));
+    expect(turboActive()).toBe(true);
+
+    window.dispatchEvent(backtick("keyup"));
+    expect(turboActive()).toBe(false);
+  });
+
+  it("never reaches the keyboard matrix (the TRS-80 has no backtick key)", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown"));
+    window.dispatchEvent(backtick("keyup"));
+
+    expect(emulator.system.keyboard.keyDown).not.toHaveBeenCalled();
+    expect(emulator.system.keyboard.keyUp).not.toHaveBeenCalled();
+  });
+
+  it("stays engaged across the auto-repeat of a held key", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown"));
+    window.dispatchEvent(backtick("keydown", { repeat: true }));
+
+    expect(turboActive()).toBe(true);
+    expect(emulator.system.keyboard.keyDown).not.toHaveBeenCalled();
+  });
+
+  it("does not engage while a form field has focus", () => {
+    document.body.innerHTML = '<input id="field" />';
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    document
+      .getElementById("field")
+      .dispatchEvent(backtick("keydown", { bubbles: true }));
+
+    expect(turboActive()).toBe(false);
+  });
+
+  it("does not engage while the changelog modal is open", () => {
+    document.body.innerHTML =
+      '<div id="changelog-modal" style="display: block;"></div>';
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown"));
+
+    expect(turboActive()).toBe(false);
+  });
+
+  it("releases on keyup even when a form field has focus", () => {
+    // Engaging is gated on focus; releasing must NOT be. If focus moved
+    // mid-hold, a gated keyup would strand the machine at 10x forever.
+    document.body.innerHTML = '<input id="field" />';
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown"));
+    expect(turboActive()).toBe(true);
+
+    document
+      .getElementById("field")
+      .dispatchEvent(backtick("keyup", { bubbles: true }));
+
+    expect(turboActive()).toBe(false);
+  });
+
+  it("blur drops a held key but keeps an explicit latch", () => {
+    // Alt-tab mid-hold: the keyup never arrives, so the hold must be
+    // dropped here — but a latch the user deliberately set must survive.
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+    emulator.turboLatched = true;
+
+    window.dispatchEvent(backtick("keydown"));
+    window.dispatchEvent(new Event("blur"));
+
+    expect(emulator.turboHeld).toBe(false);
+    expect(emulator.turboLatched).toBe(true);
+    expect(turboActive()).toBe(true);
+  });
+
+  it("opening the changelog drops a held key but keeps an explicit latch", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+    emulator.turboLatched = true;
+
+    window.dispatchEvent(backtick("keydown"));
+    onUiModalOpen();
+
+    expect(emulator.turboHeld).toBe(false);
+    expect(emulator.turboLatched).toBe(true);
+  });
+
+  it("stopping the loop drops a held key (its keyup would never arrive)", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown"));
+    stopEmulatorLoop();
+
+    expect(emulator.turboHeld).toBe(false);
+  });
+
+  it("is off on a fresh load and persists nothing", () => {
+    expect(emulator.turboHeld).toBe(false);
+    expect(emulator.turboLatched).toBe(false);
+    expect(localStorage.getItem("trs80-turbo")).toBeNull();
   });
 });
