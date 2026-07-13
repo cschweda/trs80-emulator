@@ -63,6 +63,13 @@ describe("Bundled games load and run on the real ROM", () => {
     ["seadrag.3bn", "cas", 0x497f],
     ["timetrek.3bn", "cas", 0x6ff1],
     ["invade.cas", "cas", 0x5000],
+
+    // v1.3.0 arcade classics (entries pinned from scripts/probe-program.js)
+    ["scarfman.cas", "cas", 0x6000],
+    ["robotatk.cas", "cas", 0x7fae],
+    ["meteor2.cmd", "cmd", 0x9e00],
+    ["defense.cas", "cas", 0x493e],
+    ["armored.cmd", "cmd", 0xf8ff],
   ];
 
   for (const [file, format, entry] of ML_GAMES) {
