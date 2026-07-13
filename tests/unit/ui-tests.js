@@ -24,11 +24,14 @@ import {
 function fakeSystem() {
   return {
     memory: { videoDirty: false },
+    cpu: { cycles: 0 },
+    io: { drainSound: () => [] },
     keyboard: {
       keyDown: vi.fn(() => true),
       keyUp: vi.fn(() => true),
       reset: vi.fn(),
     },
+    runTStates: vi.fn(() => 0),
   };
 }
 
@@ -226,6 +229,45 @@ describe("turbo mode", () => {
     expect(turboActive()).toBe(false);
   });
 
+  it("does not engage when Cmd is held (macOS 'cycle windows' shortcut)", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown", { metaKey: true }));
+
+    expect(turboActive()).toBe(false);
+  });
+
+  it("does not engage when Ctrl is held", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown", { ctrlKey: true }));
+
+    expect(turboActive()).toBe(false);
+  });
+
+  it("does not engage when Alt is held", () => {
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown", { altKey: true }));
+
+    expect(turboActive()).toBe(false);
+  });
+
+  it("DOES engage when Shift is held (same physical key, not a system shortcut)", () => {
+    // Pins that the modifier gate isn't over-broad: Shift+` is the same
+    // physical key a player may reach while already holding Shift in a
+    // game, and Shift has no OS-level meaning for backtick.
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(backtick("keydown", { shiftKey: true }));
+
+    expect(turboActive()).toBe(true);
+  });
+
   it("releases on keyup even when a form field has focus", () => {
     // Engaging is gated on focus; releasing must NOT be. If focus moved
     // mid-hold, a gated keyup would strand the machine at 10x forever.
@@ -358,5 +400,39 @@ describe("turbo pill (status bar)", () => {
     expect(pill.getAttribute("aria-pressed")).toBe("false");
     expect(pill.textContent).toContain("Turbo");
     expect(pill.textContent).not.toContain("10×");
+  });
+
+  it("escape hatch: clicking the pill turns turbo off even when turboHeld is stuck true", () => {
+    // Simulates the swallowed keyup: macOS does not deliver keyup for a
+    // non-modifier key held with Command, so turboHeld can get stuck true
+    // with no keyup ever coming to clear it. This is the regression test
+    // for the actual user-visible bug — before the fix, the click handler
+    // only toggled turboLatched, so turboActive() (turboHeld || turboLatched)
+    // stayed true and the pill stayed lit no matter how many times it was
+    // clicked, leaving the user stuck at 10x with an apparently-dead button.
+    const pill = document.getElementById("status-bar-turbo");
+    emulator.turboHeld = true;
+
+    pill.click();
+
+    expect(turboActive()).toBe(false);
+    expect(emulator.turboHeld).toBe(false);
+    expect(pill.classList.contains("on")).toBe(false);
+    expect(pill.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("initTurbo() is idempotent: a second call does not attach a duplicate listener", () => {
+    // Two listeners on the same pill would each toggle state on one click,
+    // netting to a no-op — the same "pill looks dead" symptom as the bug
+    // above, from a different cause. The dataset guard in initTurbo() must
+    // prevent a second wiring.
+    const pill = document.getElementById("status-bar-turbo");
+    initTurbo(); // beforeEach already wired this same pill once
+
+    pill.click();
+
+    expect(emulator.turboLatched).toBe(true);
+    expect(turboActive()).toBe(true);
+    expect(pill.classList.contains("on")).toBe(true);
   });
 });

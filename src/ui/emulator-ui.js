@@ -91,9 +91,17 @@ function updateTurboIndicator() {
  */
 export function initTurbo() {
   const pill = document.getElementById("status-bar-turbo");
-  if (!pill) return;
+  if (!pill || pill.dataset.turboWired) return;
+  pill.dataset.turboWired = "1";
   pill.addEventListener("click", () => {
-    emulator.turboLatched = !emulator.turboLatched;
+    // The pill is the visible truth: if turbo is on by ANY route, clicking it
+    // turns it off. That keeps it a working off switch even when a keyup was
+    // lost (macOS swallows keyup for a key held with Command). If the key
+    // genuinely IS still down, its auto-repeat keydown re-engages turbo within
+    // ~30 ms, so this can't fight a real hold.
+    const on = turboActive();
+    emulator.turboHeld = false;
+    emulator.turboLatched = !on;
     updateTurboIndicator();
   });
   updateTurboIndicator();
@@ -730,7 +738,10 @@ export function startEmulatorLoop() {
     // Turbo is momentary. Engaging it is gated by the guard above — in a
     // form field you're typing a backtick, not driving the machine. This
     // sits before the e.repeat check so a held key keeps re-affirming it.
-    if (e.code === TURBO_KEY) {
+    // Cmd+` is macOS "cycle windows"; Ctrl/Alt+` aren't turbo either. Do NOT
+    // gate on shiftKey: Shift+` is the same physical key, and a player may be
+    // holding Shift in a game while reaching for turbo.
+    if (e.code === TURBO_KEY && !e.metaKey && !e.ctrlKey && !e.altKey) {
       setTurboHeld(true);
       e.preventDefault();
       return;
