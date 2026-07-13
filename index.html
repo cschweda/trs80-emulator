@@ -113,6 +113,33 @@
         outline: 2px solid var(--reset-orange);
         outline-offset: 1px;
       }
+      /* Right-hand group: the turbo pill sits beside the project links
+         without being one of them (the <nav> is labelled "Project links"). */
+      #status-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      /* Turbo pill: dim when idle, unmistakable when lit. Every selector
+         carries the element type AND both ids, because the generic
+         "#status-bar button" rule above (border:none, padding, color)
+         out-specifies a bare "#status-bar-turbo" and would win. */
+      #status-bar button#status-bar-turbo {
+        border: 1px solid #2a2521;
+        border-radius: 10px;
+        padding: 1px 8px;
+        color: #8f887e;
+      }
+      #status-bar button#status-bar-turbo:hover {
+        color: #fff;
+        text-decoration: none;
+      }
+      #status-bar button#status-bar-turbo.on {
+        border-color: var(--reset-orange);
+        background: rgba(224, 100, 30, 0.16); /* --reset-orange #e0641e */
+        color: var(--reset-orange);
+        font-weight: bold;
+      }
       #view-select,
       #font-select,
       #scale-select {
@@ -1132,16 +1159,26 @@
 
     <footer id="status-bar">
       <span id="status-bar-version"></span>
-      <nav id="status-bar-links" aria-label="Project links">
-        <button type="button" id="status-bar-changelog">Changelog</button>
-        <span aria-hidden="true">·</span>
-        <a
-          href="https://github.com/cschweda/trs80-emulator"
-          target="_blank"
-          rel="noopener"
-          >GitHub ↗</a
+      <div id="status-bar-right">
+        <button
+          type="button"
+          id="status-bar-turbo"
+          aria-pressed="false"
+          title="Run the machine at 10× — click to latch, or hold the ` key"
         >
-      </nav>
+          ⏩ Turbo
+        </button>
+        <nav id="status-bar-links" aria-label="Project links">
+          <button type="button" id="status-bar-changelog">Changelog</button>
+          <span aria-hidden="true">·</span>
+          <a
+            href="https://github.com/cschweda/trs80-emulator"
+            target="_blank"
+            rel="noopener"
+            >GitHub ↗</a
+          >
+        </nav>
+      </div>
     </footer>
 
     <script type="module" src="./src/main.js"></script>

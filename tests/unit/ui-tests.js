@@ -14,6 +14,7 @@ import {
   stopEmulatorLoop,
   onUiModalOpen,
   turboActive,
+  initTurbo,
 } from "@ui/emulator-ui.js";
 
 // A minimal stand-in for TRS80System: just enough surface for
@@ -283,5 +284,72 @@ describe("turbo mode", () => {
     expect(emulator.turboHeld).toBe(false);
     expect(emulator.turboLatched).toBe(false);
     expect(localStorage.getItem("trs80-turbo")).toBeNull();
+  });
+});
+
+describe("turbo pill (status bar)", () => {
+  beforeEach(() => {
+    document.body.innerHTML =
+      '<button type="button" id="status-bar-turbo" aria-pressed="false">⏩ Turbo</button>';
+    emulator.turboHeld = false;
+    emulator.turboLatched = false;
+    initTurbo();
+  });
+
+  afterEach(() => {
+    stopEmulatorLoop();
+    emulator.system = null;
+    emulator.turboHeld = false;
+    emulator.turboLatched = false;
+    document.body.innerHTML = "";
+  });
+
+  it("latches turbo on click and unlatches on a second click", () => {
+    const pill = document.getElementById("status-bar-turbo");
+
+    pill.click();
+    expect(emulator.turboLatched).toBe(true);
+    expect(turboActive()).toBe(true);
+
+    pill.click();
+    expect(emulator.turboLatched).toBe(false);
+    expect(turboActive()).toBe(false);
+  });
+
+  it("lights up and announces itself pressed while latched", () => {
+    const pill = document.getElementById("status-bar-turbo");
+
+    pill.click();
+
+    expect(pill.classList.contains("on")).toBe(true);
+    expect(pill.getAttribute("aria-pressed")).toBe("true");
+    expect(pill.textContent).toContain("10×");
+  });
+
+  it("lights up for a held key too, not just the latch", () => {
+    const pill = document.getElementById("status-bar-turbo");
+    emulator.system = fakeSystem();
+    startEmulatorLoop();
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "`", code: "Backquote" })
+    );
+    expect(pill.classList.contains("on")).toBe(true);
+    expect(pill.getAttribute("aria-pressed")).toBe("true");
+
+    window.dispatchEvent(
+      new KeyboardEvent("keyup", { key: "`", code: "Backquote" })
+    );
+    expect(pill.classList.contains("on")).toBe(false);
+    expect(pill.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("goes dark and reads 'Turbo' when off", () => {
+    const pill = document.getElementById("status-bar-turbo");
+
+    expect(pill.classList.contains("on")).toBe(false);
+    expect(pill.getAttribute("aria-pressed")).toBe("false");
+    expect(pill.textContent).toContain("Turbo");
+    expect(pill.textContent).not.toContain("10×");
   });
 });

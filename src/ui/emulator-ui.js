@@ -82,6 +82,23 @@ function updateTurboIndicator() {
   pill.setAttribute("aria-pressed", on ? "true" : "false");
 }
 
+/**
+ * Wire the status-bar turbo pill: a session-only latch. Touch has no key
+ * to hold, and nobody should be *required* to hold a key down, so the
+ * pill is how turbo stays reachable — but it is never persisted, because
+ * a turbo that survived a reload is exactly the silent 10x this design
+ * exists to prevent.
+ */
+export function initTurbo() {
+  const pill = document.getElementById("status-bar-turbo");
+  if (!pill) return;
+  pill.addEventListener("click", () => {
+    emulator.turboLatched = !emulator.turboLatched;
+    updateTurboIndicator();
+  });
+  updateTurboIndicator();
+}
+
 function matrixPress(key, code) {
   const pending = emulator.holds.get(code);
   if (pending?.timer) {
