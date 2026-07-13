@@ -310,10 +310,17 @@ describe("turbo pill (status bar)", () => {
     pill.click();
     expect(emulator.turboLatched).toBe(true);
     expect(turboActive()).toBe(true);
+    // Turbo is deliberately NOT persisted — the Sound toggle in this same
+    // module does persist, and copying that pattern here is exactly the
+    // regression this pins. A latched turbo surviving a reload would make
+    // an arcade game look broken rather than fast.
+    expect(localStorage.getItem("trs80-turbo")).toBeNull();
+    expect(Object.keys(localStorage).some((k) => /turbo/i.test(k))).toBe(false);
 
     pill.click();
     expect(emulator.turboLatched).toBe(false);
     expect(turboActive()).toBe(false);
+    expect(Object.keys(localStorage).some((k) => /turbo/i.test(k))).toBe(false);
   });
 
   it("lights up and announces itself pressed while latched", () => {
