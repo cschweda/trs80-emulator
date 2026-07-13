@@ -4,6 +4,30 @@ All notable changes to the TRS-80 Model III emulator are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow [semver](https://semver.org/).
 
+## [1.4.0] - 2026-07-13
+
+### Added
+
+- **Turbo mode (10×).** Hold the `` ` `` key to run the machine at ten
+  times its 2.03 MHz clock, or click the TURBO pill in the status bar to
+  latch it on. Super Star Trek's galaxy setup drops from about a minute to
+  about six seconds. Turbo is a multiplier on the T-state budget the frame
+  loop hands the CPU, so the whole machine — including its 30 Hz clock
+  interrupt and its disk controller — speeds up in exact proportion.
+  Nothing inside the emulated Model III can tell.
+
+### Notes
+
+- Sound is muted while turbo is engaged. The audio path derives chunk
+  length from emulated time, so at 10× the WebAudio queue would run away
+  from the wall clock; the alternative, pitch-shifting, turns a beep into a
+  shriek.
+- Turbo is never saved. It is off on every load, and the pill stays lit for
+  as long as it is on — an unnoticed 10× would make an arcade game look
+  broken rather than fast.
+- On a slow device turbo delivers less than 10× rather than dropping
+  frames: each turbo frame is sliced against a wall-clock deadline.
+
 ## [1.3.0] - 2026-07-12
 
 ### Added
