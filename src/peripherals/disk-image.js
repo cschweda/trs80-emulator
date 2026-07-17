@@ -22,6 +22,7 @@ const JV3_FREE = 0xff;
 
 // JV3 flag bits
 const F_SIDE = 0x10;
+const F_DAM = 0x60; // data address mark code (0x00 = normal 0xFB)
 
 function jv3SectorSize(flags, free) {
   // Size code meaning flips between used and free entries; used shown here
@@ -31,6 +32,16 @@ function jv3SectorSize(flags, free) {
   }
   return [256, 128, 1024, 512][code];
 }
+
+// The WD1793 reports any non-0xFB mark as a deleted record (status bit
+// 5). DOSes rely on it: directory sectors are written 0xF8 (or 0xFA on
+// Model I TRSDOS) and verified on every directory read.
+function jv3Deleted(flags) {
+  return (flags & F_DAM) !== 0;
+}
+
+// TRSDOS-family boot sectors name the directory cylinder in byte 2.
+const DEFAULT_DIR_TRACK = 17;
 
 export class DiskImage {
   /**
@@ -70,7 +81,15 @@ export class DiskImage {
       if (!free) {
         // Sanity: plausible CHS values
         if (track > 96 || sector > 63) return false;
-        map.push({ track, sector, side: flags & F_SIDE ? 1 : 0, offset: dataOffset, size });
+        map.push({
+          track,
+          sector,
+          side: flags & F_SIDE ? 1 : 0,
+          offset: dataOffset,
+          size,
+          deleted: jv3Deleted(flags),
+          headerIndex: i, // to update the flags byte on DAM-changing writes
+        });
         used++;
       }
       dataOffset += free ? 0 : size;
@@ -107,6 +126,12 @@ export class DiskImage {
     // 1.3 style); Model I 10-sector disks number 0-9. Seed the base
     // accordingly; _locate still falls back to the other base on a miss.
     this.preferredBase = chosen.spt === 18 ? 1 : 0;
+    // JV1 carries no DAM info, but DOSes verify the deleted mark on
+    // directory reads — synthesize it for the directory track the boot
+    // sector names (byte 2), as xtrs does for its fixed track 17.
+    const bootDir = this.bytes[2];
+    this.dirTrack =
+      bootDir >= 1 && bootDir < this.tracks ? bootDir : DEFAULT_DIR_TRACK;
     return true;
   }
 
@@ -127,7 +152,7 @@ export class DiskImage {
       const hit = this.jv3Map.find(
         (e) => e.track === track && e.sector === sector && e.side === side
       );
-      return hit ? { offset: hit.offset, size: hit.size } : null;
+      return hit ? { offset: hit.offset, size: hit.size, entry: hit } : null;
     }
 
     if (side !== 0) return null; // JV1 is single-sided
@@ -142,25 +167,53 @@ export class DiskImage {
         return {
           offset: (track * this.sectorsPerTrack + index) * 256,
           size: 256,
+          entry: null,
         };
       }
     }
     return null;
   }
 
-  /** @returns {Uint8Array|null} a copy of the sector data */
-  readSector(track, side, sector) {
+  /**
+   * Read a sector with its record type, the way the FDC sees it.
+   * @returns {{data: Uint8Array, deleted: boolean}|null}
+   */
+  readSectorEx(track, side, sector) {
     const loc = this._locate(track, side, sector);
     if (!loc) return null;
-    return this.bytes.slice(loc.offset, loc.offset + loc.size);
+    const deleted = loc.entry ? loc.entry.deleted : track === this.dirTrack;
+    return {
+      data: this.bytes.slice(loc.offset, loc.offset + loc.size),
+      deleted,
+    };
   }
 
-  /** @returns {boolean} true if written */
-  writeSector(track, side, sector, data) {
+  /** @returns {Uint8Array|null} a copy of the sector data */
+  readSector(track, side, sector) {
+    return this.readSectorEx(track, side, sector)?.data ?? null;
+  }
+
+  /**
+   * @param {{deleted?: boolean}} [opts] - record type to write (WD1793
+   *   write-sector bit a0). JV3 stores it in the header flags — in the
+   *   image bytes, so exports keep it; JV1 has nowhere to put one and
+   *   keeps synthesizing by directory track.
+   * @returns {boolean} true if written
+   */
+  writeSector(track, side, sector, data, { deleted = false } = {}) {
     if (this.writeProtected) return false;
     const loc = this._locate(track, side, sector);
     if (!loc) return false;
     this.bytes.set(data.subarray(0, loc.size), loc.offset);
+    const entry = loc.entry;
+    if (entry && entry.deleted !== deleted) {
+      const flagsAt = entry.headerIndex * 3 + 2;
+      const flags = this.bytes[flagsAt] & ~F_DAM;
+      // Density decides the code for 0xF8: DD uses 0x20, SD uses 0x60
+      const damCode = deleted ? (flags & 0x80 ? 0x20 : 0x60) : 0x00;
+      this.bytes[flagsAt] = flags | damCode;
+      entry.deleted = deleted;
+    }
     return true;
   }
 }

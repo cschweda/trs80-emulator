@@ -22,6 +22,7 @@ const ST_TRACK0 = 0x04;
 const ST_CRC_ERROR = 0x08;
 const ST_RNF = 0x10; // record not found / seek error
 const ST_HEAD_LOADED = 0x20;
+const ST_RECORD_TYPE = 0x20; // Type II read: deleted data mark (0xF8)
 const ST_WRITE_PROTECT = 0x40;
 const ST_NOT_READY = 0x80;
 
@@ -51,6 +52,7 @@ export class FDC1793 {
     this.buffer = null; // Uint8Array being pumped
     this.bufferPos = 0;
     this.writing = false;
+    this.writeDeleted = false; // WRITE SECTOR bit a0: write a 0xF8 DAM
 
     this.indexClock = 0;
   }
@@ -102,17 +104,20 @@ export class FDC1793 {
         break;
 
       case "read-sector": {
-        const data = disk
-          ? disk.readSector(this.physicalTrack[this.selected], this.side, this.sectorReg)
+        const read = disk
+          ? disk.readSectorEx(this.physicalTrack[this.selected], this.side, this.sectorReg)
           : null;
-        if (!data) {
+        if (!read) {
           this.status = ST_RNF;
           this._finish();
         } else {
-          this.buffer = data;
+          this.buffer = read.data;
           this.bufferPos = 0;
           this.writing = false;
-          this.status = ST_BUSY | ST_DRQ;
+          // The 179x knows the DAM before the first data byte, and DOSes
+          // check bit 5 after completion — _finish only drops BUSY|DRQ,
+          // so the record type survives until the next command.
+          this.status = ST_BUSY | ST_DRQ | (read.deleted ? ST_RECORD_TYPE : 0);
         }
         break;
       }
@@ -238,8 +243,9 @@ export class FDC1793 {
       return;
     }
     if (high === 0x0a || high === 0x0b) {
-      // WRITE SECTOR
+      // WRITE SECTOR (bit 0 selects the DAM: 1 = deleted/0xF8)
       this.commandType = 2;
+      this.writeDeleted = (value & 0x01) !== 0;
       this.status = ST_BUSY;
       this.pending = { kind: "write-sector", delay: COMPLETION_DELAY };
       return;
@@ -293,7 +299,8 @@ export class FDC1793 {
           this.physicalTrack[this.selected],
           this.side,
           this.sectorReg,
-          this.buffer
+          this.buffer,
+          { deleted: this.writeDeleted }
         );
         this._finish();
       }

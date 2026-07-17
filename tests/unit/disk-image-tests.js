@@ -21,7 +21,7 @@ export function buildJV1({ tracks = 40, spt = 18, stamp = true } = {}) {
   return bytes;
 }
 
-export function buildJV3({ tracks = 3, spt = 10 } = {}) {
+export function buildJV3({ tracks = 3, spt = 10, flagFor = null } = {}) {
   const headerSize = 2901 * 3 + 1;
   const sectors = [];
   for (let t = 0; t < tracks; t++) {
@@ -34,7 +34,8 @@ export function buildJV3({ tracks = 3, spt = 10 } = {}) {
   sectors.forEach((sec, i) => {
     bytes[i * 3] = sec.track;
     bytes[i * 3 + 1] = sec.sector;
-    bytes[i * 3 + 2] = 0x00; // 256-byte, side 0
+    // Default 0x00 = 256-byte, side 0, normal DAM; flagFor overrides
+    bytes[i * 3 + 2] = flagFor ? flagFor(sec.track, sec.sector) : 0x00;
     const off = headerSize + i * 256;
     bytes[off] = sec.track;
     bytes[off + 1] = sec.sector;
@@ -150,5 +151,81 @@ describe("DiskImage - JV3", () => {
     expect(disk.writeSector(0, 0, 0, new Uint8Array(256).fill(0xaa))).toBe(
       true
     );
+  });
+});
+
+describe("DiskImage - data address marks", () => {
+  // LDOS/TRSDOS-family DOSes mark directory sectors with 0xF8 deleted
+  // DAMs and verify the record type on every directory read; the JV3
+  // flags byte carries that mark (DD: 0x20 bit; SD: DAM code 0x20-0x60).
+  const ddFlags = (dirTrack) => (t) => (t === dirTrack ? 0xa0 : 0x80);
+
+  it("JV3 reports deleted DAM sectors via readSectorEx", () => {
+    const disk = new DiskImage(
+      buildJV3({ tracks: 22, spt: 10, flagFor: ddFlags(20) }),
+      "ldos-style"
+    );
+
+    const dir = disk.readSectorEx(20, 0, 3);
+    const data = disk.readSectorEx(5, 0, 3);
+
+    expect(dir.deleted).toBe(true);
+    expect(dir.data[0]).toBe(20); // stamped track: payload still correct
+    expect(data.deleted).toBe(false);
+    expect(disk.readSectorEx(50, 0, 0)).toBeNull();
+  });
+
+  it("JV3 treats any single-density non-FB DAM code as deleted", () => {
+    // Model I TRSDOS 2.3 marks its directory 0xFA (SD flag 0x20)
+    const disk = new DiskImage(
+      buildJV3({ tracks: 18, spt: 10, flagFor: (t) => (t === 17 ? 0x20 : 0x00) })
+    );
+
+    expect(disk.readSectorEx(17, 0, 1).deleted).toBe(true);
+    expect(disk.readSectorEx(3, 0, 1).deleted).toBe(false);
+  });
+
+  it("JV3 writes can set and clear the deleted DAM, updating the header", () => {
+    const disk = new DiskImage(buildJV3({ tracks: 3, spt: 10 }));
+    const data = new Uint8Array(256).fill(0x11);
+
+    expect(disk.writeSector(1, 0, 4, data, { deleted: true })).toBe(true);
+    expect(disk.readSectorEx(1, 0, 4).deleted).toBe(true);
+    // The flag must live in the image bytes so an exported .dsk keeps it
+    const reparsed = new DiskImage(disk.bytes, "roundtrip");
+    expect(reparsed.readSectorEx(1, 0, 4).deleted).toBe(true);
+
+    expect(disk.writeSector(1, 0, 4, data, { deleted: false })).toBe(true);
+    expect(disk.readSectorEx(1, 0, 4).deleted).toBe(false);
+    expect(new DiskImage(disk.bytes).readSectorEx(1, 0, 4).deleted).toBe(false);
+  });
+
+  it("JV1 synthesizes deleted DAMs on the boot sector's directory track", () => {
+    const bytes = buildJV1({ tracks: 40, spt: 18 });
+    bytes[2] = 20; // boot sector byte 2 names the directory cylinder
+
+    const disk = new DiskImage(bytes, "jv1-dir20");
+
+    expect(disk.readSectorEx(20, 0, 3).deleted).toBe(true);
+    expect(disk.readSectorEx(17, 0, 3).deleted).toBe(false);
+    expect(disk.readSectorEx(0, 0, 1).deleted).toBe(false);
+  });
+
+  it("JV1 falls back to track 17 when byte 2 is implausible", () => {
+    const disk = new DiskImage(buildJV1({ tracks: 40, spt: 18 }));
+    // buildJV1 stamps byte 2 with 0 (sector payload), which is no track
+
+    expect(disk.readSectorEx(17, 0, 3).deleted).toBe(true);
+    expect(disk.readSectorEx(20, 0, 3).deleted).toBe(false);
+  });
+
+  it("readSector keeps its plain-bytes contract", () => {
+    const disk = new DiskImage(
+      buildJV3({ tracks: 22, spt: 10, flagFor: ddFlags(20) })
+    );
+
+    const sec = disk.readSector(20, 0, 3);
+    expect(sec).toBeInstanceOf(Uint8Array);
+    expect(sec[0]).toBe(20);
   });
 });
