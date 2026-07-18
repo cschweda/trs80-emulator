@@ -97,4 +97,17 @@ describe("Bundled DOS boot (drive 0)", () => {
     expect(runUntil(system, "BASIC/HLP")).toBe(true);
     expect(onScreen(system, "Filespec")).toBe(true); // DIR header row
   });
+
+  it("bootToCassetteBasic ejects a booted DOS and lands at READY", () => {
+    const system = bootSystem("newdos80");
+    expect(runUntil(system, "Newdos/80 Ready")).toBe(true);
+
+    const ok = system.bootToCassetteBasic();
+
+    expect(ok).toBe(true);
+    expect(system.io.fdc.anyDiskMounted()).toBe(false);
+    const screen = system.screenText().join("\n");
+    expect(screen).toContain("READY");
+    expect(screen).not.toContain("Newdos");
+  });
 });

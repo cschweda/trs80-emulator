@@ -215,6 +215,51 @@ describe("menuBootDos (drive 0 DOS picker)", () => {
   });
 });
 
+describe("library loading under a booted DOS", () => {
+  afterEach(() => {
+    emulator.system = null;
+  });
+
+  it("menuLoadLibrary reboots to cassette BASIC before loading", async () => {
+    document.body.innerHTML = `
+      <select id="library-select"><option value="guess" selected>Guess</option></select>
+      <div id="emulator-status"></div>
+      <div id="menu-disk0-status"></div><div id="menu-disk1-status"></div>
+      <div id="machine-menu"><button id="machine-menu-button"></button>
+        <div id="machine-menu-panel" hidden></div></div>
+    `;
+    emulator.system = {
+      io: { fdc: { anyDiskMounted: () => true, drives: [null, null, null, null] } },
+      bootToCassetteBasic: vi.fn(() => true),
+      typeText: vi.fn(() => 0),
+    };
+
+    await window.menuLoadLibrary();
+
+    expect(emulator.system.bootToCassetteBasic).toHaveBeenCalledTimes(1);
+    expect(emulator.system.typeText).toHaveBeenCalled(); // then the game typed in
+  });
+
+  it("menuLoadLibrary loads directly when no disk is mounted", async () => {
+    document.body.innerHTML = `
+      <select id="library-select"><option value="guess" selected>Guess</option></select>
+      <div id="emulator-status"></div>
+      <div id="machine-menu"><button id="machine-menu-button"></button>
+        <div id="machine-menu-panel" hidden></div></div>
+    `;
+    emulator.system = {
+      io: { fdc: { anyDiskMounted: () => false, drives: [null, null, null, null] } },
+      bootToCassetteBasic: vi.fn(() => true),
+      typeText: vi.fn(() => 0),
+    };
+
+    await window.menuLoadLibrary();
+
+    expect(emulator.system.bootToCassetteBasic).not.toHaveBeenCalled();
+    expect(emulator.system.typeText).toHaveBeenCalled();
+  });
+});
+
 describe("modal key isolation (changelog must not leak keys into the machine)", () => {
   afterEach(() => {
     stopEmulatorLoop(); // cancels rAF/interval, removes the window listeners

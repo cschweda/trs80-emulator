@@ -346,11 +346,28 @@ export async function readPickedFile(inputId) {
   });
 }
 
+// Cassette-world loaders (library, .cas tapes, pasted BASIC) need the
+// machine sitting in cassette BASIC at READY. Under a booted DOS the
+// typed RUN goes to the DOS prompt instead (NEWDOS answers it with
+// DIRECTORY READ ERROR) — so eject and reboot to BASIC first. The whole
+// dance is emulated inline; it costs a blink of wall clock.
+function ensureCassetteBasic() {
+  if (!emulator.system.io.fdc.anyDiskMounted()) return true;
+  setEmulatorStatus("Ejecting disks — rebooting to cassette BASIC…");
+  const ok = emulator.system.bootToCassetteBasic();
+  refreshDiskMenu();
+  if (!ok) {
+    setEmulatorStatus("Could not reach cassette BASIC — try Reset");
+  }
+  return ok;
+}
+
 window.menuLoadCas = async function () {
   window.toggleMachineMenu(true);
   if (!emulator.system) return;
   const picked = await readPickedFile("cas-file");
   if (!picked) return;
+  if (!ensureCassetteBasic()) return;
   const statusEl = document.getElementById("menu-cassette-status");
   try {
     const parsed = parseCas(picked.bytes);
@@ -483,6 +500,7 @@ window.menuLoadLibrary = async function () {
   const select = document.getElementById("library-select");
   const entry = LIBRARY.find((e) => e.id === select?.value);
   if (!entry) return;
+  if (!ensureCassetteBasic()) return;
   if (entry.kind === "file") {
     await loadLibraryFile(entry);
     return;
@@ -557,6 +575,7 @@ window.menuPasteBasic = async function () {
       setEmulatorStatus("Clipboard is empty");
       return;
     }
+    if (!ensureCassetteBasic()) return;
     setEmulatorStatus(`Typing ${text.length} characters…`);
     const skipped = await typeTextChunked(
       text.endsWith("\n") ? text : text + "\n"
