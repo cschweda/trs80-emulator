@@ -44,6 +44,42 @@ export function buildSystemCas(blocks, entry, { name = "GAME" } = {}) {
 // Level II tokens used in fixtures: PRINT = 0xB2
 export const T_PRINT = 0xb2;
 
+describe("parseCas - BASIC images with embedded machine code", () => {
+  it("preserves 0x00 bytes inside a line by walking the link chain", () => {
+    // Christopherson-style: ML embedded in a REM line, zeros included.
+    // Real CLOAD follows the link pointers, so the zeros survive.
+    const ml = [0x8e, 0x00, 0x21, 0x00, 0x3c, 0xc9, 0x00, 0x00, 0x3e];
+    const cas = buildBasicCas([
+      { lineNo: 1, tokens: [0x93, ...ml] }, // REM <binary>
+      { lineNo: 10, tokens: [T_PRINT, 0x22, 0x4f, 0x4b, 0x22] },
+    ]);
+
+    const parsed = parseCas(cas);
+
+    expect(parsed.lines).toHaveLength(2);
+    expect(parsed.lines[0].tokens).toEqual([0x93, ...ml]);
+    expect(parsed.lines[1].lineNo).toBe(10);
+  });
+
+  it("falls back to zero-scanning when the link chain is inconsistent", () => {
+    // Hand-build a tape whose links are garbage (as some tools emit)
+    const bytes = [0x00, 0x00, 0xa5, 0xd3, 0xd3, 0xd3, 0x41];
+    const put = (lineNo, tokens) => {
+      bytes.push(0x11, 0x11, lineNo & 0xff, lineNo >> 8, ...tokens, 0x00);
+    };
+    put(10, [T_PRINT, 0x22, 0x48, 0x49, 0x22]);
+    put(20, [T_PRINT]);
+    bytes.push(0x00, 0x00);
+
+    const parsed = parseCas(new Uint8Array(bytes));
+
+    expect(parsed.lines).toHaveLength(2);
+    expect(parsed.lines[0].lineNo).toBe(10);
+    expect(parsed.lines[0].tokens).toEqual([T_PRINT, 0x22, 0x48, 0x49, 0x22]);
+    expect(parsed.lines[1].lineNo).toBe(20);
+  });
+});
+
 describe("parseCas - BASIC images", () => {
   it("parses a tokenized program with leader and sync", () => {
     const tokens = [T_PRINT, 0x22, 0x48, 0x49, 0x22]; // PRINT "HI"

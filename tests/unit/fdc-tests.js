@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { IOSystem } from "@core/io.js";
 import { DiskImage } from "@peripherals/disk-image.js";
-import { buildJV1 } from "./disk-image-tests.js";
+import { buildJV1, buildJV3 } from "./disk-image-tests.js";
 
 function settle(io, tstates = 20000) {
   io.fdc.tick(tstates);
@@ -145,6 +145,54 @@ describe("FDC via ports", () => {
 
     expect(io.fdc.pending).toBe(null);
     expect(io.readPort(0xf0) & 0x01).toBe(0);
+  });
+
+  it("READ SECTOR reports the deleted record type in status bit 5", () => {
+    // Directory sectors on DOS disks carry 0xF8 deleted DAMs; the DOS
+    // reads status after the transfer and checks bit 5 (record type).
+    const image = new DiskImage(
+      buildJV3({ tracks: 22, spt: 10, flagFor: (t) => (t === 20 ? 0xa0 : 0x80) })
+    );
+    io.fdc.attachDrive(0, image);
+    io.writePort(0xf4, 0x01);
+    io.writePort(0xf3, 20);
+    io.writePort(0xf0, 0x10); // seek 20
+    settle(io);
+
+    io.writePort(0xf2, 3);
+    io.writePort(0xf0, 0x80); // READ SECTOR (directory track)
+    settle(io);
+    for (let i = 0; i < 256; i++) io.readPort(0xf3);
+    expect(io.readPort(0xf0) & 0x20).toBe(0x20); // deleted record type
+    expect(io.readPort(0xf0) & 0x01).toBe(0); // completed
+
+    io.writePort(0xf3, 5);
+    io.writePort(0xf0, 0x10); // seek 5 (data track)
+    settle(io);
+    io.writePort(0xf0, 0x80);
+    settle(io);
+    for (let i = 0; i < 256; i++) io.readPort(0xf3);
+    expect(io.readPort(0xf0) & 0x20).toBe(0); // normal record type
+  });
+
+  it("WRITE SECTOR bit a0 writes a deleted DAM the image remembers", () => {
+    const image = new DiskImage(buildJV3({ tracks: 3, spt: 10 }));
+    io.fdc.attachDrive(0, image);
+    io.writePort(0xf4, 0x01);
+    io.writePort(0xf2, 4);
+
+    io.writePort(0xf0, 0xa1); // WRITE SECTOR, deleted DAM
+    settle(io);
+    for (let i = 0; i < 256; i++) io.writePort(0xf3, 0x42);
+
+    expect(image.readSectorEx(0, 0, 4).deleted).toBe(true);
+    expect(image.readSectorEx(0, 0, 4).data[0]).toBe(0x42);
+
+    io.writePort(0xf0, 0xa0); // WRITE SECTOR, normal DAM
+    settle(io);
+    for (let i = 0; i < 256; i++) io.writePort(0xf3, 0x43);
+
+    expect(image.readSectorEx(0, 0, 4).deleted).toBe(false);
   });
 
   it("NMI line follows INTRQ gated by the 0xE4 mask", () => {

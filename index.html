@@ -243,7 +243,8 @@
         font-size: 11px;
         padding: 2px 10px 6px;
       }
-      #library-select {
+      #library-select,
+      #dos-select {
         margin: 2px 10px 4px;
         background: #1c1916;
         color: #d8d2c4;
@@ -912,6 +913,12 @@
             <div id="menu-cassette-status" class="menu-note">
               No tape loaded
             </div>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-heading">Boot a DOS (drive 0)</div>
+            <select id="dos-select" aria-label="Operating system for drive 0"></select>
+            <button role="menuitem" onclick="menuBootDos()">
+              Boot in drive 0
+            </button>
             <div class="menu-separator" role="separator"></div>
             <div class="menu-heading">Disks (reset to boot)</div>
             <button role="menuitem" onclick="menuMountDisk(0)">

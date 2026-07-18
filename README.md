@@ -1,6 +1,6 @@
 # TRS-80 Model III Emulator
 
-A web-based TRS-80 Model III emulator, built with JavaScript and Vite, that boots the real 14K Model III ROM into genuine Level II BASIC on an emulated Z80 at 2.03 MHz — with cassette (.cas) loading, dual WD1793 disk drives (.dsk), a games/program library with 26 built-in titles, an in-app changelog and status bar, cassette-port sound, save states, touch input, and authentic keyboard and video behavior (64- and 32-column modes).
+A web-based TRS-80 Model III emulator, built with JavaScript and Vite, that boots the real 14K Model III ROM into genuine Level II BASIC on an emulated Z80 at 2.03 MHz — with one-click booting of real DOSes (TRSDOS 1.3, NEWDOS/80, LDOS 5.3.1, or your own .dsk), cassette (.cas) loading, dual WD1793 disk drives, a games/program library with 39 built-in titles, an in-app changelog and status bar, cassette-port sound, save states, touch input, and authentic keyboard and video behavior (64- and 32-column modes).
 
 🌐 **Live Demo**: [https://trs80emu.netlify.app/](https://trs80emu.netlify.app/)
 
@@ -20,7 +20,7 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 - **BASIC Program Execution**: ROM loading, program storage, CPU execution with ROM, CLOAD integration
 - **Video Display System**: 64×16 character text display with 128×48 pixel graphics mode, SET/RESET/POINT commands, CHR$() graphics characters
 - **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, BASIC source code, and graphics display
-- **Comprehensive Test Suite**: 488 vitest tests across 30 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, library programs, 32-column mode, save states)
+- **Comprehensive Test Suite**: 536 vitest tests across 31 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, real-DOS boot with DIR on TRSDOS/NEWDOS/LDOS, library programs, 32-column mode, save states)
 
 **July 2026 performance & platform pass** ✅ **COMPLETE**
 
@@ -38,8 +38,9 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 **Phase 7: Storage & Library** ✅ **COMPLETE**
 
 - **.cas cassette loading**: BASIC and SYSTEM (machine-code) tapes fast-load from the MACHINE menu — drop in your own game tapes (e.g. Big Five titles from bigfivesoftware.com)
-- **Dual disk drives**: WD1793 FDC emulation (ports 0xF0-0xF4, NMI via 0xE4) with JV1/JV3 `.dsk` mounting — mount LDOS/TRSDOS in drive 0, games/data in drive 1, press RESET to boot the DOS
-- **Program Library**: 26 built-in titles across four groups — Arcade (Super Nova, Galaxy Invasion, Flying Saucers, Sea Dragon, Time Trek, Invasion Force, City Defence, Scarfman, Cosmic Fighter, Meteor Mission 2, Defense Command, Armored Patrol), Adventures (Adventureland, Pirate Adventure, Bedlam), BASIC type-ins (Hammurabi, Lunar Lander, Hurkle, Number Guess, Hunt the Wumpus, Acey Ducey, Bagels, Camel, Hangman), and Extras (OPUS-1, Super Star Trek — Ahl, 1978, public domain, pre-tokenized by the real ROM via `scripts/build-cas.js`) — loaded through a native /CMD, .cas/.3bn loader or turbo-typed into the real ROM, plus paste-BASIC-from-clipboard; see the LICENSE exceptions for sourcing and copyright status
+- **Boot a real DOS**: MACHINE menu → Boot a DOS (drive 0) — TRSDOS 1.3 (Tandy, 1981), NEWDOS/80 v2 (Apparat), LDOS 5.3.1 (Logical Systems/MISOSYS), or a custom `.dsk`, fetched on demand and booted with one click; DIR and Disk BASIC work, because the FDC models the deleted data address marks DOS directories are verified with (JV3 DAM flags, JV1 directory-track synthesis, WRITE SECTOR a0 bit)
+- **Dual disk drives**: WD1793 FDC emulation (ports 0xF0-0xF4, NMI via 0xE4) with JV1/JV3 `.dsk` mounting — mount your own system disk in drive 0, games/data in drive 1, press RESET to boot
+- **Program Library**: 39 built-in titles across five groups — Arcade (Super Nova, Galaxy Invasion, Flying Saucers, Sea Dragon, Time Trek, Invasion Force, City Defence, Scarfman, Cosmic Fighter, Meteor Mission 2, Defense Command, Armored Patrol, Eliminator, Tank Zone 2000, Rear Guard, Space Castle, Flip-Out), Christopherson (Android Nim, Bee Wary, Snake Eggs — the animated BASIC/ML hybrids, cassette-port sound included), Adventures (Adventureland, Pirate Adventure, Bedlam, Pyramid of Doom, Asylum, Asylum II, Deathmaze 5000, Labyrinth), BASIC type-ins (Hammurabi, Lunar Lander, Hurkle, Number Guess, Hunt the Wumpus, Acey Ducey, Bagels, Camel, Hangman), and Extras (OPUS-1, Super Star Trek — Ahl, 1978, public domain, pre-tokenized by the real ROM via `scripts/build-cas.js`) — loaded through a native /CMD, .cas/.3bn loader or turbo-typed into the real ROM, plus paste-BASIC-from-clipboard; see the LICENSE exceptions for sourcing and copyright status
 - **Full-window display**: the screen IS the page — Fill window, Original ratio (authentic 4:3 CRT proportion), or fixed 1×–4× sizes from the dev bar; the classic Tandy cabinet look survives as a MACHINE-menu toggle
 - See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the implementation map and extension guide
 
@@ -94,13 +95,19 @@ SHIFT+0 unlocks lowercase). By default the screen fills the browser
 window; the Size selector switches between **Fill window**, **Original
 ratio** (the real 12" CRT's 4:3 proportion), and fixed 1×–4× sizes. The
 **MACHINE** menu has reset, a "Show machine case" toggle that brings
-back the Tandy cabinet, cassette (.cas) loading, dual disk (.dsk)
-mounting, the game/program library (pick a title, **Load & run**), and
-paste-BASIC-from-clipboard. Font, size, and case preferences persist
-between visits.
+back the Tandy cabinet, a **Boot a DOS (drive 0)** picker, cassette
+(.cas) loading, dual disk (.dsk) mounting, the game/program library
+(pick a title, **Load & run**), and paste-BASIC-from-clipboard. Font,
+size, and case preferences persist between visits.
 
-Mount a JV1/JV3 disk image in drive 0 and press RESET to boot it; with
-no disk mounted the machine boots straight to cassette BASIC.
+To run a real operating system, pick TRSDOS 1.3, NEWDOS/80, LDOS
+5.3.1, or **Custom .dsk…** in the Boot-a-DOS picker and press **Boot
+in drive 0** — the machine resets into it (TRSDOS and LDOS ask for a
+date; `07/17/87` works, and LDOS also wants a time like `12:00:00`).
+You can still mount any JV1/JV3 image per-drive and press RESET
+yourself; with no disk mounted the machine boots straight to cassette
+BASIC. Disk writes stay in-memory — **Export drive** downloads the
+modified .dsk.
 
 ### Development consoles
 

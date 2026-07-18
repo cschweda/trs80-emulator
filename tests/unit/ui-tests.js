@@ -90,6 +90,176 @@ describe("readPickedFile", () => {
   });
 });
 
+describe("menuBootDos (drive 0 DOS picker)", () => {
+  // Real image bytes so DiskImage parses: a tiny 10x10 JV1
+  const diskBytes = () => new Uint8Array(10 * 10 * 256);
+
+  function fakeBootSystem() {
+    return {
+      mountDisk: vi.fn(),
+      reset: vi.fn(),
+      io: { fdc: { drives: [null, null, null, null] } },
+    };
+  }
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <select id="dos-select"></select>
+      <div id="emulator-status"></div>
+      <div id="menu-disk0-status"></div>
+      <div id="menu-disk1-status"></div>
+      <div id="machine-menu"><button id="machine-menu-button"></button>
+        <div id="machine-menu-panel" hidden></div></div>
+      <input type="file" id="dsk-file" hidden />
+    `;
+    emulator.system = fakeBootSystem();
+  });
+
+  afterEach(() => {
+    emulator.system = null;
+    vi.unstubAllGlobals();
+  });
+
+  it("fetches a bundled DOS, mounts drive 0, and resets to boot", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        arrayBuffer: async () => diskBytes().buffer,
+      }))
+    );
+    const select = document.getElementById("dos-select");
+    select.innerHTML = `<option value="trsdos13" selected>TRSDOS 1.3</option>`;
+
+    await window.menuBootDos();
+
+    expect(fetch).toHaveBeenCalledWith("/disks/trsdos13.dsk");
+    expect(emulator.system.mountDisk).toHaveBeenCalledTimes(1);
+    const [drive, image] = emulator.system.mountDisk.mock.calls[0];
+    expect(drive).toBe(0);
+    expect(image.format).toBe("jv1");
+    expect(emulator.system.reset).toHaveBeenCalled();
+    expect(document.getElementById("emulator-status").textContent).toContain(
+      "TRSDOS 1.3"
+    );
+  });
+
+  it("reports a fetch failure without resetting the machine", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 404 })));
+    const select = document.getElementById("dos-select");
+    select.innerHTML = `<option value="ldos531" selected>LDOS</option>`;
+
+    await window.menuBootDos();
+
+    expect(emulator.system.mountDisk).not.toHaveBeenCalled();
+    expect(emulator.system.reset).not.toHaveBeenCalled();
+    expect(document.getElementById("emulator-status").textContent).toContain(
+      "Could not fetch"
+    );
+  });
+
+  it("the custom option goes through the .dsk picker then boots", async () => {
+    const select = document.getElementById("dos-select");
+    select.innerHTML = `<option value="custom" selected>Custom .dsk…</option>`;
+
+    const promise = window.menuBootDos();
+    const input = document.getElementById("dsk-file");
+    Object.defineProperty(input, "files", {
+      value: [
+        { name: "mydisk.dsk", arrayBuffer: async () => diskBytes().buffer },
+      ],
+      configurable: true,
+    });
+    input.dispatchEvent(new Event("change"));
+    await promise;
+
+    const [drive, image] = emulator.system.mountDisk.mock.calls[0];
+    expect(drive).toBe(0);
+    expect(image.name).toBe("mydisk.dsk");
+    expect(emulator.system.reset).toHaveBeenCalled();
+  });
+
+  it("a canceled custom picker leaves the machine untouched", async () => {
+    const select = document.getElementById("dos-select");
+    select.innerHTML = `<option value="custom" selected>Custom .dsk…</option>`;
+
+    const promise = window.menuBootDos();
+    document.getElementById("dsk-file").dispatchEvent(new Event("cancel"));
+    await promise;
+
+    expect(emulator.system.mountDisk).not.toHaveBeenCalled();
+    expect(emulator.system.reset).not.toHaveBeenCalled();
+  });
+
+  it("an unparseable custom image is reported, not mounted", async () => {
+    const select = document.getElementById("dos-select");
+    select.innerHTML = `<option value="custom" selected>Custom .dsk…</option>`;
+
+    const promise = window.menuBootDos();
+    const input = document.getElementById("dsk-file");
+    Object.defineProperty(input, "files", {
+      value: [
+        // 1000 bytes: not a sector multiple, not JV3 — DiskImage throws
+        { name: "bad.dsk", arrayBuffer: async () => new Uint8Array(1000).buffer },
+      ],
+      configurable: true,
+    });
+    input.dispatchEvent(new Event("change"));
+    await promise;
+
+    expect(emulator.system.mountDisk).not.toHaveBeenCalled();
+    expect(emulator.system.reset).not.toHaveBeenCalled();
+    expect(document.getElementById("emulator-status").textContent).toContain(
+      "Could not mount"
+    );
+  });
+});
+
+describe("library loading under a booted DOS", () => {
+  afterEach(() => {
+    emulator.system = null;
+  });
+
+  it("menuLoadLibrary reboots to cassette BASIC before loading", async () => {
+    document.body.innerHTML = `
+      <select id="library-select"><option value="guess" selected>Guess</option></select>
+      <div id="emulator-status"></div>
+      <div id="menu-disk0-status"></div><div id="menu-disk1-status"></div>
+      <div id="machine-menu"><button id="machine-menu-button"></button>
+        <div id="machine-menu-panel" hidden></div></div>
+    `;
+    emulator.system = {
+      io: { fdc: { anyDiskMounted: () => true, drives: [null, null, null, null] } },
+      bootToCassetteBasic: vi.fn(() => true),
+      typeText: vi.fn(() => 0),
+    };
+
+    await window.menuLoadLibrary();
+
+    expect(emulator.system.bootToCassetteBasic).toHaveBeenCalledTimes(1);
+    expect(emulator.system.typeText).toHaveBeenCalled(); // then the game typed in
+  });
+
+  it("menuLoadLibrary loads directly when no disk is mounted", async () => {
+    document.body.innerHTML = `
+      <select id="library-select"><option value="guess" selected>Guess</option></select>
+      <div id="emulator-status"></div>
+      <div id="machine-menu"><button id="machine-menu-button"></button>
+        <div id="machine-menu-panel" hidden></div></div>
+    `;
+    emulator.system = {
+      io: { fdc: { anyDiskMounted: () => false, drives: [null, null, null, null] } },
+      bootToCassetteBasic: vi.fn(() => true),
+      typeText: vi.fn(() => 0),
+    };
+
+    await window.menuLoadLibrary();
+
+    expect(emulator.system.bootToCassetteBasic).not.toHaveBeenCalled();
+    expect(emulator.system.typeText).toHaveBeenCalled();
+  });
+});
+
 describe("modal key isolation (changelog must not leak keys into the machine)", () => {
   afterEach(() => {
     stopEmulatorLoop(); // cancels rAF/interval, removes the window listeners

@@ -4,6 +4,49 @@ All notable changes to the TRS-80 Model III emulator are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow [semver](https://semver.org/).
 
+## [1.5.0] - 2026-07-17
+
+### Added
+
+- **Boot a real DOS.** MACHINE menu → "Boot a DOS (drive 0)": pick
+  TRSDOS 1.3 (Tandy, 1981), NEWDOS/80 v2 (Apparat), LDOS 5.3.1
+  (Logical Systems/MISOSYS), or your own `.dsk`, press **Boot in
+  drive 0**, and the machine resets straight into it — DIR, BASIC, and
+  friends all work. The bundled images are verified 40-track
+  double-density Model III masters (see LICENSE for provenance,
+  including the MISOSYS redistribution grant for LDOS). The status line
+  tells you what each DOS asks at boot (TRSDOS and LDOS want a date —
+  try `07/17/87`).
+- **Deleted data address marks**, the one FDC feature real DOSes
+  wouldn't boot without: directory sectors on TRSDOS-family disks carry
+  0xF8 marks and the DOS verifies the WD1793 record-type status bit on
+  every directory read. JV3 flags now decode (and write back) DAMs, JV1
+  images synthesize them for the boot sector's directory track, and
+  WRITE SECTOR honors the a0 command bit — so exported disks keep their
+  marks.
+- **13 new library titles** (26 → 39), every one machine-verified to
+  its real title screen. New *Christopherson* group: Android Nim
+  (1978), Bee Wary, Snake Eggs — the famous animated BASIC/ML hybrids,
+  with their cassette-port sound wired to the emulator's audio. Arcade:
+  Eliminator, Tank Zone 2000, Rear Guard (all Westmoreland & Gilman,
+  public domain per the authors), Space Castle and Flip-Out (Cornsoft).
+  Adventures: Pyramid of Doom (Scott Adams #8) and the Med Systems 3-D
+  quartet — Asylum, Asylum II, Deathmaze 5000, Labyrinth.
+- The cassette BASIC loader now follows the CSAVE link-pointer chain
+  the way real CLOAD does, so programs with machine code embedded in
+  REM lines (zeros included) load intact; garbage links still fall back
+  to the old scan.
+
+### Notes
+
+- Voyage of the Valkyrie could not be included: its downloads on
+  trs-80.com are disabled at the author's request, which this project
+  honors (as with Penetrator). Dancing Demon, Duel-N-Droids, and Life
+  Two stayed out for lack of any license evidence; Donkey Kong and
+  Zaxxon for trademark/license reasons — details in LICENSE.
+- DOS FORMAT (WRITE TRACK) and DMK images remain future work; writes
+  to mounted disks stay in-memory (use Export drive to keep them).
+
 ## [1.4.1] - 2026-07-13
 
 ### Fixed

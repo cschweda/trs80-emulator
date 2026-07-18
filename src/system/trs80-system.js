@@ -110,6 +110,33 @@ export class TRS80System {
     this.io.fdc.attachDrive(driveNumber, image);
   }
 
+  /**
+   * Eject every drive and reboot into cassette BASIC, answering the
+   * ROM's Cass? and Memory Size? prompts. Cassette-world loaders (the
+   * library, .cas tapes, paste-BASIC) need the machine at READY — under
+   * a booted DOS their typed RUN goes to the DOS prompt instead. Runs
+   * ~3.5 emulated seconds inline, a blink of wall clock.
+   * @returns {boolean} true when the READY prompt was reached
+   */
+  bootToCassetteBasic() {
+    for (let drive = 0; drive < 4; drive++) {
+      this.ejectDisk(drive);
+    }
+    this.reset();
+    const pressEnter = () => {
+      this.keyboard.keyDown("Enter", "bootdance");
+      this.runTStates(200000);
+      this.keyboard.keyUp("bootdance");
+      this.runTStates(100000);
+    };
+    this.runSeconds(1);
+    pressEnter();
+    this.runSeconds(0.5);
+    pressEnter();
+    this.runSeconds(2);
+    return this.screenText().join("\n").includes("READY");
+  }
+
   ejectDisk(driveNumber) {
     this.io.fdc.ejectDrive(driveNumber);
   }

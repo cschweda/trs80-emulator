@@ -67,6 +67,7 @@ const FDC_SCALARS = [
   "commandType",
   "bufferPos",
   "writing",
+  "writeDeleted",
   "indexClock",
 ];
 
@@ -147,6 +148,7 @@ export function restoreState(system, state) {
   system.memory.videoDirty = true;
 
   for (const key of FDC_SCALARS) fdc[key] = state.fdc[key];
+  fdc.writeDeleted = !!fdc.writeDeleted; // absent in version-1 saves from before DAM support
   fdc.physicalTrack = [...state.fdc.physicalTrack];
   fdc.pending = state.fdc.pending ? { ...state.fdc.pending } : null;
   fdc.buffer = state.fdc.buffer ? fromBase64(state.fdc.buffer) : null;

@@ -19,6 +19,7 @@ import { DiskImage } from "@peripherals/disk-image.js";
 import { SoundDriver } from "@peripherals/sound.js";
 import { serializeState, restoreState } from "@system/state.js";
 import { LIBRARY } from "@data/library.js";
+import { DOS_LIBRARY } from "@data/dos-library.js";
 import { normalizeScale, wellLayout } from "@ui/screen-layout.js";
 import { setupTouchInput } from "@ui/touch-input.js";
 import {
@@ -230,6 +231,21 @@ async function initEmulator() {
     release: matrixRelease,
   });
 
+  // Populate the drive-0 DOS picker: bundled systems plus a custom slot
+  const dosSelect = document.getElementById("dos-select");
+  if (dosSelect && dosSelect.childElementCount === 0) {
+    for (const entry of DOS_LIBRARY) {
+      const option = document.createElement("option");
+      option.value = entry.id;
+      option.textContent = entry.title;
+      dosSelect.appendChild(option);
+    }
+    const custom = document.createElement("option");
+    custom.value = "custom";
+    custom.textContent = "Custom .dsk…";
+    dosSelect.appendChild(custom);
+  }
+
   // Populate the library picker: games first, then the BASIC classics
   const librarySelect = document.getElementById("library-select");
   if (librarySelect && librarySelect.childElementCount === 0) {
@@ -330,11 +346,28 @@ export async function readPickedFile(inputId) {
   });
 }
 
+// Cassette-world loaders (library, .cas tapes, pasted BASIC) need the
+// machine sitting in cassette BASIC at READY. Under a booted DOS the
+// typed RUN goes to the DOS prompt instead (NEWDOS answers it with
+// DIRECTORY READ ERROR) — so eject and reboot to BASIC first. The whole
+// dance is emulated inline; it costs a blink of wall clock.
+function ensureCassetteBasic() {
+  if (!emulator.system.io.fdc.anyDiskMounted()) return true;
+  setEmulatorStatus("Ejecting disks — rebooting to cassette BASIC…");
+  const ok = emulator.system.bootToCassetteBasic();
+  refreshDiskMenu();
+  if (!ok) {
+    setEmulatorStatus("Could not reach cassette BASIC — try Reset");
+  }
+  return ok;
+}
+
 window.menuLoadCas = async function () {
   window.toggleMachineMenu(true);
   if (!emulator.system) return;
   const picked = await readPickedFile("cas-file");
   if (!picked) return;
+  if (!ensureCassetteBasic()) return;
   const statusEl = document.getElementById("menu-cassette-status");
   try {
     const parsed = parseCas(picked.bytes);
@@ -355,6 +388,57 @@ window.menuLoadCas = async function () {
   } catch (err) {
     setEmulatorStatus(`Could not load ${picked.name}: ${err.message}`);
   }
+};
+
+/**
+ * Boot drive 0 from the DOS picker: a bundled system image (fetched on
+ * demand) or a user-picked .dsk. Mounting alone never reboots — this
+ * action's whole meaning is "put it in drive 0 and boot it", so it
+ * resets the machine, which is exactly how the real hardware behaves
+ * with a disk in the drive.
+ */
+window.menuBootDos = async function () {
+  window.toggleMachineMenu(true);
+  if (!emulator.system) return;
+  const select = document.getElementById("dos-select");
+  const choice = select?.value;
+
+  let image;
+  let label;
+  let note = "";
+  if (choice === "custom") {
+    const picked = await readPickedFile("dsk-file");
+    if (!picked) return;
+    try {
+      image = new DiskImage(picked.bytes, picked.name);
+    } catch (err) {
+      setEmulatorStatus(`Could not mount ${picked.name}: ${err.message}`);
+      return;
+    }
+    label = picked.name;
+  } else {
+    const entry = DOS_LIBRARY.find((e) => e.id === choice);
+    if (!entry) return;
+    setEmulatorStatus(`Fetching ${entry.title}…`);
+    try {
+      const response = await fetch(entry.file);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      image = new DiskImage(
+        new Uint8Array(await response.arrayBuffer()),
+        entry.file.split("/").pop()
+      );
+    } catch (err) {
+      setEmulatorStatus(`Could not fetch ${entry.title}: ${err.message}`);
+      return;
+    }
+    label = entry.title;
+    note = entry.note;
+  }
+
+  emulator.system.mountDisk(0, image);
+  emulator.system.reset();
+  refreshDiskMenu();
+  setEmulatorStatus(`Booting ${label} from drive 0${note ? ` — ${note}` : ""}`);
 };
 
 window.menuMountDisk = async function (driveNumber) {
@@ -416,6 +500,7 @@ window.menuLoadLibrary = async function () {
   const select = document.getElementById("library-select");
   const entry = LIBRARY.find((e) => e.id === select?.value);
   if (!entry) return;
+  if (!ensureCassetteBasic()) return;
   if (entry.kind === "file") {
     await loadLibraryFile(entry);
     return;
@@ -490,6 +575,7 @@ window.menuPasteBasic = async function () {
       setEmulatorStatus("Clipboard is empty");
       return;
     }
+    if (!ensureCassetteBasic()) return;
     setEmulatorStatus(`Typing ${text.length} characters…`);
     const skipped = await typeTextChunked(
       text.endsWith("\n") ? text : text + "\n"
