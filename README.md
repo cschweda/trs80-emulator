@@ -20,7 +20,7 @@ The emulator now boots the real 14K Model III ROM into 48K cassette BASIC — ex
 - **BASIC Program Execution**: ROM loading, program storage, CPU execution with ROM, CLOAD integration
 - **Video Display System**: 64×16 character text display with 128×48 pixel graphics mode, SET/RESET/POINT commands, CHR$() graphics characters
 - **Browser Test Console**: Interactive test runner for all phases with opcodes, assembly mnemonics, BASIC source code, and graphics display
-- **Comprehensive Test Suite**: 533 vitest tests across 31 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, real-DOS boot with DIR on TRSDOS/NEWDOS/LDOS, library programs, 32-column mode, save states)
+- **Comprehensive Test Suite**: 536 vitest tests across 31 files — unit coverage for the CPU (opcodes, flags, indexed ops, interrupts), memory, I/O, video, keyboard, FDC, sound synthesis, touch input, and disk/cassette formats, plus strict-mode acceptance tests that boot the real ROM headless (ROM boot, cassette fast-load, disk boot, real-DOS boot with DIR on TRSDOS/NEWDOS/LDOS, library programs, 32-column mode, save states)
 
 **July 2026 performance & platform pass** ✅ **COMPLETE**
 
