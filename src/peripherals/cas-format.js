@@ -58,26 +58,53 @@ export function parseCas(bytes) {
   );
 }
 
+// Stock cassette BASIC program base (Model I and III alike): the link
+// addresses a real CSAVE writes are absolute from here.
+const TXTTAB_STOCK = 0x42e9;
+
 function parseBasic(bytes, offset) {
   const name = String.fromCharCode(bytes[offset]);
   let i = offset + 1;
   const lines = [];
 
+  // Real CLOAD walks the link-pointer chain, which is what lets a line
+  // contain 0x00 bytes (machine code embedded in a REM — the
+  // Christopherson games). Trust each link while it stays
+  // self-consistent; fall back to 0x00-scanning for that record when it
+  // doesn't (some tools write garbage links). After a fallback the next
+  // record re-syncs on the link value, so lengths derive from link
+  // deltas and the saving machine's base stops mattering.
+  let addr = TXTTAB_STOCK;
   while (i + 1 < bytes.length) {
     const link = bytes[i] | (bytes[i + 1] << 8);
-    i += 2;
     if (link === 0x0000) {
       break; // program terminator
     }
-    const lineNo = bytes[i] | (bytes[i + 1] << 8);
-    i += 2;
-    const tokens = [];
-    while (i < bytes.length && bytes[i] !== 0x00) {
-      tokens.push(bytes[i]);
-      i++;
+    const lineNo = bytes[i + 2] | (bytes[i + 3] << 8);
+    const recLen = link - addr; // [link u16][line# u16][tokens...][0x00]
+    if (
+      recLen >= 5 &&
+      recLen <= 1000 &&
+      i + recLen < bytes.length &&
+      bytes[i + recLen - 1] === 0x00
+    ) {
+      lines.push({
+        lineNo,
+        tokens: Array.from(bytes.slice(i + 4, i + recLen - 1)),
+      });
+      i += recLen;
+    } else {
+      const tokens = [];
+      let j = i + 4;
+      while (j < bytes.length && bytes[j] !== 0x00) {
+        tokens.push(bytes[j]);
+        j++;
+      }
+      j++; // consume the end-of-line 0x00
+      lines.push({ lineNo, tokens });
+      i = j;
     }
-    i++; // consume the end-of-line 0x00
-    lines.push({ lineNo, tokens });
+    addr = link; // re-sync even after a fallback record
   }
 
   return { kind: "basic", name, lines };

@@ -85,6 +85,20 @@ describe("Bundled games load and run on the real ROM", () => {
     // typed input to reach their distinct, title-identifying banners —
     // see the dedicated tests after the BASIC games below).
     ["bedlam.cmd", "cmd", 0xbd30, "YOU FEEL AS THOUGH YOU HAVE JUST AWAKENED", 8],
+
+    // v1.5.0 arcade (Westmoreland & Gilman released theirs to the public
+    // domain; Cornsoft ties to the Misosys grant family — see LICENSE)
+    ["eliminat.cmd", "cmd", 0x9000, "Press <ENTER> to Start", 8],
+    ["tankzone.cmd", "cmd", 0x7b1f, "Press <I> for instructions", 8],
+    ["reargard.cmd", "cmd", 0x77a5, "Hit <ENTER> to begin", 8],
+    ["flipout.cmd", "cmd", 0x7000, "How many players?", 8],
+
+    // v1.5.0 Med Systems 3-D adventures: Asylum idles at its restore
+    // prompt; Asylum II runs straight into its title card. Deathmaze and
+    // Labyrinth share one load-prompt string, so like the Scott Adams
+    // pair they get dedicated keyed tests below.
+    ["asylum.cmd", "cmd", 0x43ae, "RESTORE AN OLD GAME", 8],
+    ["asylum2.cmd", "cmd", 0xb200, "A WILLIAM DENMAN PRODUCTION", 8],
   ];
 
   for (const [file, format, entry, expectText, seconds] of ML_GAMES) {
@@ -195,6 +209,100 @@ describe("Bundled games load and run on the real ROM", () => {
     expect(screen).not.toContain("READY");
     expect(screen).toContain('Welcome to Adventure number: 1 "ADVENTURELAND"');
   });
+
+  it("pyrmdoom.cmd loads Scott Adams's Pyramid of Doom and reaches its opening room", () => {
+    const bytes = programBytes("pyrmdoom.cmd");
+    const parsed = parseCmd(bytes);
+    expect(parsed.entry).toBe(0xf000);
+    fastLoadCmd(system, parsed);
+    system.runSeconds(3);
+    expect(system.screenText().join("\n")).toContain(
+      "Want to restore a previously saved game?"
+    );
+
+    system.typeText("N\n", { enterTStates: 600000 }); // decline restore
+    system.runSeconds(3);
+    system.typeText("\n", { enterTStates: 600000 }); // past the credits page
+    system.runSeconds(3);
+
+    const screen = system.screenText().join("\n");
+    expect(system.cpu.halted).toBe(false);
+    expect(screen).toContain('Welcome to Adventure: 8 "PYRAMID OF DOOM"');
+    expect(screen).toContain("I am in a desert");
+  });
+
+  // Deathmaze 5000 and Labyrinth open with the same "Do you wish to load
+  // an old game (Y or N)?" — press N and require each one's distinct
+  // instruction page (strings from full-screen probe dumps).
+  const MED_MAZES = [
+    ["dthmaze.cmd", 0x6c00, "Deathmaze 5000 is a full screen 3-D adventure"],
+    ["labyrnth.cmd", 0xbd13, "Labyrinth is a full scale 3-D adventure"],
+  ];
+  for (const [file, entry, expectText] of MED_MAZES) {
+    it(`${file} answers its load prompt and shows its instructions`, () => {
+      const parsed = parseCmd(programBytes(file));
+      expect(parsed.entry).toBe(entry);
+      fastLoadCmd(system, parsed);
+      system.runSeconds(2);
+      expect(system.screenText().join("\n")).toContain(
+        "Do you wish to load an old game"
+      );
+
+      system.keyboard.keyDown("N", "med");
+      system.runTStates(400000);
+      system.keyboard.keyUp("med");
+      system.runSeconds(4);
+
+      expect(system.cpu.halted).toBe(false);
+      expect(system.screenText().join("\n")).toContain(expectText);
+    });
+  }
+
+  // Space Castle's attract mode alternates pure-graphics scenes with a
+  // letter-spaced Cornsoft title crawl; scan a window for the crawl
+  // instead of pinning one instant.
+  it("castle.cmd runs Space Castle's attract mode to its title crawl", () => {
+    const parsed = parseCmd(programBytes("castle.cmd"));
+    expect(parsed.entry).toBe(0x93f5);
+    fastLoadCmd(system, parsed);
+    system.runSeconds(3);
+    system.keyboard.keyDown("Enter", "sc");
+    system.runTStates(400000);
+    system.keyboard.keyUp("sc");
+
+    let seen = false;
+    for (let i = 0; i < 40 && !seen; i++) {
+      system.runTStates(Math.round(2027520 / 4));
+      seen = system.screenText().join("\n").includes("o r n s o f t");
+    }
+    expect(system.cpu.halted).toBe(false);
+    expect(seen).toBe(true);
+  });
+
+  // Leo Christopherson's BASIC/ML hybrids: tokenized BASIC whose REM
+  // lines carry the animation machine code (binary bytes, 0x00 included)
+  // — these load through the link-chain path of parseCas and must reach
+  // their real instruction screens, proving the ML survived the tape.
+  const CHRISTOPHERSON = [
+    ["andrnim.cas", "ANDROID NIM", 8],
+    ["beewary.cas", "YOU ARE THE BEE", 8],
+    ["snakeggs.cas", "SNAKE EGGS : INSTRUCTIONS", 8],
+  ];
+  for (const [file, expectText, seconds] of CHRISTOPHERSON) {
+    it(`${file} fast-loads (embedded ML intact) and reaches its instructions`, () => {
+      const parsed = parseCas(programBytes(file));
+      expect(parsed.kind).toBe("basic");
+      fastLoadBasic(system, parsed);
+      system.typeText("RUN\n");
+      system.runSeconds(seconds);
+
+      const screen = system.screenText().join("\n");
+      expect(system.cpu.halted).toBe(false);
+      expect(screen).not.toContain("?SN"); // a corrupted line would SN-error
+      expect(screen).not.toContain("READY");
+      expect(screen).toContain(expectText);
+    });
+  }
 
   it("pirate.cmd loads Scott Adams's Pirate Adventure and reaches its opening room", () => {
     const bytes = programBytes("pirate.cmd");

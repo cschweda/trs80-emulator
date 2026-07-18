@@ -71,7 +71,60 @@ distribution (down-sw-model4.pl?bedlamau.zip): BEDLAM.III, the
 self-contained Model III payload inside that archive, is the only
 digitized copy of Bedlam found, and is what ships here.
 
-Two titles considered for this release are not included in
+Added for v1.5.0, from trs-80.com's download system unless noted:
+
+Wayne Westmoreland and Terry Gilman released their games to the public
+domain; their collection readme (in down-sw-model1.pl?westmore.zip)
+states: "The programs display copyright notices but I hearby release
+them into the public domain, do with them as you please." That covers
+Eliminator (down-sw-model3.pl?elimin83.zip), Tank Zone 2000
+(down-sw-model3.pl?tankzon3.zip), and Rear Guard
+(down-sw-model1.pl?reargrd1.zip, dump 4 of Ira Goldklang's vetted set).
+
+Leo Christopherson's Android Nim, Bee Wary, and Snake Eggs ship from
+the 1986 Powersoft/Breeze re-releases (down-sw-model1.pl?andnympw.zip,
+beewarps.zip, snkeggps.zip). Each of those archives carries this notice,
+retained here as it requires: "Roy Soltoff and/or Bill Schroeder hold
+copyright or distribution rights to software and documentation
+copyrwritten in the names of Misosys, Logical Systems Inc, Breeze,
+Powersoft, and QSD ... Roy and Bill have each granted free permission
+to everyone to download and use this software and documentation and to
+redistribute it to others, provided this notice is retained. All other
+rights are reserved. Kim Watt has also granted free permission to
+everyone to download and use any software to which he may hold the
+copyright." The shipped .cas files are rebuilt from those releases'
+tokenized BASIC by scripts/wrap-tokenized-bas.js (the games' animation
+machine code lives inside REM lines and survives via the link chain).
+
+Space Castle (down-sw-model3.pl?spccast3.zip) and Flip-Out
+(down-sw-model1.pl?flpoutcg.zip) are Cornsoft Group titles on the same
+preservation-community basis as the already-shipped Scarfman. Pyramid
+of Doom (down-sw-model3.pl?sac38124.zip) joins under the Scott Adams
+note above.
+
+Med Systems' 3-D adventures — Asylum (the self-contained ASYLUM.III
+payload of a Model 4 GO-EXEC pack, the same pattern as Bedlam above),
+Asylum II, Deathmaze 5000, and Labyrinth — could not be found in
+trs-80.com's downloadable set and were sourced from the willus.com Big
+List of TRS-80 Software (entries 701, 705, 3268, 7007). No
+permission-to-distribute statement from Med Systems or William F.
+Denman, Jr. could be located; these ship purely on the
+preservation-community basis stated at the top of this exception, and
+any rights holder's removal request will be honored immediately. The
+circulating Asylum II copy carries a period cracker's modification
+notice (Zeta Microcomputer Software) in its header, noted here for
+honesty about the dump's provenance.
+
+Titles researched for v1.5.0 and deliberately NOT shipped: Voyage of
+the Valkyrie (its downloads on trs-80.com are disabled at the author's
+request, honored the same way as Penetrator's below), Dancing Demon,
+Duel-N-Droids, and Life Two (no license evidence found and not
+downloadable on trs-80.com), Donkey Kong (Westmoreland/Gilman's code is
+public domain, but the mark is Nintendo's and the readme itself notes
+it was never marketed for that reason), and Zaxxon (written under a
+Sega license).
+
+Two titles considered for the v1.3.0 release are not included in
 public/programs/. Penetrator (Melbourne House) is on trs-80.com, but
 every download of it there has been disabled at the author's request,
 which this project honors. Robot Attack has circulating dumps, but no
@@ -85,3 +138,34 @@ Generated locally: sstrek.cas is Super Star Trek from David Ahl's
 the cassette image is built from src/data/super-star-trek.bas by
 scripts/build-cas.js. It IS covered by the MIT license above, as are the
 BASIC type-in adaptations embedded in src/data/library.js.
+
+
+EXCEPTION - Bundled disk operating systems (public/disks/)
+
+The three bootable .dsk images under public/disks/ are classic TRS-80
+Model III operating systems, included so the emulator's disk hardware
+has real software to run. They are NOT covered by the MIT license
+above; the emulator contributors claim no rights over them.
+
+ldos-531.dsk (LDOS 5.3.1) is from Tim Mann's MISOSYS archive
+(https://tim-mann.org/misosys.html, trs80/ld3-531.zip). The source zip
+embeds this notice, retained as it requires: "Roy Soltoff and/or
+William Schroeder hold copyright and/or distribution rights to the
+software and documentation in this ZIP archive. Roy Soltoff and William
+Schroeder each individually grant free permission to everyone to
+download and use this software and documentation and to redistribute it
+to others, provided this notice is retained. All other rights are
+reserved."
+
+trsdos13.dsk (TRSDOS 1.3, Tandy, 1981) is from the willus.com Big List
+of TRS-80 Software (entry 14364, TDOS13A.DSK). It is Tandy/Radio Shack
+firmware-era software included on the same interoperability basis as
+the Model III ROM exception above: the disk subsystem cannot be
+meaningfully used without a DOS, rights remain with the rights holders,
+and any removal request will be honored.
+
+newdos80.dsk (NEWDOS/80 v2, Apparat Inc.) is from the willus.com Big
+List (entry 9601, NWDS80-3.DSK — a working system disk, volume name
+SPOCK-22). It circulates freely in the TRS-80 preservation community;
+no formal permission statement is known, rights remain with the rights
+holders, and any removal request will be honored.
